@@ -91,13 +91,16 @@
     async function cargarDatos() {
       const { data, error } = await supabase
         .from("logs")
-        .select("*")
-        .order("created_at", { ascending: true });
+        .select("*");
 
       if (error) {
-        console.error(error);
+        console.error("ERROR:", error);
         return;
       }
+
+      console.log("DATOS RECIBIDOS:", data);
+
+      if (!data || data.length === 0) return;
 
       let entradas = 0;
       let salidas = 0;
@@ -105,27 +108,27 @@
       const porMinuto = {};
 
       data.forEach(log => {
-        const minuto = log.created_at.substring(0, 16);
+        // 🔥 CONTADOR
+        if (log.action_type === "entry") entradas++;
+        if (log.action_type === "exit") salidas++;
 
-        if (!porMinuto[minuto]) {
-          porMinuto[minuto] = 0;
-        }
+        // 🔥 FECHA SEGURA
+        const fecha = new Date(log.created_at);
+        const minuto = fecha.getHours() + ":" + String(fecha.getMinutes()).padStart(2, "0");
 
-        // 🔥 CAMBIO CLAVE AQUÍ
+        if (!porMinuto[minuto]) porMinuto[minuto] = 0;
+
         if (log.action_type === "entry") {
-          entradas++;
           porMinuto[minuto]++;
-        }
-
-        if (log.action_type === "exit") {
-          salidas++;
         }
       });
 
+      // métricas
       document.getElementById("entradas").textContent = entradas;
       document.getElementById("salidas").textContent = salidas;
       document.getElementById("aforo").textContent = entradas - salidas;
 
+      // lista
       const lista = document.getElementById("logs");
       lista.innerHTML = "";
 
@@ -135,6 +138,7 @@
         lista.appendChild(li);
       });
 
+      // gráfico
       const labels = Object.keys(porMinuto);
       const valores = Object.values(porMinuto);
 
@@ -148,20 +152,8 @@
           labels: labels,
           datasets: [{
             label: "Entradas por minuto",
-            data: valores,
-            tension: 0.3
+            data: valores
           }]
-        },
-        options: {
-          plugins: {
-            legend: {
-              labels: { color: "white" }
-            }
-          },
-          scales: {
-            x: { ticks: { color: "white" } },
-            y: { ticks: { color: "white" } }
-          }
         }
       });
     }
