@@ -1,1 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Top Access Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    .cards {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      flex: 1;
+      text-align: center;
+    }
+
+    .title {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .value {
+      font-size: 28px;
+      margin-top: 10px;
+    }
+
+    ul {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>🎟️ Top Access Dashboard</h1>
+
+  <div class="cards">
+    <div class="card">
+      <div class="title">Aforo actual</div>
+      <div class="value" id="aforo">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Entradas</div>
+      <div class="value" id="entradas">0</div>
+    </div>
+
+    <div class="card">
+      <div class="title">Salidas</div>
+      <div class="value" id="salidas">0</div>
+    </div>
+  </div>
+
+  <h2>Últimos accesos</h2>
+  <ul id="logs"></ul>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      "https://zuhssrhdezptsgemxofh.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
+    );
+
+    async function cargarDatos() {
+      const { data, error } = await supabase
+        .from("logs")
+        .select("*");
+
+      if (error) {
+        console.error("Error cargando datos:", error);
+        return;
+      }
+
+      if (!data) return;
+
+      let entradas = 0;
+      let salidas = 0;
+
+      data.forEach(log => {
+        if (log.result === "entry_ok") entradas++;
+        if (log.result === "exit_ok") salidas++;
+      });
+
+      document.getElementById("entradas").textContent = entradas;
+      document.getElementById("salidas").textContent = salidas;
+      document.getElementById("aforo").textContent = entradas - salidas;
+
+      const lista = document.getElementById("logs");
+      lista.innerHTML = "";
+
+      data.slice(-20).reverse().forEach(log => {
+        const li = document.createElement("li");
+        li.textContent = log.result + " - " + log.created_at;
+        lista.appendChild(li);
+      });
+    }
+
+    cargarDatos();
+
+    // 🔄 actualizar cada 5 segundos
+    setInterval(cargarDatos, 5000);
+  </script>
+
+</body>
+</html>
