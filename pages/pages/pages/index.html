@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Top Access Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body style="font-family: Arial; padding: 20px;">
+
+  <h1>Top Access Dashboard</h1>
+  <h2>Últimos accesos</h2>
+
+  <ul id="logs"></ul>
+
+  <script>
+    const supabase = window.supabase.createClient(
+      "https://zuhssrhdezptsgemxofh.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
+    );
+
+    async function cargarLogs() {
+      const { data } = await supabase
+        .from("logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      const lista = document.getElementById("logs");
+      lista.innerHTML = "";
+
+      data.forEach(log => {
+        const li = document.createElement("li");
+        li.textContent = log.result + " - " + log.created_at;
+        lista.appendChild(li);
+      });
+    }
+
+    cargarLogs();
+  </script>
+
+</body>
+</html>
