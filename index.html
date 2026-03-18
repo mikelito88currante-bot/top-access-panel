@@ -2,7 +2,12 @@
 <html>
 <head>
   <title>Top Access Dashboard</title>
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
@@ -10,6 +15,10 @@
       background: #0f172a;
       color: white;
       padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
     }
 
     .cards {
@@ -37,6 +46,13 @@
     }
 
     ul {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+
+    canvas {
       background: #1e293b;
       padding: 20px;
       border-radius: 10px;
@@ -68,36 +84,61 @@
   <h2>Últimos accesos</h2>
   <ul id="logs"></ul>
 
+  <h2>Entradas por minuto</h2>
+  <canvas id="grafico" height="100"></canvas>
+
   <script>
     const supabase = window.supabase.createClient(
       "https://zuhssrhdezptsgemxofh.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
     );
 
+    let chart;
+
     async function cargarDatos() {
       const { data, error } = await supabase
         .from("logs")
-        .select("*");
+        .select("*")
+        .order("created_at", { ascending: true });
 
       if (error) {
         console.error("Error cargando datos:", error);
         return;
       }
 
-      if (!data) return;
+      if (!data || data.length === 0) {
+        console.log("No hay datos");
+        return;
+      }
 
       let entradas = 0;
       let salidas = 0;
 
+      const porMinuto = {};
+
       data.forEach(log => {
-        if (log.result === "entry_ok") entradas++;
-        if (log.result === "exit_ok") salidas++;
+        const minuto = log.created_at.substring(0, 16);
+
+        if (!porMinuto[minuto]) {
+          porMinuto[minuto] = 0;
+        }
+
+        if (log.result === "entry_ok") {
+          entradas++;
+          porMinuto[minuto]++;
+        }
+
+        if (log.result === "exit_ok") {
+          salidas++;
+        }
       });
 
+      // métricas
       document.getElementById("entradas").textContent = entradas;
       document.getElementById("salidas").textContent = salidas;
       document.getElementById("aforo").textContent = entradas - salidas;
 
+      // lista últimos accesos
       const lista = document.getElementById("logs");
       lista.innerHTML = "";
 
@@ -106,11 +147,50 @@
         li.textContent = log.result + " - " + log.created_at;
         lista.appendChild(li);
       });
+
+      // preparar gráfico
+      const labels = Object.keys(porMinuto);
+      const valores = Object.values(porMinuto);
+
+      if (chart) {
+        chart.destroy();
+      }
+
+      const ctx = document.getElementById("grafico").getContext("2d");
+
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Entradas por minuto",
+            data: valores,
+            tension: 0.3
+          }]
+        },
+        options: {
+          plugins: {
+            legend: {
+              labels: {
+                color: "white"
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "white" }
+            },
+            y: {
+              ticks: { color: "white" }
+            }
+          }
+        }
+      });
     }
 
     cargarDatos();
 
-    // 🔄 actualizar cada 5 segundos
+    // 🔄 actualización automática cada 5s
     setInterval(cargarDatos, 5000);
   </script>
 
