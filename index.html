@@ -81,7 +81,7 @@
   <canvas id="grafico" height="100"></canvas>
 
   <script>
-    const supabase = window.supabase.createClient(
+    const client = window.supabase.createClient(
       "https://zuhssrhdezptsgemxofh.supabase.co",
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
     );
@@ -89,18 +89,16 @@
     let chart;
 
     async function cargarDatos() {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("logs")
         .select("*");
 
       if (error) {
-        console.error("ERROR:", error);
+        console.error(error);
         return;
       }
 
-      console.log("DATOS RECIBIDOS:", data);
-
-      if (!data || data.length === 0) return;
+      console.log("DATOS:", data);
 
       let entradas = 0;
       let salidas = 0;
@@ -108,11 +106,9 @@
       const porMinuto = {};
 
       data.forEach(log => {
-        // 🔥 CONTADOR
         if (log.action_type === "entry") entradas++;
         if (log.action_type === "exit") salidas++;
 
-        // 🔥 FECHA SEGURA
         const fecha = new Date(log.created_at);
         const minuto = fecha.getHours() + ":" + String(fecha.getMinutes()).padStart(2, "0");
 
@@ -123,12 +119,10 @@
         }
       });
 
-      // métricas
       document.getElementById("entradas").textContent = entradas;
       document.getElementById("salidas").textContent = salidas;
       document.getElementById("aforo").textContent = entradas - salidas;
 
-      // lista
       const lista = document.getElementById("logs");
       lista.innerHTML = "";
 
@@ -138,7 +132,6 @@
         lista.appendChild(li);
       });
 
-      // gráfico
       const labels = Object.keys(porMinuto);
       const valores = Object.values(porMinuto);
 
