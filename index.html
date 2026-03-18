@@ -3,10 +3,7 @@
 <head>
   <title>Top Access Dashboard</title>
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -15,10 +12,6 @@
       background: #0f172a;
       color: white;
       padding: 20px;
-    }
-
-    h1 {
-      margin-bottom: 20px;
     }
 
     .cards {
@@ -102,12 +95,7 @@
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error("Error cargando datos:", error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        console.log("No hay datos");
+        console.error(error);
         return;
       }
 
@@ -123,38 +111,34 @@
           porMinuto[minuto] = 0;
         }
 
-        if (log.result === "entry_ok") {
+        // 🔥 CAMBIO CLAVE AQUÍ
+        if (log.action_type === "entry") {
           entradas++;
           porMinuto[minuto]++;
         }
 
-        if (log.result === "exit_ok") {
+        if (log.action_type === "exit") {
           salidas++;
         }
       });
 
-      // métricas
       document.getElementById("entradas").textContent = entradas;
       document.getElementById("salidas").textContent = salidas;
       document.getElementById("aforo").textContent = entradas - salidas;
 
-      // lista últimos accesos
       const lista = document.getElementById("logs");
       lista.innerHTML = "";
 
       data.slice(-20).reverse().forEach(log => {
         const li = document.createElement("li");
-        li.textContent = log.result + " - " + log.created_at;
+        li.textContent = log.action_type + " - " + log.created_at;
         lista.appendChild(li);
       });
 
-      // preparar gráfico
       const labels = Object.keys(porMinuto);
       const valores = Object.values(porMinuto);
 
-      if (chart) {
-        chart.destroy();
-      }
+      if (chart) chart.destroy();
 
       const ctx = document.getElementById("grafico").getContext("2d");
 
@@ -171,26 +155,18 @@
         options: {
           plugins: {
             legend: {
-              labels: {
-                color: "white"
-              }
+              labels: { color: "white" }
             }
           },
           scales: {
-            x: {
-              ticks: { color: "white" }
-            },
-            y: {
-              ticks: { color: "white" }
-            }
+            x: { ticks: { color: "white" } },
+            y: { ticks: { color: "white" } }
           }
         }
       });
     }
 
     cargarDatos();
-
-    // 🔄 actualización automática cada 5s
     setInterval(cargarDatos, 5000);
   </script>
 
