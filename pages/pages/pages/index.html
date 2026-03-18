@@ -71,13 +71,20 @@
   <script>
     const supabase = window.supabase.createClient(
       "https://zuhssrhdezptsgemxofh.supabase.co",
-      "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
     );
 
     async function cargarDatos() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("logs")
         .select("*");
+
+      if (error) {
+        console.error("Error cargando datos:", error);
+        return;
+      }
+
+      if (!data) return;
 
       let entradas = 0;
       let salidas = 0;
@@ -91,7 +98,6 @@
       document.getElementById("salidas").textContent = salidas;
       document.getElementById("aforo").textContent = entradas - salidas;
 
-      // últimos accesos
       const lista = document.getElementById("logs");
       lista.innerHTML = "";
 
@@ -104,7 +110,7 @@
 
     cargarDatos();
 
-    // 🔄 actualizar cada 5 segundos (como quieres en tu sistema)
+    // 🔄 actualizar cada 5 segundos
     setInterval(cargarDatos, 5000);
   </script>
 
