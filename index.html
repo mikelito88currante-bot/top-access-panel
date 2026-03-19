@@ -14,9 +14,7 @@
       padding: 20px;
     }
 
-    h1 {
-      margin-bottom: 20px;
-    }
+    h1 { margin-bottom: 20px; }
 
     .menu {
       display: flex;
@@ -35,13 +33,9 @@
       font-size: 16px;
     }
 
-    button:hover {
-      background: #334155;
-    }
+    button:hover { background: #334155; }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
 
     input {
       padding: 10px;
@@ -108,6 +102,9 @@
   <h1>Crear evento</h1>
 
   <input type="text" id="nombreEvento" placeholder="Nombre del evento">
+  <input type="text" id="venueEvento" placeholder="Recinto">
+  <input type="date" id="fechaEvento">
+
   <br>
   <button onclick="guardarEvento()">Guardar evento</button>
 
@@ -179,29 +176,47 @@
     document.getElementById("crearEvento").classList.add("hidden");
   }
 
-  // 🔹 CREAR EVENTO
+  // 🔥 CREAR EVENTO REAL
   async function guardarEvento() {
     const nombre = document.getElementById("nombreEvento").value;
+    const venue = document.getElementById("venueEvento").value;
+    const fecha = document.getElementById("fechaEvento").value;
 
-    if (!nombre) {
-      alert("Introduce un nombre");
+    if (!nombre || !venue || !fecha) {
+      alert("Completa todos los campos");
       return;
     }
 
+    const ahora = new Date().toISOString();
+
     const { error } = await client
       .from("events")
-      .insert([{ name: nombre }]);
+      .insert([{
+        name: nombre,
+        venue: venue,
+        event_date: fecha,
+        status: "active",
+        capacity_max: 0,
+        capacity_current: 0,
+        created_at: ahora,
+        updated_at: ahora,
+        is_active: true,
+        sync_interval_seconds: 5,
+        logo_url: null,
+        created_by: null,
+        allow_capacity_override: false
+      }]);
 
     if (error) {
-      alert("Error al guardar");
       console.error(error);
+      alert("Error al guardar: " + error.message);
     } else {
       alert("Evento creado correctamente");
       volverInicio();
     }
   }
 
-  // 🔹 CARGAR EVENTOS
+  // 🔹 EVENTOS
   async function cargarEventos() {
     const { data } = await client
       .from("events")
@@ -228,7 +243,7 @@
     cargarDatos();
   });
 
-  // 🔹 CARGAR LOGS
+  // 🔹 LOGS
   async function cargarDatos() {
     if (!selectedEvent) return;
 
