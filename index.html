@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Top Access Dashboard</title>
+  <title>Top Access</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
@@ -27,7 +26,12 @@
 
     .hidden { display: none; }
 
-    input { margin-bottom: 10px; }
+    select, input {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: none;
+    }
 
     .back { margin-bottom: 20px; background: #334155; }
   </style>
@@ -40,25 +44,38 @@
   <h1>🎟️ Top Access</h1>
 
   <div class="menu">
-    <button onclick="irDashboard()">Seleccionar evento</button>
+    <button onclick="irSeleccionarEvento()">Seleccionar evento</button>
     <button onclick="irCrearEvento()">Crear evento</button>
-    <button onclick="irSubirCodigos()">Subir códigos</button>
   </div>
 </div>
 
-<!-- SUBIR CODIGOS -->
-<div id="subirCodigos" class="hidden">
+<!-- SELECCIONAR EVENTO -->
+<div id="seleccionarEvento" class="hidden">
 
   <button class="back" onclick="volverInicio()">⬅ Volver</button>
 
-  <h1>Subir códigos</h1>
+  <h2>Seleccionar evento</h2>
 
-  <select id="eventSelectorUpload"></select>
+  <select id="eventSelector"></select>
+
+  <br>
+  <button onclick="entrarEvento()">Entrar</button>
+
+</div>
+
+<!-- GESTIONAR EVENTO -->
+<div id="gestionarEvento" class="hidden">
+
+  <button class="back" onclick="volverInicio()">⬅ Volver</button>
+
+  <h2>Gestión del evento</h2>
+
+  <h3>Subir códigos (CSV)</h3>
 
   <input type="file" id="fileInput" accept=".csv">
 
   <br>
-  <button onclick="procesarArchivo()">Subir CSV</button>
+  <button onclick="subirCSV()">Subir códigos</button>
 
 </div>
 
@@ -68,13 +85,11 @@ const client = window.supabase.createClient(
   "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
 );
 
-let selectedEventUpload = null;
+let selectedEvent = null;
 
-// NAV
-function irSubirCodigos() {
-  ocultarTodo();
-  document.getElementById("subirCodigos").classList.remove("hidden");
-  cargarEventosUpload();
+// NAVEGACIÓN
+function ocultarTodo() {
+  document.querySelectorAll("div").forEach(d => d.classList.add("hidden"));
 }
 
 function volverInicio() {
@@ -82,15 +97,23 @@ function volverInicio() {
   document.getElementById("home").classList.remove("hidden");
 }
 
-function ocultarTodo() {
-  document.querySelectorAll("div").forEach(d => d.classList.add("hidden"));
+function irSeleccionarEvento() {
+  ocultarTodo();
+  document.getElementById("seleccionarEvento").classList.remove("hidden");
+  cargarEventos();
+}
+
+function entrarEvento() {
+  selectedEvent = document.getElementById("eventSelector").value;
+  ocultarTodo();
+  document.getElementById("gestionarEvento").classList.remove("hidden");
 }
 
 // CARGAR EVENTOS
-async function cargarEventosUpload() {
+async function cargarEventos() {
   const { data } = await client.from("events").select("id,name");
 
-  const selector = document.getElementById("eventSelectorUpload");
+  const selector = document.getElementById("eventSelector");
   selector.innerHTML = "";
 
   data.forEach(e => {
@@ -99,16 +122,10 @@ async function cargarEventosUpload() {
     opt.textContent = e.name;
     selector.appendChild(opt);
   });
-
-  selectedEventUpload = data[0]?.id;
 }
 
-document.getElementById("eventSelectorUpload").addEventListener("change", e => {
-  selectedEventUpload = e.target.value;
-});
-
-// PROCESAR CSV
-async function procesarArchivo() {
+// SUBIR CSV
+async function subirCSV() {
   const file = document.getElementById("fileInput").files[0];
 
   if (!file) {
@@ -122,22 +139,19 @@ async function procesarArchivo() {
   const datos = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const [codigo, zona, ticketera] = lines[i].split(",");
+    const [codigo] = lines[i].split(",");
 
     if (!codigo) continue;
 
     datos.push({
-      event_id: selectedEventUpload,
+      event_id: selectedEvent,
       code_value: codigo.trim(),
       status: "valid",
-      zone_id: null, // luego mapeamos zonas reales
-      ticket_provider_id: null,
       usage_count: 0,
       created_at: new Date().toISOString()
     });
   }
 
-  // 🔥 INSERTAR EN BLOQUE
   const { error } = await client.from("codes").insert(datos);
 
   if (error) {
