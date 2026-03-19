@@ -14,14 +14,7 @@
       padding: 20px;
     }
 
-    h1 { margin-bottom: 20px; }
-
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      max-width: 300px;
-    }
+    .menu { display: flex; flex-direction: column; gap: 15px; max-width: 300px; }
 
     button {
       padding: 15px;
@@ -30,273 +23,130 @@
       background: #1e293b;
       color: white;
       cursor: pointer;
-      font-size: 16px;
     }
-
-    button:hover { background: #334155; }
 
     .hidden { display: none; }
 
-    input {
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      border: none;
-      width: 300px;
-    }
+    input { margin-bottom: 10px; }
 
-    .cards {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 10px;
-      flex: 1;
-      text-align: center;
-    }
-
-    ul {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-    }
-
-    canvas {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 10px;
-    }
-
-    .back {
-      margin-bottom: 20px;
-      background: #334155;
-    }
+    .back { margin-bottom: 20px; background: #334155; }
   </style>
 </head>
 
 <body>
 
-<!-- 🔥 HOME -->
+<!-- HOME -->
 <div id="home">
   <h1>🎟️ Top Access</h1>
 
   <div class="menu">
     <button onclick="irDashboard()">Seleccionar evento</button>
     <button onclick="irCrearEvento()">Crear evento</button>
-    <button>Usuarios</button>
-    <button>Configuración de zonas</button>
-    <button>Configuración de localizaciones</button>
+    <button onclick="irSubirCodigos()">Subir códigos</button>
   </div>
 </div>
 
-<!-- 🔥 CREAR EVENTO -->
-<div id="crearEvento" class="hidden">
+<!-- SUBIR CODIGOS -->
+<div id="subirCodigos" class="hidden">
 
   <button class="back" onclick="volverInicio()">⬅ Volver</button>
 
-  <h1>Crear evento</h1>
+  <h1>Subir códigos</h1>
 
-  <input type="text" id="nombreEvento" placeholder="Nombre del evento">
-  <input type="text" id="venueEvento" placeholder="Recinto">
-  <input type="date" id="fechaEvento">
+  <select id="eventSelectorUpload"></select>
+
+  <input type="file" id="fileInput" accept=".csv">
 
   <br>
-  <button onclick="guardarEvento()">Guardar evento</button>
-
-</div>
-
-<!-- 🔥 DASHBOARD -->
-<div id="dashboard" class="hidden">
-
-  <button class="back" onclick="volverInicio()">⬅ Volver</button>
-
-  <h1>📊 Dashboard</h1>
-
-  <select id="eventSelector"></select>
-
-  <div class="cards">
-    <div class="card">
-      <div>Aforo actual</div>
-      <div id="aforo">0</div>
-    </div>
-
-    <div class="card">
-      <div>Entradas</div>
-      <div id="entradas">0</div>
-    </div>
-
-    <div class="card">
-      <div>Salidas</div>
-      <div id="salidas">0</div>
-    </div>
-  </div>
-
-  <h2>Últimos accesos</h2>
-  <ul id="logs"></ul>
-
-  <h2>Entradas por minuto</h2>
-  <canvas id="grafico"></canvas>
+  <button onclick="procesarArchivo()">Subir CSV</button>
 
 </div>
 
 <script>
-  const client = window.supabase.createClient(
-    "https://zuhssrhdezptsgemxofh.supabase.co",
-    "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
-  );
+const client = window.supabase.createClient(
+  "https://zuhssrhdezptsgemxofh.supabase.co",
+  "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
+);
 
-  let selectedEvent = null;
-  let chart;
+let selectedEventUpload = null;
 
-  function irDashboard() {
-    ocultarTodo();
-    document.getElementById("dashboard").classList.remove("hidden");
-    cargarEventos();
-  }
+// NAV
+function irSubirCodigos() {
+  ocultarTodo();
+  document.getElementById("subirCodigos").classList.remove("hidden");
+  cargarEventosUpload();
+}
 
-  function irCrearEvento() {
-    ocultarTodo();
-    document.getElementById("crearEvento").classList.remove("hidden");
-  }
+function volverInicio() {
+  ocultarTodo();
+  document.getElementById("home").classList.remove("hidden");
+}
 
-  function volverInicio() {
-    ocultarTodo();
-    document.getElementById("home").classList.remove("hidden");
-  }
+function ocultarTodo() {
+  document.querySelectorAll("div").forEach(d => d.classList.add("hidden"));
+}
 
-  function ocultarTodo() {
-    document.getElementById("home").classList.add("hidden");
-    document.getElementById("dashboard").classList.add("hidden");
-    document.getElementById("crearEvento").classList.add("hidden");
-  }
+// CARGAR EVENTOS
+async function cargarEventosUpload() {
+  const { data } = await client.from("events").select("id,name");
 
-  async function guardarEvento() {
-    const nombre = document.getElementById("nombreEvento").value;
-    const venue = document.getElementById("venueEvento").value;
-    const fecha = document.getElementById("fechaEvento").value;
+  const selector = document.getElementById("eventSelectorUpload");
+  selector.innerHTML = "";
 
-    if (!nombre || !venue || !fecha) {
-      alert("Completa todos los campos");
-      return;
-    }
-
-    const ahora = new Date().toISOString();
-
-    const { error } = await client
-      .from("events")
-      .insert([{
-        name: nombre,
-        venue: venue,
-        event_date: fecha,
-        status: "active",
-        capacity_max: 0,
-        capacity_current: 0,
-        created_at: ahora,
-        updated_at: ahora,
-        is_active: true,
-        sync_interval_seconds: 5,
-        logo_url: null,
-        created_by: null,
-        allow_capacity_override: false
-      }]);
-
-    if (error) {
-      console.error(error);
-      alert("Error al guardar: " + error.message);
-    } else {
-      alert("Evento creado correctamente");
-      volverInicio();
-    }
-  }
-
-  async function cargarEventos() {
-    const { data } = await client
-      .from("events")
-      .select("id, name");
-
-    const selector = document.getElementById("eventSelector");
-    selector.innerHTML = "";
-
-    data.forEach(event => {
-      const option = document.createElement("option");
-      option.value = event.id;
-      option.textContent = event.name;
-      selector.appendChild(option);
-    });
-
-    if (data.length > 0) {
-      selectedEvent = data[0].id;
-      cargarDatos();
-    }
-  }
-
-  document.getElementById("eventSelector").addEventListener("change", (e) => {
-    selectedEvent = e.target.value;
-    cargarDatos();
+  data.forEach(e => {
+    const opt = document.createElement("option");
+    opt.value = e.id;
+    opt.textContent = e.name;
+    selector.appendChild(opt);
   });
 
-  async function cargarDatos() {
-    if (!selectedEvent) return;
+  selectedEventUpload = data[0]?.id;
+}
 
-    const { data } = await client
-      .from("logs")
-      .select("*")
-      .eq("event_id", selectedEvent);
+document.getElementById("eventSelectorUpload").addEventListener("change", e => {
+  selectedEventUpload = e.target.value;
+});
 
-    let entradas = 0;
-    let salidas = 0;
-    const porMinuto = {};
+// PROCESAR CSV
+async function procesarArchivo() {
+  const file = document.getElementById("fileInput").files[0];
 
-    data.forEach(log => {
-      if (log.action_type === "entry") entradas++;
-      if (log.action_type === "exit") salidas++;
+  if (!file) {
+    alert("Selecciona un archivo");
+    return;
+  }
 
-      const fecha = new Date(log.created_at);
-      const minuto = fecha.getHours() + ":" + String(fecha.getMinutes()).padStart(2, "0");
+  const text = await file.text();
+  const lines = text.split("\n");
 
-      if (!porMinuto[minuto]) porMinuto[minuto] = 0;
+  const datos = [];
 
-      if (log.action_type === "entry") porMinuto[minuto]++;
-    });
+  for (let i = 1; i < lines.length; i++) {
+    const [codigo, zona, ticketera] = lines[i].split(",");
 
-    document.getElementById("entradas").textContent = entradas;
-    document.getElementById("salidas").textContent = salidas;
-    document.getElementById("aforo").textContent = entradas - salidas;
+    if (!codigo) continue;
 
-    const lista = document.getElementById("logs");
-    lista.innerHTML = "";
-
-    data.slice(-20).reverse().forEach(log => {
-      const li = document.createElement("li");
-      li.textContent = log.action_type + " - " + log.created_at;
-      lista.appendChild(li);
-    });
-
-    const labels = Object.keys(porMinuto);
-    const valores = Object.values(porMinuto);
-
-    if (chart) chart.destroy();
-
-    const ctx = document.getElementById("grafico").getContext("2d");
-
-    chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: labels,
-        datasets: [{
-          label: "Entradas por minuto",
-          data: valores
-        }]
-      }
+    datos.push({
+      event_id: selectedEventUpload,
+      code_value: codigo.trim(),
+      status: "valid",
+      zone_id: null, // luego mapeamos zonas reales
+      ticket_provider_id: null,
+      usage_count: 0,
+      created_at: new Date().toISOString()
     });
   }
 
-  setInterval(cargarDatos, 5000);
+  // 🔥 INSERTAR EN BLOQUE
+  const { error } = await client.from("codes").insert(datos);
+
+  if (error) {
+    console.error(error);
+    alert("Error al subir");
+  } else {
+    alert("Códigos subidos correctamente");
+  }
+}
 </script>
 
 </body>
