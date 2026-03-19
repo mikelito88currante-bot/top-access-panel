@@ -147,13 +147,12 @@
 <script>
   const client = window.supabase.createClient(
     "https://zuhssrhdezptsgemxofh.supabase.co",
-    "TU_KEY"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
   );
 
   let selectedEvent = null;
   let chart;
 
-  // 🔹 NAVEGACIÓN
   function irDashboard() {
     ocultarTodo();
     document.getElementById("dashboard").classList.remove("hidden");
@@ -176,7 +175,6 @@
     document.getElementById("crearEvento").classList.add("hidden");
   }
 
-  // 🔥 CREAR EVENTO REAL
   async function guardarEvento() {
     const nombre = document.getElementById("nombreEvento").value;
     const venue = document.getElementById("venueEvento").value;
@@ -216,7 +214,6 @@
     }
   }
 
-  // 🔹 EVENTOS
   async function cargarEventos() {
     const { data } = await client
       .from("events")
@@ -243,7 +240,6 @@
     cargarDatos();
   });
 
-  // 🔹 LOGS
   async function cargarDatos() {
     if (!selectedEvent) return;
 
