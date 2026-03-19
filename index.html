@@ -25,7 +25,7 @@
       max-width: 300px;
     }
 
-    .menu button {
+    button {
       padding: 15px;
       border: none;
       border-radius: 10px;
@@ -35,12 +35,20 @@
       font-size: 16px;
     }
 
-    .menu button:hover {
+    button:hover {
       background: #334155;
     }
 
     .hidden {
       display: none;
+    }
+
+    input {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: none;
+      width: 300px;
     }
 
     .cards {
@@ -55,16 +63,6 @@
       border-radius: 10px;
       flex: 1;
       text-align: center;
-    }
-
-    .title {
-      font-size: 14px;
-      color: #94a3b8;
-    }
-
-    .value {
-      font-size: 28px;
-      margin-top: 10px;
     }
 
     ul {
@@ -82,176 +80,213 @@
 
     .back {
       margin-bottom: 20px;
-      padding: 10px;
       background: #334155;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- 🔥 PANTALLA INICIO -->
-  <div id="home">
+<!-- 🔥 HOME -->
+<div id="home">
+  <h1>🎟️ Top Access</h1>
 
-    <h1>🎟️ Top Access</h1>
+  <div class="menu">
+    <button onclick="irDashboard()">Seleccionar evento</button>
+    <button onclick="irCrearEvento()">Crear evento</button>
+    <button>Usuarios</button>
+    <button>Configuración de zonas</button>
+    <button>Configuración de localizaciones</button>
+  </div>
+</div>
 
-    <div class="menu">
-      <button onclick="irDashboard()">Seleccionar evento</button>
-      <button>Crear evento</button>
-      <button>Usuarios</button>
-      <button>Configuración de zonas</button>
-      <button>Configuración de localizaciones</button>
+<!-- 🔥 CREAR EVENTO -->
+<div id="crearEvento" class="hidden">
+
+  <button class="back" onclick="volverInicio()">⬅ Volver</button>
+
+  <h1>Crear evento</h1>
+
+  <input type="text" id="nombreEvento" placeholder="Nombre del evento">
+  <br>
+  <button onclick="guardarEvento()">Guardar evento</button>
+
+</div>
+
+<!-- 🔥 DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+  <button class="back" onclick="volverInicio()">⬅ Volver</button>
+
+  <h1>📊 Dashboard</h1>
+
+  <select id="eventSelector"></select>
+
+  <div class="cards">
+    <div class="card">
+      <div>Aforo actual</div>
+      <div id="aforo">0</div>
     </div>
 
-  </div>
-
-  <!-- 🔥 DASHBOARD -->
-  <div id="dashboard" class="hidden">
-
-    <button class="back" onclick="volverInicio()">⬅ Volver</button>
-
-    <h1>📊 Dashboard</h1>
-
-    <select id="eventSelector"></select>
-
-    <div class="cards">
-      <div class="card">
-        <div class="title">Aforo actual</div>
-        <div class="value" id="aforo">0</div>
-      </div>
-
-      <div class="card">
-        <div class="title">Entradas</div>
-        <div class="value" id="entradas">0</div>
-      </div>
-
-      <div class="card">
-        <div class="title">Salidas</div>
-        <div class="value" id="salidas">0</div>
-      </div>
+    <div class="card">
+      <div>Entradas</div>
+      <div id="entradas">0</div>
     </div>
 
-    <h2>Últimos accesos</h2>
-    <ul id="logs"></ul>
-
-    <h2>Entradas por minuto</h2>
-    <canvas id="grafico" height="100"></canvas>
-
+    <div class="card">
+      <div>Salidas</div>
+      <div id="salidas">0</div>
+    </div>
   </div>
 
-  <script>
-    const client = window.supabase.createClient(
-      "https://zuhssrhdezptsgemxofh.supabase.co",
-      "TU_KEY"
-    );
+  <h2>Últimos accesos</h2>
+  <ul id="logs"></ul>
 
-    let chart;
-    let selectedEvent = null;
+  <h2>Entradas por minuto</h2>
+  <canvas id="grafico"></canvas>
 
-    // 🔥 NAVEGACIÓN
-    function irDashboard() {
-      document.getElementById("home").classList.add("hidden");
-      document.getElementById("dashboard").classList.remove("hidden");
-      cargarEventos();
+</div>
+
+<script>
+  const client = window.supabase.createClient(
+    "https://zuhssrhdezptsgemxofh.supabase.co",
+    "TU_KEY"
+  );
+
+  let selectedEvent = null;
+  let chart;
+
+  // 🔹 NAVEGACIÓN
+  function irDashboard() {
+    ocultarTodo();
+    document.getElementById("dashboard").classList.remove("hidden");
+    cargarEventos();
+  }
+
+  function irCrearEvento() {
+    ocultarTodo();
+    document.getElementById("crearEvento").classList.remove("hidden");
+  }
+
+  function volverInicio() {
+    ocultarTodo();
+    document.getElementById("home").classList.remove("hidden");
+  }
+
+  function ocultarTodo() {
+    document.getElementById("home").classList.add("hidden");
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("crearEvento").classList.add("hidden");
+  }
+
+  // 🔹 CREAR EVENTO
+  async function guardarEvento() {
+    const nombre = document.getElementById("nombreEvento").value;
+
+    if (!nombre) {
+      alert("Introduce un nombre");
+      return;
     }
 
-    function volverInicio() {
-      document.getElementById("dashboard").classList.add("hidden");
-      document.getElementById("home").classList.remove("hidden");
+    const { error } = await client
+      .from("events")
+      .insert([{ name: nombre }]);
+
+    if (error) {
+      alert("Error al guardar");
+      console.error(error);
+    } else {
+      alert("Evento creado correctamente");
+      volverInicio();
     }
+  }
 
-    // 🔥 EVENTOS
-    async function cargarEventos() {
-      const { data } = await client
-        .from("events")
-        .select("id, name");
+  // 🔹 CARGAR EVENTOS
+  async function cargarEventos() {
+    const { data } = await client
+      .from("events")
+      .select("id, name");
 
-      const selector = document.getElementById("eventSelector");
-      selector.innerHTML = "";
+    const selector = document.getElementById("eventSelector");
+    selector.innerHTML = "";
 
-      data.forEach(event => {
-        const option = document.createElement("option");
-        option.value = event.id;
-        option.textContent = event.name || event.id;
-        selector.appendChild(option);
-      });
-
-      if (data.length > 0) {
-        selectedEvent = data[0].id;
-        selector.value = selectedEvent;
-        cargarDatos();
-      }
-    }
-
-    document.getElementById("eventSelector").addEventListener("change", (e) => {
-      selectedEvent = e.target.value;
-      cargarDatos();
+    data.forEach(event => {
+      const option = document.createElement("option");
+      option.value = event.id;
+      option.textContent = event.name;
+      selector.appendChild(option);
     });
 
-    async function cargarDatos() {
-      if (!selectedEvent) return;
-
-      const { data } = await client
-        .from("logs")
-        .select("*")
-        .eq("event_id", selectedEvent);
-
-      let entradas = 0;
-      let salidas = 0;
-      const porMinuto = {};
-
-      data.forEach(log => {
-        if (log.action_type === "entry") entradas++;
-        if (log.action_type === "exit") salidas++;
-
-        const fecha = new Date(log.created_at);
-        const minuto = fecha.getHours() + ":" + String(fecha.getMinutes()).padStart(2, "0");
-
-        if (!porMinuto[minuto]) porMinuto[minuto] = 0;
-
-        if (log.action_type === "entry") {
-          porMinuto[minuto]++;
-        }
-      });
-
-      document.getElementById("entradas").textContent = entradas;
-      document.getElementById("salidas").textContent = salidas;
-      document.getElementById("aforo").textContent = entradas - salidas;
-
-      const lista = document.getElementById("logs");
-      lista.innerHTML = "";
-
-      data.slice(-20).reverse().forEach(log => {
-        const li = document.createElement("li");
-        li.textContent = log.action_type + " - " + log.created_at;
-        lista.appendChild(li);
-      });
-
-      const labels = Object.keys(porMinuto);
-      const valores = Object.values(porMinuto);
-
-      if (chart) chart.destroy();
-
-      const ctx = document.getElementById("grafico").getContext("2d");
-
-      chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Entradas por minuto",
-            data: valores
-          }]
-        }
-      });
+    if (data.length > 0) {
+      selectedEvent = data[0].id;
+      cargarDatos();
     }
+  }
 
-    setInterval(cargarDatos, 5000);
-  </script>
+  document.getElementById("eventSelector").addEventListener("change", (e) => {
+    selectedEvent = e.target.value;
+    cargarDatos();
+  });
+
+  // 🔹 CARGAR LOGS
+  async function cargarDatos() {
+    if (!selectedEvent) return;
+
+    const { data } = await client
+      .from("logs")
+      .select("*")
+      .eq("event_id", selectedEvent);
+
+    let entradas = 0;
+    let salidas = 0;
+    const porMinuto = {};
+
+    data.forEach(log => {
+      if (log.action_type === "entry") entradas++;
+      if (log.action_type === "exit") salidas++;
+
+      const fecha = new Date(log.created_at);
+      const minuto = fecha.getHours() + ":" + String(fecha.getMinutes()).padStart(2, "0");
+
+      if (!porMinuto[minuto]) porMinuto[minuto] = 0;
+
+      if (log.action_type === "entry") porMinuto[minuto]++;
+    });
+
+    document.getElementById("entradas").textContent = entradas;
+    document.getElementById("salidas").textContent = salidas;
+    document.getElementById("aforo").textContent = entradas - salidas;
+
+    const lista = document.getElementById("logs");
+    lista.innerHTML = "";
+
+    data.slice(-20).reverse().forEach(log => {
+      const li = document.createElement("li");
+      li.textContent = log.action_type + " - " + log.created_at;
+      lista.appendChild(li);
+    });
+
+    const labels = Object.keys(porMinuto);
+    const valores = Object.values(porMinuto);
+
+    if (chart) chart.destroy();
+
+    const ctx = document.getElementById("grafico").getContext("2d");
+
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Entradas por minuto",
+          data: valores
+        }]
+      }
+    });
+  }
+
+  setInterval(cargarDatos, 5000);
+</script>
 
 </body>
 </html>
