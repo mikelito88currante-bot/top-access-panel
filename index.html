@@ -14,11 +14,33 @@
       padding: 20px;
     }
 
-    select {
-      padding: 10px;
+    h1 {
       margin-bottom: 20px;
-      border-radius: 5px;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 300px;
+    }
+
+    .menu button {
+      padding: 15px;
       border: none;
+      border-radius: 10px;
+      background: #1e293b;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .menu button:hover {
+      background: #334155;
+    }
+
+    .hidden {
+      display: none;
     }
 
     .cards {
@@ -57,49 +79,92 @@
       padding: 20px;
       border-radius: 10px;
     }
+
+    .back {
+      margin-bottom: 20px;
+      padding: 10px;
+      background: #334155;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
 
-  <h1>🎟️ Top Access Dashboard</h1>
+  <!-- 🔥 PANTALLA INICIO -->
+  <div id="home">
 
-  <!-- 🔥 SELECTOR DE EVENTO -->
-  <select id="eventSelector"></select>
+    <h1>🎟️ Top Access</h1>
 
-  <div class="cards">
-    <div class="card">
-      <div class="title">Aforo actual</div>
-      <div class="value" id="aforo">0</div>
+    <div class="menu">
+      <button onclick="irDashboard()">Seleccionar evento</button>
+      <button>Crear evento</button>
+      <button>Usuarios</button>
+      <button>Configuración de zonas</button>
+      <button>Configuración de localizaciones</button>
     </div>
 
-    <div class="card">
-      <div class="title">Entradas</div>
-      <div class="value" id="entradas">0</div>
-    </div>
-
-    <div class="card">
-      <div class="title">Salidas</div>
-      <div class="value" id="salidas">0</div>
-    </div>
   </div>
 
-  <h2>Últimos accesos</h2>
-  <ul id="logs"></ul>
+  <!-- 🔥 DASHBOARD -->
+  <div id="dashboard" class="hidden">
 
-  <h2>Entradas por minuto</h2>
-  <canvas id="grafico" height="100"></canvas>
+    <button class="back" onclick="volverInicio()">⬅ Volver</button>
+
+    <h1>📊 Dashboard</h1>
+
+    <select id="eventSelector"></select>
+
+    <div class="cards">
+      <div class="card">
+        <div class="title">Aforo actual</div>
+        <div class="value" id="aforo">0</div>
+      </div>
+
+      <div class="card">
+        <div class="title">Entradas</div>
+        <div class="value" id="entradas">0</div>
+      </div>
+
+      <div class="card">
+        <div class="title">Salidas</div>
+        <div class="value" id="salidas">0</div>
+      </div>
+    </div>
+
+    <h2>Últimos accesos</h2>
+    <ul id="logs"></ul>
+
+    <h2>Entradas por minuto</h2>
+    <canvas id="grafico" height="100"></canvas>
+
+  </div>
 
   <script>
     const client = window.supabase.createClient(
       "https://zuhssrhdezptsgemxofh.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
+      "TU_KEY"
     );
 
     let chart;
     let selectedEvent = null;
 
-    // 🔥 CARGAR EVENTOS
+    // 🔥 NAVEGACIÓN
+    function irDashboard() {
+      document.getElementById("home").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      cargarEventos();
+    }
+
+    function volverInicio() {
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("home").classList.remove("hidden");
+    }
+
+    // 🔥 EVENTOS
     async function cargarEventos() {
       const { data } = await client
         .from("events")
@@ -122,7 +187,6 @@
       }
     }
 
-    // 🔥 CAMBIO DE EVENTO
     document.getElementById("eventSelector").addEventListener("change", (e) => {
       selectedEvent = e.target.value;
       cargarDatos();
@@ -131,15 +195,10 @@
     async function cargarDatos() {
       if (!selectedEvent) return;
 
-      const { data, error } = await client
+      const { data } = await client
         .from("logs")
         .select("*")
         .eq("event_id", selectedEvent);
-
-      if (error) {
-        console.error(error);
-        return;
-      }
 
       let entradas = 0;
       let salidas = 0;
@@ -191,7 +250,6 @@
       });
     }
 
-    cargarEventos();
     setInterval(cargarDatos, 5000);
   </script>
 
