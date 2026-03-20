@@ -16,14 +16,34 @@
     .screen { display: none; }
     .active { display: block; }
 
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 300px;
+    }
+
     button {
-      padding: 10px;
-      margin: 5px;
+      padding: 12px;
       border-radius: 8px;
       border: none;
       background: #1e293b;
       color: white;
       cursor: pointer;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -33,12 +53,16 @@
 <!-- HOME -->
 <div id="home" class="screen active">
   <h1>🎟️ Top Access</h1>
-  <button onclick="ir('eventos')">Seleccionar evento</button>
+
+  <div class="menu">
+    <button onclick="ir('eventos')">Seleccionar evento</button>
+  </div>
 </div>
 
 <!-- EVENTOS -->
 <div id="eventos" class="screen">
   <button onclick="ir('home')">⬅ Volver</button>
+  <h2>Eventos</h2>
   <div id="listaEventos"></div>
 </div>
 
@@ -46,16 +70,16 @@
 <div id="gestion" class="screen">
   <button onclick="ir('eventos')">⬅ Volver</button>
 
-  <h2>Gestión</h2>
+  <h2>Gestión del evento</h2>
 
-  <button onclick="ir('upload')">📂 Subir CSV</button>
+  <button onclick="ir('upload')">📂 Cargar CSV</button>
 </div>
 
 <!-- UPLOAD -->
 <div id="upload" class="screen">
   <button onclick="ir('gestion')">⬅ Volver</button>
 
-  <h2>Subir códigos</h2>
+  <h2>📂 Subir códigos (CSV)</h2>
 
   <input type="file" id="fileInput">
   <br>
@@ -67,44 +91,52 @@
 <script>
 const client = window.supabase.createClient(
   "https://zuhssrhdezptsgemxofh.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
+  "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
 );
 
 let currentEvent = null;
 
 // NAVEGACIÓN
-function ir(p) {
+function ir(pantalla) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(p).classList.add("active");
+  document.getElementById(pantalla).classList.add("active");
 
-  if (p === "eventos") cargarEventos();
+  if (pantalla === "eventos") cargarEventos();
 }
 
-// EVENTOS
+// CARGAR EVENTOS
 async function cargarEventos() {
-  const { data } = await client.from("events").select("*");
+  const { data, error } = await client.from("events").select("*");
 
   const cont = document.getElementById("listaEventos");
   cont.innerHTML = "";
 
+  if (error) {
+    cont.innerHTML = "Error cargando eventos";
+    return;
+  }
+
   data.forEach(e => {
     const div = document.createElement("div");
+    div.className = "card";
 
     div.innerHTML = `
-      <strong>${e.name}</strong>
-      <button onclick="seleccionar('${e.id}')">Entrar</button>
+      <strong>${e.name}</strong><br>
+      ${e.venue || ""}<br>
+      <button onclick="seleccionarEvento('${e.id}')">Entrar</button>
     `;
 
     cont.appendChild(div);
   });
 }
 
-function seleccionar(id) {
+// SELECCIONAR EVENTO
+function seleccionarEvento(id) {
   currentEvent = id;
   ir("gestion");
 }
 
-// 🔥 SUBIDA REAL (CORREGIDA)
+// SUBIR CSV (CORREGIDO)
 async function subir() {
 
   if (!currentEvent) {
@@ -125,7 +157,9 @@ async function subir() {
   const insertar = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const codigo = lines[i].split(",")[0]?.trim();
+
+    const cols = lines[i].split(",");
+    const codigo = cols[0]?.trim();
 
     if (!codigo) continue;
 
@@ -133,11 +167,15 @@ async function subir() {
       event_id: currentEvent,
       code_value: codigo,
       status: "valid",
-      usage_count: 0
+      usage_count: 0,
+
+      // 🔥 SOLUCIÓN ERROR zone_id
+      zone_id: "default-zone",
+      ticket_provider_id: "default"
     });
   }
 
-  console.log("DATOS A INSERTAR:", insertar);
+  console.log("INSERTAR:", insertar);
 
   const { data, error } = await client
     .from("codes")
