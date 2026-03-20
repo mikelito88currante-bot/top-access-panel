@@ -148,10 +148,9 @@ function ir(p) {
   if (p === "incidencias") cargarIncidencias();
 }
 
-// CREAR ZONA
+// ZONAS
 async function crearZona() {
   const nombre = document.getElementById("zonaNombre").value;
-
   if (!nombre) return alert("Introduce nombre");
 
   await client.from("zones").insert({ name: nombre });
@@ -160,7 +159,6 @@ async function crearZona() {
   cargarZonas();
 }
 
-// LISTAR ZONAS
 async function cargarZonas() {
   const { data } = await client.from("zones").select("*");
 
@@ -188,22 +186,17 @@ async function cargarZonasSeleccion() {
   });
 }
 
-// CREAR EVENTO + ASIGNAR ZONAS
+// CREAR EVENTO
 async function guardarEvento() {
   const name = document.getElementById("eventoNombre").value;
   const venue = document.getElementById("eventoLugar").value;
 
   if (!name) return alert("Pon nombre");
 
-  const { data, error } = await client
+  const { data } = await client
     .from("events")
     .insert({ name, venue, status: "active" })
     .select();
-
-  if (error) {
-    alert("Error creando evento");
-    return;
-  }
 
   const eventId = data[0].id;
 
@@ -225,7 +218,7 @@ async function guardarEvento() {
   ir("home");
 }
 
-// LISTAR EVENTOS
+// EVENTOS
 async function cargarEventos() {
   const { data } = await client.from("events").select("*");
 
@@ -283,9 +276,10 @@ function pintar(lista) {
   });
 }
 
-// SUBIR CSV
+// SUBIR CSV (FINAL COMPLETO)
 async function subir() {
 
+  // 🔹 zona del evento
   const { data: zonas } = await client
     .from("event_zones")
     .select("*")
@@ -298,6 +292,19 @@ async function subir() {
 
   const zona = zonas[0].zone_id;
 
+  // 🔹 ticket provider
+  const { data: tickets } = await client
+    .from("ticket_providers")
+    .select("*");
+
+  if (!tickets || tickets.length === 0) {
+    alert("No hay ticketeras creadas");
+    return;
+  }
+
+  const ticket = tickets[0].id;
+
+  // 🔹 archivo
   const file = document.getElementById("fileInput").files[0];
   if (!file) return alert("Selecciona archivo");
 
@@ -314,7 +321,9 @@ async function subir() {
       event_id: currentEvent,
       code_value: codigo,
       status: "valid",
-      zone_id: zona
+      zone_id: zona,
+      ticket_provider_id: ticket,
+      usage_count: 0
     });
   }
 
