@@ -2,34 +2,106 @@
 <html>
 <head>
   <title>Top Access PRO</title>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body { font-family: Arial; background:#0f172a; color:white; padding:20px;}
     .screen{display:none;} .active{display:block;}
-    button{padding:6px;margin:3px;border:none;border-radius:6px;background:#1e293b;color:white;}
-    table{width:100%;border-collapse:collapse;margin-top:10px;}
-    td,th{padding:6px;border-bottom:1px solid #333;}
+
+    button{
+      padding:10px;
+      margin:5px;
+      border:none;
+      border-radius:8px;
+      background:#1e293b;
+      color:white;
+      cursor:pointer;
+    }
+
+    input{
+      padding:8px;
+      margin:5px;
+      border-radius:6px;
+      border:none;
+    }
+
+    .card{
+      background:#1e293b;
+      padding:10px;
+      margin:5px 0;
+      border-radius:8px;
+    }
+
+    table{
+      width:100%;
+      margin-top:10px;
+      border-collapse:collapse;
+    }
+
+    td,th{
+      padding:6px;
+      border-bottom:1px solid #333;
+    }
   </style>
 </head>
 
 <body>
 
-<div id="menu" class="screen active">
-  <h1>⚙️ Gestión</h1>
-  <button onclick="ir('stats')">📊 Estadísticas</button>
-  <button onclick="ir('inc')">⚠️ Incidencias</button>
+<!-- HOME -->
+<div id="home" class="screen active">
+  <h1>🏠 Inicio</h1>
+
+  <button onclick="ir('crearEvento')">➕ Crear evento</button>
+  <button onclick="ir('eventos')">📅 Seleccionar evento</button>
 </div>
 
+<!-- CREAR EVENTO -->
+<div id="crearEvento" class="screen">
+  <h1>➕ Crear evento</h1>
+
+  <button onclick="ir('home')">⬅ Volver</button>
+
+  <input id="nombreEvento" placeholder="Nombre">
+  <input id="venueEvento" placeholder="Venue">
+
+  <button onclick="crearEvento()">Guardar</button>
+</div>
+
+<!-- LISTA EVENTOS -->
+<div id="eventos" class="screen">
+  <h1>📅 Eventos</h1>
+
+  <button onclick="ir('home')">⬅ Volver</button>
+
+  <div id="listaEventos"></div>
+</div>
+
+<!-- GESTION -->
+<div id="gestion" class="screen">
+  <h1>⚙️ Gestión evento</h1>
+
+  <button onclick="ir('eventos')">⬅ Cambiar evento</button>
+
+  <button onclick="ir('stats')">📊 Estadísticas</button>
+  <button onclick="ir('inc')">⚠️ Incidencias</button>
+  <button onclick="ir('upload')">📂 Subir CSV</button>
+</div>
+
+<!-- STATS -->
 <div id="stats" class="screen">
   <h1>📊 Estadísticas</h1>
-  <button onclick="ir('menu')">⬅</button>
+
+  <button onclick="ir('gestion')">⬅</button>
+
   <div id="tablaStats"></div>
 </div>
 
+<!-- INCIDENCIAS -->
 <div id="inc" class="screen">
   <h1>⚠️ Incidencias</h1>
-  <button onclick="ir('menu')">⬅</button>
+
+  <button onclick="ir('gestion')">⬅</button>
 
   <table>
     <thead>
@@ -48,24 +120,77 @@
   </table>
 </div>
 
+<!-- CSV -->
+<div id="upload" class="screen">
+  <h1>📂 Subida CSV</h1>
+
+  <button onclick="ir('gestion')">⬅</button>
+
+  <input type="file" id="fileInput">
+  <button onclick="subir()">Subir CSV</button>
+
+  <div id="resumen"></div>
+</div>
+
 <script>
 const client = window.supabase.createClient(
  "https://zuhssrhdezptsgemxofh.supabase.co",
  "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
 );
 
-let currentEvent = "d8026425-6e24-4b8a-8891-4ac81057e6f2";
+let currentEvent=null;
 
+// NAV
 function ir(p){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
  document.getElementById(p).classList.add("active");
 
+ if(p==="eventos") cargarEventos();
  if(p==="stats") cargarStats();
  if(p==="inc") cargarInc();
 }
 
+// CREAR EVENTO
+async function crearEvento(){
+
+ const nombre=document.getElementById("nombreEvento").value;
+ const venue=document.getElementById("venueEvento").value;
+
+ if(!nombre) return alert("Nombre requerido");
+
+ const {error}=await client.from("events").insert({
+   name:nombre,
+   venue:venue,
+   status:"active"
+ });
+
+ if(error){ alert(error.message); return; }
+
+ alert("Evento creado");
+ ir("eventos");
+}
+
+// LISTAR EVENTOS
+async function cargarEventos(){
+
+ const {data}=await client.from("events").select("*");
+
+ document.getElementById("listaEventos").innerHTML =
+ data.map(e=>`
+   <div class="card">
+     ${e.name}
+     <button onclick="entrar('${e.id}')">Entrar</button>
+   </div>
+ `).join("");
+}
+
+function entrar(id){
+ currentEvent=id;
+ ir("gestion");
+}
+
 //////////////////////////////////////////////////
-// 📊 ESTADÍSTICAS (CORRECTAS)
+// 📊 STATS
 //////////////////////////////////////////////////
 
 async function cargarStats(){
@@ -79,17 +204,14 @@ async function cargarStats(){
 
  data.forEach(c=>{
 
-   const key = (c.zones?.name || "Sin zona") + " - " + (c.ticket_providers?.name || "Sin ticketera");
+   const key=(c.zones?.name||"Sin zona")+" - "+(c.ticket_providers?.name||"Sin ticketera");
 
-   if(!agrupado[key]){
-     agrupado[key]={pend:0, used:0, total:0};
-   }
+   if(!agrupado[key]) agrupado[key]={pend:0,used:0,total:0};
 
    agrupado[key].total++;
 
-   if(c.usage_count === 0) agrupado[key].pend++;
-   if(c.usage_count > 0) agrupado[key].used++;
-
+   if(c.usage_count===0) agrupado[key].pend++;
+   if(c.usage_count>0) agrupado[key].used++;
  });
 
  let html="<table><tr><th>Origen</th><th>Pendientes</th><th>Usadas</th><th>Total</th></tr>";
@@ -109,7 +231,7 @@ async function cargarStats(){
 }
 
 //////////////////////////////////////////////////
-// ⚠️ INCIDENCIAS (PRO)
+// ⚠️ INCIDENCIAS
 //////////////////////////////////////////////////
 
 async function cargarInc(){
@@ -136,8 +258,8 @@ async function cargarInc(){
      <td>${c.zones?.name||""}</td>
      <td>${c.ticket_providers?.name||""}</td>
      <td>${c.usage_count}</td>
-     <td>${c.first_entry_at || "-"}</td>
-     <td>${c.first_entry_device_id || "-"}</td>
+     <td>${c.first_entry_at||"-"}</td>
+     <td>${c.first_entry_device_id||"-"}</td>
      <td>${estado}</td>
      <td>
        <button onclick="usar('${c.id}')">Usar</button>
@@ -150,7 +272,7 @@ async function cargarInc(){
 }
 
 //////////////////////////////////////////////////
-// ✏️ ACCIONES REALES
+// ACCIONES
 //////////////////////////////////////////////////
 
 async function usar(id){
@@ -186,7 +308,54 @@ async function multi(id){
    is_top_code:true
  }).eq("id",id);
 
- alert("MULTIREAD activado");
+ alert("Multiread activado");
+}
+
+//////////////////////////////////////////////////
+// CSV
+//////////////////////////////////////////////////
+
+async function subir(){
+
+ const file=document.getElementById("fileInput").files[0];
+ if(!file) return alert("Selecciona archivo");
+
+ const text=await file.text();
+ const lines=text.split("\n");
+
+ const {data:zonas}=await client.from("zones").select("*");
+ const {data:tickets}=await client.from("ticket_providers").select("*");
+
+ const insertar=[];
+
+ for(let i=1;i<lines.length;i++){
+
+   const cols=lines[i].split(";");
+
+   const codigo=cols[0]?.trim();
+   const nombreZona=cols[1]?.trim();
+   const nombreTicket=cols[2]?.trim();
+
+   const zona=zonas.find(z=>z.name.toLowerCase()===nombreZona?.toLowerCase());
+   const ticket=tickets.find(t=>t.name.toLowerCase()===nombreTicket?.toLowerCase());
+
+   if(!codigo||!zona||!ticket) continue;
+
+   insertar.push({
+     event_id:currentEvent,
+     code_value:codigo,
+     status:"valid",
+     zone_id:zona.id,
+     ticket_provider_id:ticket.id,
+     usage_count:0
+   });
+ }
+
+ const {error}=await client.from("codes").insert(insertar);
+
+ if(error){ alert(error.message); return; }
+
+ alert("CSV cargado");
 }
 </script>
 
