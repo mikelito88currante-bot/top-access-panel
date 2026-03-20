@@ -9,9 +9,25 @@
     body { font-family: Arial; background: #0f172a; color: white; padding: 20px; }
     .screen { display: none; }
     .active { display: block; }
-    button { padding: 10px; margin: 5px; border-radius: 8px; border: none; background: #1e293b; color: white; cursor: pointer; }
-    input { padding: 10px; margin: 5px; border-radius: 8px; border: none; }
-    .card { background: #1e293b; padding: 10px; margin: 5px; border-radius: 8px; }
+
+    h1 { margin-bottom: 20px; }
+
+    button {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      background: #1e293b;
+      color: white;
+      cursor: pointer;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+    }
   </style>
 </head>
 
@@ -19,23 +35,24 @@
 
 <!-- HOME -->
 <div id="home" class="screen active">
-  <h1>🎟️ Top Access</h1>
+  <h1>🏠 Inicio</h1>
 
-  <button onclick="ir('crearEvento')">Crear evento</button>
   <button onclick="ir('eventos')">Seleccionar evento</button>
-  <button onclick="ir('zonas')">Zonas</button>
-  <button onclick="ir('ticketeras')">Ticketeras</button>
 </div>
 
 <!-- EVENTOS -->
 <div id="eventos" class="screen">
-  <button onclick="ir('home')">⬅</button>
+  <h1>📅 Eventos</h1>
+  <button onclick="ir('home')">⬅ Volver</button>
+
   <div id="listaEventos"></div>
 </div>
 
 <!-- GESTION -->
 <div id="gestion" class="screen">
-  <button onclick="ir('eventos')">⬅</button>
+  <h1>⚙️ Gestión del evento</h1>
+
+  <button onclick="ir('eventos')">⬅ Volver</button>
 
   <button onclick="ir('stats')">📊 Estadísticas</button>
   <button onclick="ir('incidencias')">⚠️ Incidencias</button>
@@ -44,19 +61,24 @@
 
 <!-- STATS -->
 <div id="stats" class="screen">
-  <button onclick="ir('gestion')">⬅</button>
+  <h1>📊 Estadísticas</h1>
+  <button onclick="ir('gestion')">⬅ Volver</button>
+
   <div id="statsContent"></div>
 </div>
 
 <!-- INCIDENCIAS -->
 <div id="incidencias" class="screen">
-  <button onclick="ir('gestion')">⬅</button>
+  <h1>⚠️ Incidencias</h1>
+  <button onclick="ir('gestion')">⬅ Volver</button>
+
   <ul id="listaCodigos"></ul>
 </div>
 
 <!-- UPLOAD -->
 <div id="upload" class="screen">
-  <button onclick="ir('gestion')">⬅</button>
+  <h1>📂 Subida de CSV</h1>
+  <button onclick="ir('gestion')">⬅ Volver</button>
 
   <input type="file" id="fileInput">
   <button onclick="subir()">Subir CSV</button>
@@ -70,7 +92,7 @@ const client = window.supabase.createClient(
   "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
 );
 
-let currentEvent=null;
+let currentEvent = null;
 
 // NAV
 function ir(p){
@@ -86,99 +108,101 @@ function ir(p){
 async function cargarEventos(){
   const {data}=await client.from("events").select("*");
 
-  document.getElementById("listaEventos").innerHTML=
-    data.map(e=>`<div class="card">${e.name}<button onclick="entrar('${e.id}')">Entrar</button></div>`).join("");
+  document.getElementById("listaEventos").innerHTML =
+    data.map(e=>`<div class="card">${e.name}
+      <button onclick="entrar('${e.id}')">Entrar</button>
+    </div>`).join("");
 }
 
 function entrar(id){
-  currentEvent=id;
+  currentEvent = id;
   ir("gestion");
 }
 
 // STATS
 async function cargarStats(){
-  const {data}=await client.from("codes").select("*").eq("event_id",currentEvent);
-  document.getElementById("statsContent").innerText="Total códigos: "+(data?.length||0);
+  const {data}=await client
+    .from("codes")
+    .select("*")
+    .eq("event_id",currentEvent);
+
+  document.getElementById("statsContent").innerText =
+    "Total códigos: " + (data?.length || 0);
 }
 
 // INCIDENCIAS
 async function cargarIncidencias(){
-  const {data}=await client.from("codes").select("*").eq("event_id",currentEvent);
-
-  document.getElementById("listaCodigos").innerHTML=
-    data.map(c=>`<li>${c.code_value}</li>`).join("");
-}
-
-// 🚀 SUBIDA CSV CORREGIDA
-async function subir(){
-
-  const file=document.getElementById("fileInput").files[0];
-  if(!file) return alert("Selecciona archivo");
-
-  // 🔹 obtener zona válida
-  const {data:zonas}=await client
-    .from("event_zones")
+  const {data}=await client
+    .from("codes")
     .select("*")
     .eq("event_id",currentEvent);
 
-  if(!zonas.length){
-    alert("Evento sin zonas");
-    return;
-  }
+  document.getElementById("listaCodigos").innerHTML =
+    data.map(c=>`<li>${c.code_value}</li>`).join("");
+}
 
-  const zona=zonas[0].zone_id;
+// 🚀 CSV CORRECTO
+async function subir(){
 
-  // 🔹 obtener ticketera válida
-  const {data:tickets}=await client.from("ticket_providers").select("*");
-  if(!tickets.length){
-    alert("No hay ticketeras");
-    return;
-  }
+  const file = document.getElementById("fileInput").files[0];
+  if(!file) return alert("Selecciona archivo");
 
-  const ticket=tickets[0].id;
+  const text = await file.text();
+  const lines = text.split("\n");
 
-  const text=await file.text();
-  const lines=text.split("\n");
+  const {data:zonas} = await client.from("zones").select("*");
+  const {data:tickets} = await client.from("ticket_providers").select("*");
 
-  const insertar=[];
-  const conteo={};
+  const insertar = [];
+  const resumen = {};
 
   for(let i=1;i<lines.length;i++){
-    const codigo=lines[i].split(",")[0]?.trim();
+
+    const cols = lines[i].split(";"); // 🔥 CORREGIDO
+
+    const codigo = cols[0]?.trim();
+    const nombreZona = cols[1]?.trim();
+    const nombreTicket = cols[2]?.trim();
+
     if(!codigo) continue;
 
+    const zona = zonas.find(z => z.name.toLowerCase() === nombreZona?.toLowerCase());
+    const ticket = tickets.find(t => t.name.toLowerCase() === nombreTicket?.toLowerCase());
+
+    if(!zona || !ticket){
+      console.warn("No encontrado:", nombreZona, nombreTicket);
+      continue;
+    }
+
     insertar.push({
-      event_id:currentEvent,
-      code_value:codigo,
-      status:"valid",
-      zone_id:zona,
-      ticket_provider_id:ticket,
-      usage_count:0
+      event_id: currentEvent,
+      code_value: codigo,
+      status: "valid",
+      zone_id: zona.id,
+      ticket_provider_id: ticket.id,
+      usage_count: 0
     });
 
-    // conteo por ticketera
-    conteo[ticket]=(conteo[ticket]||0)+1;
+    resumen[nombreTicket] = (resumen[nombreTicket] || 0) + 1;
   }
 
-  console.log("INSERTAR:", insertar);
-
-  const {error}=await client.from("codes").insert(insertar);
+  const {error} = await client.from("codes").insert(insertar);
 
   if(error){
-    alert("Error: "+error.message);
+    alert(error.message);
     return;
   }
 
-  // 🔥 resumen visual
-  document.getElementById("resumen").innerHTML =
-    `<div class="card">Códigos cargados: ${insertar.length}</div>
-     <div class="card">Ticketera usada: ${ticket}</div>`;
+  // 🔥 RESUMEN VISUAL
+  let html = `<div class="card">Total: ${insertar.length}</div>`;
+
+  for(let t in resumen){
+    html += `<div class="card">${t}: ${resumen[t]} códigos</div>`;
+  }
+
+  document.getElementById("resumen").innerHTML = html;
 
   alert("CSV cargado correctamente");
-
-  // refrescar datos
-  cargarStats();
-  cargarIncidencias();
 }
 </script>
 
