@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Top Access PRO</title>
+  <title>Top Access DEBUG</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -44,16 +44,11 @@
 
 <body>
 
-<!-- HOME -->
 <div id="home" class="screen active">
   <h1>🎟️ Top Access</h1>
-
-  <button onclick="ir('crearEvento')">Crear evento</button>
-  <button onclick="ir('eventos')">Seleccionar evento</button>
   <button onclick="ir('zonas')">Crear zonas</button>
 </div>
 
-<!-- ZONAS -->
 <div id="zonas" class="screen">
   <button onclick="ir('home')">⬅ Volver</button>
 
@@ -62,69 +57,8 @@
   <input id="zonaNombre" placeholder="Nombre zona">
   <button onclick="crearZona()">Crear</button>
 
-  <div id="listaZonas"></div>
-</div>
-
-<!-- CREAR EVENTO -->
-<div id="crearEvento" class="screen">
-  <button onclick="ir('home')">⬅ Volver</button>
-
-  <h2>Crear evento</h2>
-
-  <input id="eventoNombre" placeholder="Nombre evento">
-  <input id="eventoLugar" placeholder="Lugar">
-
-  <h3>Seleccionar zonas</h3>
-  <div id="zonasSeleccion"></div>
-
-  <button onclick="guardarEvento()">Guardar evento</button>
-</div>
-
-<!-- EVENTOS -->
-<div id="eventos" class="screen">
-  <button onclick="ir('home')">⬅ Volver</button>
-  <h2>Eventos</h2>
-  <div id="listaEventos"></div>
-</div>
-
-<!-- GESTION -->
-<div id="gestion" class="screen">
-  <button onclick="ir('eventos')">⬅ Volver</button>
-
-  <h2>Gestión del evento</h2>
-
-  <button onclick="ir('stats')">📊 Estadísticas</button>
-  <button onclick="ir('incidencias')">⚠️ Incidencias</button>
-  <button onclick="ir('upload')">📂 Subir CSV</button>
-</div>
-
-<!-- STATS -->
-<div id="stats" class="screen">
-  <button onclick="ir('gestion')">⬅ Volver</button>
-  <h2>Estadísticas</h2>
-  <div id="statsContent"></div>
-</div>
-
-<!-- INCIDENCIAS -->
-<div id="incidencias" class="screen">
-  <button onclick="ir('gestion')">⬅ Volver</button>
-
-  <h2>Incidencias</h2>
-
-  <input id="buscar" placeholder="Buscar código..." oninput="filtrar()">
-  <ul id="listaCodigos"></ul>
-</div>
-
-<!-- UPLOAD -->
-<div id="upload" class="screen">
-  <button onclick="ir('gestion')">⬅ Volver</button>
-
-  <h2>Subir CSV</h2>
-
-  <input type="file" id="fileInput">
-  <button onclick="subir()">Subir archivo</button>
-
   <div id="resultado"></div>
+  <div id="listaZonas"></div>
 </div>
 
 <script>
@@ -133,208 +67,60 @@ const client = window.supabase.createClient(
   "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
 );
 
-let currentEvent = null;
-let codigos = [];
-
 // NAV
 function ir(p) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(p).classList.add("active");
 
   if (p === "zonas") cargarZonas();
-  if (p === "crearEvento") cargarZonasSeleccion();
-  if (p === "eventos") cargarEventos();
-  if (p === "stats") cargarStats();
-  if (p === "incidencias") cargarIncidencias();
 }
 
-// ZONAS
+// 🔴 CREAR ZONA CON DEBUG
 async function crearZona() {
   const nombre = document.getElementById("zonaNombre").value;
-  if (!nombre) return alert("Introduce nombre");
 
-  await client.from("zones").insert({ name: nombre });
+  if (!nombre) {
+    alert("Introduce nombre");
+    return;
+  }
 
-  document.getElementById("zonaNombre").value = "";
-  cargarZonas();
-}
-
-async function cargarZonas() {
-  const { data } = await client.from("zones").select("*");
-
-  const cont = document.getElementById("listaZonas");
-  cont.innerHTML = "";
-
-  data.forEach(z => {
-    cont.innerHTML += `<div class="card">${z.name}</div>`;
-  });
-}
-
-// ZONAS PARA EVENTO
-async function cargarZonasSeleccion() {
-  const { data } = await client.from("zones").select("*");
-
-  const cont = document.getElementById("zonasSeleccion");
-  cont.innerHTML = "";
-
-  data.forEach(z => {
-    cont.innerHTML += `
-      <label>
-        <input type="checkbox" value="${z.id}"> ${z.name}
-      </label><br>
-    `;
-  });
-}
-
-// CREAR EVENTO
-async function guardarEvento() {
-  const name = document.getElementById("eventoNombre").value;
-  const venue = document.getElementById("eventoLugar").value;
-
-  if (!name) return alert("Pon nombre");
-
-  const { data } = await client
-    .from("events")
-    .insert({ name, venue, status: "active" })
+  const { data, error } = await client
+    .from("zones")
+    .insert({ name: nombre })
     .select();
 
-  const eventId = data[0].id;
-
-  const checks = document.querySelectorAll("#zonasSeleccion input:checked");
-
-  if (checks.length === 0) {
-    alert("Selecciona al menos una zona");
-    return;
-  }
-
-  for (let c of checks) {
-    await client.from("event_zones").insert({
-      event_id: eventId,
-      zone_id: c.value
-    });
-  }
-
-  alert("Evento creado correctamente");
-  ir("home");
-}
-
-// EVENTOS
-async function cargarEventos() {
-  const { data } = await client.from("events").select("*");
-
-  const cont = document.getElementById("listaEventos");
-  cont.innerHTML = "";
-
-  data.forEach(e => {
-    cont.innerHTML += `
-      <div class="card">
-        ${e.name}
-        <button onclick="entrar('${e.id}')">Entrar</button>
-      </div>
-    `;
-  });
-}
-
-function entrar(id) {
-  currentEvent = id;
-  ir("gestion");
-}
-
-// STATS
-async function cargarStats() {
-  const { data } = await client
-    .from("codes")
-    .select("*")
-    .eq("event_id", currentEvent);
-
-  document.getElementById("statsContent").innerText =
-    "Total códigos: " + (data?.length || 0);
-}
-
-// INCIDENCIAS
-async function cargarIncidencias() {
-  const { data } = await client
-    .from("codes")
-    .select("*")
-    .eq("event_id", currentEvent);
-
-  codigos = data;
-  pintar(data);
-}
-
-function filtrar() {
-  const txt = document.getElementById("buscar").value.toLowerCase();
-  pintar(codigos.filter(c => c.code_value.toLowerCase().includes(txt)));
-}
-
-function pintar(lista) {
-  const ul = document.getElementById("listaCodigos");
-  ul.innerHTML = "";
-
-  lista.forEach(c => {
-    ul.innerHTML += `<li>${c.code_value} - ${c.status}</li>`;
-  });
-}
-
-// SUBIR CSV (FINAL COMPLETO)
-async function subir() {
-
-  // 🔹 zona del evento
-  const { data: zonas } = await client
-    .from("event_zones")
-    .select("*")
-    .eq("event_id", currentEvent);
-
-  if (!zonas || zonas.length === 0) {
-    alert("Este evento no tiene zonas asignadas");
-    return;
-  }
-
-  const zona = zonas[0].zone_id;
-
-  // 🔹 ticket provider
-  const { data: tickets } = await client
-    .from("ticket_providers")
-    .select("*");
-
-  if (!tickets || tickets.length === 0) {
-    alert("No hay ticketeras creadas");
-    return;
-  }
-
-  const ticket = tickets[0].id;
-
-  // 🔹 archivo
-  const file = document.getElementById("fileInput").files[0];
-  if (!file) return alert("Selecciona archivo");
-
-  const text = await file.text();
-  const lines = text.split("\n");
-
-  const insertar = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const codigo = lines[i].split(",")[0]?.trim();
-    if (!codigo) continue;
-
-    insertar.push({
-      event_id: currentEvent,
-      code_value: codigo,
-      status: "valid",
-      zone_id: zona,
-      ticket_provider_id: ticket,
-      usage_count: 0
-    });
-  }
-
-  const { error } = await client.from("codes").insert(insertar);
+  console.log("RESPUESTA:", data, error);
 
   if (error) {
+    document.getElementById("resultado").innerText =
+      "ERROR: " + error.message;
     alert("Error: " + error.message);
     return;
   }
 
-  alert("Códigos subidos correctamente");
+  document.getElementById("resultado").innerText =
+    "Zona creada correctamente";
+
+  document.getElementById("zonaNombre").value = "";
+
+  cargarZonas();
+}
+
+// LISTAR ZONAS
+async function cargarZonas() {
+  const { data, error } = await client.from("zones").select("*");
+
+  const cont = document.getElementById("listaZonas");
+  cont.innerHTML = "";
+
+  if (error) {
+    cont.innerHTML = "Error cargando zonas";
+    return;
+  }
+
+  data.forEach(z => {
+    cont.innerHTML += `<div class="card">${z.name}</div>`;
+  });
 }
 </script>
 
