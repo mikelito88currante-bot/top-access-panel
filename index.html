@@ -53,7 +53,7 @@
   <button onclick="ir('zonas')">Crear zonas</button>
 </div>
 
-<!-- CREAR ZONAS -->
+<!-- ZONAS -->
 <div id="zonas" class="screen">
   <button onclick="ir('home')">⬅ Volver</button>
 
@@ -83,12 +83,15 @@
 <!-- EVENTOS -->
 <div id="eventos" class="screen">
   <button onclick="ir('home')">⬅ Volver</button>
+  <h2>Eventos</h2>
   <div id="listaEventos"></div>
 </div>
 
 <!-- GESTION -->
 <div id="gestion" class="screen">
   <button onclick="ir('eventos')">⬅ Volver</button>
+
+  <h2>Gestión del evento</h2>
 
   <button onclick="ir('stats')">📊 Estadísticas</button>
   <button onclick="ir('incidencias')">⚠️ Incidencias</button>
@@ -98,21 +101,30 @@
 <!-- STATS -->
 <div id="stats" class="screen">
   <button onclick="ir('gestion')">⬅ Volver</button>
+  <h2>Estadísticas</h2>
   <div id="statsContent"></div>
 </div>
 
 <!-- INCIDENCIAS -->
 <div id="incidencias" class="screen">
   <button onclick="ir('gestion')">⬅ Volver</button>
-  <input id="buscar" oninput="filtrar()" placeholder="Buscar código">
+
+  <h2>Incidencias</h2>
+
+  <input id="buscar" placeholder="Buscar código..." oninput="filtrar()">
   <ul id="listaCodigos"></ul>
 </div>
 
 <!-- UPLOAD -->
 <div id="upload" class="screen">
   <button onclick="ir('gestion')">⬅ Volver</button>
+
+  <h2>Subir CSV</h2>
+
   <input type="file" id="fileInput">
-  <button onclick="subir()">Subir</button>
+  <button onclick="subir()">Subir archivo</button>
+
+  <div id="resultado"></div>
 </div>
 
 <script>
@@ -136,15 +148,19 @@ function ir(p) {
   if (p === "incidencias") cargarIncidencias();
 }
 
-// ZONAS
+// CREAR ZONA
 async function crearZona() {
   const nombre = document.getElementById("zonaNombre").value;
 
+  if (!nombre) return alert("Introduce nombre");
+
   await client.from("zones").insert({ name: nombre });
 
+  document.getElementById("zonaNombre").value = "";
   cargarZonas();
 }
 
+// LISTAR ZONAS
 async function cargarZonas() {
   const { data } = await client.from("zones").select("*");
 
@@ -172,19 +188,31 @@ async function cargarZonasSeleccion() {
   });
 }
 
-// CREAR EVENTO
+// CREAR EVENTO + ASIGNAR ZONAS
 async function guardarEvento() {
   const name = document.getElementById("eventoNombre").value;
   const venue = document.getElementById("eventoLugar").value;
 
-  const { data } = await client
+  if (!name) return alert("Pon nombre");
+
+  const { data, error } = await client
     .from("events")
     .insert({ name, venue, status: "active" })
     .select();
 
+  if (error) {
+    alert("Error creando evento");
+    return;
+  }
+
   const eventId = data[0].id;
 
   const checks = document.querySelectorAll("#zonasSeleccion input:checked");
+
+  if (checks.length === 0) {
+    alert("Selecciona al menos una zona");
+    return;
+  }
 
   for (let c of checks) {
     await client.from("event_zones").insert({
@@ -197,7 +225,7 @@ async function guardarEvento() {
   ir("home");
 }
 
-// EVENTOS
+// LISTAR EVENTOS
 async function cargarEventos() {
   const { data } = await client.from("events").select("*");
 
@@ -255,7 +283,7 @@ function pintar(lista) {
   });
 }
 
-// UPLOAD
+// SUBIR CSV
 async function subir() {
 
   const { data: zonas } = await client
@@ -263,7 +291,7 @@ async function subir() {
     .select("*")
     .eq("event_id", currentEvent);
 
-  if (!zonas.length) {
+  if (!zonas || zonas.length === 0) {
     alert("Este evento no tiene zonas asignadas");
     return;
   }
@@ -271,6 +299,8 @@ async function subir() {
   const zona = zonas[0].zone_id;
 
   const file = document.getElementById("fileInput").files[0];
+  if (!file) return alert("Selecciona archivo");
+
   const text = await file.text();
   const lines = text.split("\n");
 
@@ -288,9 +318,14 @@ async function subir() {
     });
   }
 
-  await client.from("codes").insert(insertar);
+  const { error } = await client.from("codes").insert(insertar);
 
-  alert("Códigos subidos");
+  if (error) {
+    alert("Error: " + error.message);
+    return;
+  }
+
+  alert("Códigos subidos correctamente");
 }
 </script>
 
