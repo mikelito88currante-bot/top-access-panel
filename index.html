@@ -16,15 +16,9 @@
     .screen { display: none; }
     .active { display: block; }
 
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 300px;
-    }
-
     button {
       padding: 12px;
+      margin: 5px;
       border-radius: 8px;
       border: none;
       background: #1e293b;
@@ -38,52 +32,34 @@
       border-radius: 10px;
       margin-bottom: 10px;
     }
-
-    input {
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin-bottom: 10px;
-    }
   </style>
 </head>
 
 <body>
 
-<!-- HOME -->
 <div id="home" class="screen active">
   <h1>🎟️ Top Access</h1>
-
-  <div class="menu">
-    <button onclick="ir('eventos')">Seleccionar evento</button>
-  </div>
+  <button onclick="ir('eventos')">Seleccionar evento</button>
 </div>
 
-<!-- EVENTOS -->
 <div id="eventos" class="screen">
   <button onclick="ir('home')">⬅ Volver</button>
-  <h2>Eventos</h2>
   <div id="listaEventos"></div>
 </div>
 
-<!-- GESTION -->
 <div id="gestion" class="screen">
   <button onclick="ir('eventos')">⬅ Volver</button>
-
-  <h2>Gestión del evento</h2>
-
+  <h2>Gestión</h2>
   <button onclick="ir('upload')">📂 Cargar CSV</button>
 </div>
 
-<!-- UPLOAD -->
 <div id="upload" class="screen">
   <button onclick="ir('gestion')">⬅ Volver</button>
 
-  <h2>📂 Subir códigos (CSV)</h2>
+  <h2>Subir CSV</h2>
 
   <input type="file" id="fileInput">
-  <br>
-  <button onclick="subir()">Subir archivo</button>
+  <button onclick="subir()">Subir</button>
 
   <div id="resultado"></div>
 </div>
@@ -96,25 +72,20 @@ const client = window.supabase.createClient(
 
 let currentEvent = null;
 
-// NAVEGACIÓN
-function ir(pantalla) {
+// NAV
+function ir(p) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(pantalla).classList.add("active");
+  document.getElementById(p).classList.add("active");
 
-  if (pantalla === "eventos") cargarEventos();
+  if (p === "eventos") cargarEventos();
 }
 
-// CARGAR EVENTOS
+// EVENTOS
 async function cargarEventos() {
-  const { data, error } = await client.from("events").select("*");
+  const { data } = await client.from("events").select("*");
 
   const cont = document.getElementById("listaEventos");
   cont.innerHTML = "";
-
-  if (error) {
-    cont.innerHTML = "Error cargando eventos";
-    return;
-  }
 
   data.forEach(e => {
     const div = document.createElement("div");
@@ -122,32 +93,44 @@ async function cargarEventos() {
 
     div.innerHTML = `
       <strong>${e.name}</strong><br>
-      ${e.venue || ""}<br>
-      <button onclick="seleccionarEvento('${e.id}')">Entrar</button>
+      <button onclick="seleccionar('${e.id}')">Entrar</button>
     `;
 
     cont.appendChild(div);
   });
 }
 
-// SELECCIONAR EVENTO
-function seleccionarEvento(id) {
+function seleccionar(id) {
   currentEvent = id;
   ir("gestion");
 }
 
-// SUBIR CSV (CORREGIDO)
+// 🔥 SUBIDA INTELIGENTE
 async function subir() {
 
   if (!currentEvent) {
-    alert("Selecciona un evento primero");
+    alert("Selecciona evento primero");
     return;
   }
 
+  // 🔥 1. BUSCAR ZONA DEL EVENTO
+  const { data: zonas } = await client
+    .from("zones")
+    .select("*")
+    .eq("event_id", currentEvent);
+
+  if (!zonas || zonas.length === 0) {
+    alert("Este evento no tiene zonas creadas");
+    return;
+  }
+
+  const zona = zonas[0].id; // usa la primera zona
+
+  // 🔥 2. LEER CSV
   const file = document.getElementById("fileInput").files[0];
 
   if (!file) {
-    alert("Selecciona un archivo");
+    alert("Selecciona archivo");
     return;
   }
 
@@ -158,9 +141,7 @@ async function subir() {
 
   for (let i = 1; i < lines.length; i++) {
 
-    const cols = lines[i].split(",");
-    const codigo = cols[0]?.trim();
-
+    const codigo = lines[i].split(",")[0]?.trim();
     if (!codigo) continue;
 
     insertar.push({
@@ -168,28 +149,22 @@ async function subir() {
       code_value: codigo,
       status: "valid",
       usage_count: 0,
-
-      // 🔥 SOLUCIÓN ERROR zone_id
-      zone_id: "default-zone",
-      ticket_provider_id: "default"
+      zone_id: zona // 🔥 zona correcta del evento
     });
   }
-
-  console.log("INSERTAR:", insertar);
 
   const { data, error } = await client
     .from("codes")
     .insert(insertar)
     .select();
 
-  console.log("RESPUESTA:", data, error);
-
   if (error) {
     alert("ERROR: " + error.message);
+    console.error(error);
     return;
   }
 
-  alert("Códigos insertados: " + data.length);
+  alert("Insertados: " + data.length);
 
   document.getElementById("resultado").innerText =
     "Insertados correctamente: " + data.length;
