@@ -10,8 +10,7 @@
     .screen { display: none; }
     .active { display: block; }
     button { padding: 10px; margin: 5px; border-radius: 8px; border: none; background: #1e293b; color: white; cursor: pointer; }
-    input, select { padding: 10px; margin: 5px; border-radius: 8px; border: none; }
-    .card { background: #1e293b; padding: 10px; margin: 5px; border-radius: 8px; }
+    input { padding: 10px; margin: 5px; border-radius: 8px; border: none; }
   </style>
 </head>
 
@@ -21,27 +20,8 @@
   <h1>🎟️ Top Access</h1>
   <button onclick="ir('crearEvento')">Crear evento</button>
   <button onclick="ir('eventos')">Seleccionar evento</button>
-  <button onclick="ir('zonas')">Zonas</button>
-  <button onclick="ir('ticketeras')">Ticketeras</button>
 </div>
 
-<!-- ZONAS -->
-<div id="zonas" class="screen">
-  <button onclick="ir('home')">⬅</button>
-  <input id="zonaNombre" placeholder="Zona">
-  <button onclick="crearZona()">Crear</button>
-  <div id="listaZonas"></div>
-</div>
-
-<!-- TICKETERAS -->
-<div id="ticketeras" class="screen">
-  <button onclick="ir('home')">⬅</button>
-  <input id="ticketNombre" placeholder="Ticketera">
-  <button onclick="crearTicketera()">Crear</button>
-  <div id="listaTicket"></div>
-</div>
-
-<!-- CREAR EVENTO -->
 <div id="crearEvento" class="screen">
   <button onclick="ir('home')">⬅</button>
 
@@ -57,30 +37,21 @@
   <button onclick="guardarEvento()">Guardar</button>
 </div>
 
-<!-- EVENTOS -->
 <div id="eventos" class="screen">
   <button onclick="ir('home')">⬅</button>
   <div id="listaEventos"></div>
 </div>
 
-<!-- GESTION -->
 <div id="gestion" class="screen">
   <button onclick="ir('eventos')">⬅</button>
   <button onclick="ir('upload')">Subir CSV</button>
 </div>
 
-<!-- UPLOAD -->
 <div id="upload" class="screen">
   <button onclick="ir('gestion')">⬅</button>
 
-  <h3>Zona</h3>
-  <select id="selectZona"></select>
-
-  <h3>Ticketera</h3>
-  <select id="selectTicket"></select>
-
   <input type="file" id="fileInput">
-  <button onclick="subir()">Subir</button>
+  <button onclick="subir()">Subir CSV inteligente</button>
 </div>
 
 <script>
@@ -96,98 +67,62 @@ function ir(p){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   document.getElementById(p).classList.add("active");
 
-  if(p==="zonas") cargarZonas();
-  if(p==="ticketeras") cargarTicketeras();
-  if(p==="crearEvento"){ cargarZonasSel(); cargarTicketSel(); }
+  if(p==="crearEvento"){ cargarZonas(); cargarTickets(); }
   if(p==="eventos") cargarEventos();
-  if(p==="upload") cargarSelects();
 }
 
-// ZONAS
-async function crearZona(){
-  const n=document.getElementById("zonaNombre").value;
-  const {error}=await client.from("zones").insert({name:n});
-  if(error) return alert(error.message);
-  cargarZonas();
-}
-
+// CARGAR ZONAS
 async function cargarZonas(){
   const {data}=await client.from("zones").select("*");
-  document.getElementById("listaZonas").innerHTML =
-    data.map(z=>`<div class="card">${z.name}</div>`).join("");
-}
 
-// TICKETERAS
-async function crearTicketera(){
-  const n=document.getElementById("ticketNombre").value;
-  const {error}=await client.from("ticket_providers").insert({name:n});
-  if(error) return alert(error.message);
-  cargarTicketeras();
-}
-
-async function cargarTicketeras(){
-  const {data}=await client.from("ticket_providers").select("*");
-  document.getElementById("listaTicket").innerHTML =
-    data.map(t=>`<div class="card">${t.name}</div>`).join("");
-}
-
-// SELECTORES
-async function cargarZonasSel(){
-  const {data}=await client.from("zones").select("*");
   document.getElementById("zonasSeleccion").innerHTML =
     data.map(z=>`<input type="checkbox" value="${z.id}">${z.name}<br>`).join("");
 }
 
-async function cargarTicketSel(){
+// CARGAR TICKETERAS
+async function cargarTickets(){
   const {data}=await client.from("ticket_providers").select("*");
+
   document.getElementById("ticketSeleccion").innerHTML =
     data.map(t=>`<input type="checkbox" value="${t.id}">${t.name}<br>`).join("");
 }
 
-// CREAR EVENTO (CORREGIDO)
+// CREAR EVENTO
 async function guardarEvento(){
 
   const name=document.getElementById("eventoNombre").value;
   const venue=document.getElementById("eventoLugar").value;
 
-  const {data,error}=await client.from("events")
+  const {data}=await client.from("events")
     .insert({name,venue,status:"active"})
     .select();
 
-  if(error) return alert(error.message);
-
   const eventId=data[0].id;
 
-  const zonas = [...document.querySelectorAll("#zonasSeleccion input:checked")];
-  const tickets = [...document.querySelectorAll("#ticketSeleccion input:checked")];
-
-  if(!zonas.length || !tickets.length){
-    alert("Selecciona zonas y ticketeras");
-    return;
+  for(const z of document.querySelectorAll("#zonasSeleccion input:checked")){
+    await client.from("event_zones").insert({
+      event_id:eventId,
+      zone_id:z.value
+    });
   }
 
-  // 🔥 IMPORTANTE: usar await en bucle
-  for(const z of zonas){
-    const {error}=await client.from("event_zones")
-      .insert({event_id:eventId,zone_id:z.value});
-    if(error) return alert(error.message);
+  for(const t of document.querySelectorAll("#ticketSeleccion input:checked")){
+    await client.from("event_ticket_providers").insert({
+      event_id:eventId,
+      ticket_provider_id:t.value
+    });
   }
 
-  for(const t of tickets){
-    const {error}=await client.from("event_ticket_providers")
-      .insert({event_id:eventId,ticket_provider_id:t.value});
-    if(error) return alert(error.message);
-  }
-
-  alert("Evento creado correctamente");
+  alert("Evento creado");
   ir("home");
 }
 
 // EVENTOS
 async function cargarEventos(){
   const {data}=await client.from("events").select("*");
+
   document.getElementById("listaEventos").innerHTML =
-    data.map(e=>`<div class="card">${e.name}<button onclick="entrar('${e.id}')">Entrar</button></div>`).join("");
+    data.map(e=>`<div>${e.name} <button onclick="entrar('${e.id}')">Entrar</button></div>`).join("");
 }
 
 function entrar(id){
@@ -195,62 +130,56 @@ function entrar(id){
   ir("gestion");
 }
 
-// SELECTS (CORREGIDO)
-async function cargarSelects(){
-
-  const {data:zonas}=await client
-    .from("event_zones")
-    .select("zone_id, zones(name)")
-    .eq("event_id",currentEvent);
-
-  const selectZ=document.getElementById("selectZona");
-  selectZ.innerHTML="";
-  zonas.forEach(z=>{
-    selectZ.innerHTML+=`<option value="${z.zone_id}">${z.zones.name}</option>`;
-  });
-
-  const {data:tickets}=await client
-    .from("event_ticket_providers")
-    .select("ticket_provider_id, ticket_providers(name)")
-    .eq("event_id",currentEvent);
-
-  const selectT=document.getElementById("selectTicket");
-  selectT.innerHTML="";
-  tickets.forEach(t=>{
-    selectT.innerHTML+=`<option value="${t.ticket_provider_id}">${t.ticket_providers.name}</option>`;
-  });
-}
-
-// SUBIR CSV
+// 🚀 SUBIDA CSV INTELIGENTE (CLAVE)
 async function subir(){
 
-  const zona=document.getElementById("selectZona").value;
-  const ticket=document.getElementById("selectTicket").value;
-
   const file=document.getElementById("fileInput").files[0];
+  if(!file) return alert("Selecciona archivo");
+
   const text=await file.text();
   const lines=text.split("\n");
+
+  const {data:zonas}=await client.from("zones").select("*");
+  const {data:tickets}=await client.from("ticket_providers").select("*");
 
   const insertar=[];
 
   for(let i=1;i<lines.length;i++){
-    const codigo=lines[i].split(",")[0]?.trim();
+
+    const cols=lines[i].split(",");
+
+    const codigo=cols[0]?.trim();
+    const nombreZona=cols[1]?.trim();
+    const nombreTicket=cols[2]?.trim();
+
     if(!codigo) continue;
+
+    const zona=zonas.find(z=>z.name.toLowerCase()===nombreZona?.toLowerCase());
+    const ticket=tickets.find(t=>t.name.toLowerCase()===nombreTicket?.toLowerCase());
+
+    if(!zona || !ticket){
+      console.warn("Zona o ticket no encontrada:", nombreZona, nombreTicket);
+      continue;
+    }
 
     insertar.push({
       event_id:currentEvent,
       code_value:codigo,
       status:"valid",
-      zone_id:zona,
-      ticket_provider_id:ticket,
+      zone_id:zona.id,
+      ticket_provider_id:ticket.id,
       usage_count:0
     });
   }
 
   const {error}=await client.from("codes").insert(insertar);
-  if(error) return alert(error.message);
 
-  alert("Cargado correctamente");
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  alert("CSV cargado correctamente");
 }
 </script>
 
