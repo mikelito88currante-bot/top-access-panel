@@ -16,15 +16,9 @@
     .screen { display: none; }
     .active { display: block; }
 
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 300px;
-    }
-
     button {
-      padding: 12px;
+      padding: 10px;
+      margin: 5px;
       border-radius: 8px;
       border: none;
       background: #1e293b;
@@ -39,9 +33,22 @@
       margin-bottom: 10px;
     }
 
-    .back {
-      margin-bottom: 20px;
-      background: #334155;
+    table {
+      width: 100%;
+      background: #1e293b;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    td, th {
+      padding: 10px;
+      text-align: center;
+    }
+
+    .clickable {
+      cursor: pointer;
+      color: #38bdf8;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -51,17 +58,49 @@
 <!-- HOME -->
 <div id="home" class="screen active">
   <h1>🎟️ Top Access</h1>
-
-  <div class="menu">
-    <button onclick="mostrar('listaEventos')">Seleccionar evento</button>
-  </div>
+  <button onclick="mostrar('listaEventos')">Seleccionar evento</button>
 </div>
 
 <!-- EVENTOS -->
 <div id="listaEventos" class="screen">
-  <button class="back" onclick="mostrar('home')">⬅ Volver</button>
-  <h2>Eventos</h2>
-  <div id="contenedorEventos">Cargando...</div>
+  <button onclick="mostrar('home')">⬅ Volver</button>
+  <div id="contenedorEventos"></div>
+</div>
+
+<!-- GESTION -->
+<div id="gestion" class="screen">
+  <button onclick="mostrar('listaEventos')">⬅ Volver</button>
+  <h2>Gestión del evento</h2>
+  <button onclick="mostrar('estadisticas')">📊 Estadísticas</button>
+</div>
+
+<!-- ESTADISTICAS -->
+<div id="estadisticas" class="screen">
+  <button onclick="mostrar('gestion')">⬅ Volver</button>
+
+  <h2>📊 Estadísticas</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Zona</th>
+        <th>Ticketera</th>
+        <th>Pendientes</th>
+        <th>Usadas</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="tablaStats"></tbody>
+  </table>
+</div>
+
+<!-- CODIGOS -->
+<div id="codigos" class="screen">
+  <button onclick="mostrar('estadisticas')">⬅ Volver</button>
+
+  <h2>Listado de códigos</h2>
+
+  <ul id="listaCodigos"></ul>
 </div>
 
 <script>
@@ -70,31 +109,24 @@ const client = window.supabase.createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
 );
 
+let currentEvent = null;
+let filtroActual = {};
+
+// NAV
 function mostrar(id) {
   document.querySelectorAll(".screen").forEach(d => d.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 
   if (id === "listaEventos") cargarEventos();
+  if (id === "estadisticas") cargarStats();
+  if (id === "codigos") cargarCodigos();
 }
 
+// EVENTOS
 async function cargarEventos() {
+  const { data } = await client.from("events").select("*");
+
   const cont = document.getElementById("contenedorEventos");
-  cont.innerHTML = "Cargando...";
-
-  const { data, error } = await client.from("events").select("*");
-
-  console.log("EVENTOS:", data, error);
-
-  if (error) {
-    cont.innerHTML = "Error: " + error.message;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    cont.innerHTML = "No hay eventos";
-    return;
-  }
-
   cont.innerHTML = "";
 
   data.forEach(e => {
@@ -104,11 +136,102 @@ async function cargarEventos() {
     div.innerHTML = `
       <strong>${e.name}</strong><br>
       ${e.venue || ""}<br>
-      ${e.event_date || ""}<br><br>
-      <button>Entrar</button>
+      <button onclick="seleccionarEvento('${e.id}')">Entrar</button>
     `;
 
     cont.appendChild(div);
+  });
+}
+
+function seleccionarEvento(id) {
+  currentEvent = id;
+  mostrar("gestion");
+}
+
+// STATS
+async function cargarStats() {
+
+  const { data } = await client
+    .from("codes")
+    .select("*")
+    .eq("event_id", currentEvent);
+
+  const resumen = {};
+
+  data.forEach(c => {
+    const zona = c.zone_id || "Sin zona";
+    const ticket = c.ticket_provider_id || "Sin ticketera";
+
+    const key = zona + "_" + ticket;
+
+    if (!resumen[key]) {
+      resumen[key] = { zona, ticket, usadas: 0, pendientes: 0 };
+    }
+
+    if (c.status === "used") resumen[key].usadas++;
+    else resumen[key].pendientes++;
+  });
+
+  const tbody = document.getElementById("tablaStats");
+  tbody.innerHTML = "";
+
+  Object.values(resumen).forEach(r => {
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${r.zona}</td>
+      <td>${r.ticket}</td>
+
+      <td class="clickable" onclick="verCodigos('${r.zona}','${r.ticket}','pendientes')">
+        ${r.pendientes}
+      </td>
+
+      <td class="clickable" onclick="verCodigos('${r.zona}','${r.ticket}','usadas')">
+        ${r.usadas}
+      </td>
+
+      <td>${r.usadas + r.pendientes}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+// FILTRO
+function verCodigos(zona, ticket, tipo) {
+  filtroActual = { zona, ticket, tipo };
+  mostrar("codigos");
+}
+
+// LISTADO CODIGOS
+async function cargarCodigos() {
+
+  const { data } = await client
+    .from("codes")
+    .select("*")
+    .eq("event_id", currentEvent);
+
+  const lista = document.getElementById("listaCodigos");
+  lista.innerHTML = "";
+
+  const filtrados = data.filter(c => {
+
+    const zonaOk = (c.zone_id || "Sin zona") == filtroActual.zona;
+    const ticketOk = (c.ticket_provider_id || "Sin ticketera") == filtroActual.ticket;
+
+    const estadoOk =
+      filtroActual.tipo === "usadas"
+        ? c.status === "used"
+        : c.status !== "used";
+
+    return zonaOk && ticketOk && estadoOk;
+  });
+
+  filtrados.forEach(c => {
+    const li = document.createElement("li");
+    li.textContent = c.code_value + " - " + c.status;
+    lista.appendChild(li);
   });
 }
 </script>
