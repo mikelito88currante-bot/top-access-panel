@@ -9,10 +9,8 @@
     body { font-family: Arial; background: #0f172a; color: white; padding: 20px; }
     .screen { display: none; }
     .active { display: block; }
-
     button { padding: 10px; margin: 5px; border-radius: 8px; border: none; background: #1e293b; color: white; cursor: pointer; }
-    input { padding: 10px; margin: 5px; border-radius: 8px; border: none; }
-
+    input, select { padding: 10px; margin: 5px; border-radius: 8px; border: none; }
     .card { background: #1e293b; padding: 10px; margin: 5px; border-radius: 8px; }
   </style>
 </head>
@@ -21,39 +19,33 @@
 
 <div id="home" class="screen active">
   <h1>🎟️ Top Access</h1>
-
   <button onclick="ir('crearEvento')">Crear evento</button>
   <button onclick="ir('eventos')">Seleccionar evento</button>
   <button onclick="ir('zonas')">Zonas</button>
   <button onclick="ir('ticketeras')">Ticketeras</button>
 </div>
 
-<!-- TICKETERAS -->
-<div id="ticketeras" class="screen">
-  <button onclick="ir('home')">⬅ Volver</button>
-
-  <h2>Crear ticketera</h2>
-  <input id="ticketNombre" placeholder="Nombre ticketera">
-  <button onclick="crearTicketera()">Crear</button>
-
-  <div id="listaTicket"></div>
-</div>
-
 <!-- ZONAS -->
 <div id="zonas" class="screen">
-  <button onclick="ir('home')">⬅ Volver</button>
-
-  <input id="zonaNombre" placeholder="Nombre zona">
+  <button onclick="ir('home')">⬅</button>
+  <input id="zonaNombre" placeholder="Zona">
   <button onclick="crearZona()">Crear</button>
-
   <div id="listaZonas"></div>
+</div>
+
+<!-- TICKETERAS -->
+<div id="ticketeras" class="screen">
+  <button onclick="ir('home')">⬅</button>
+  <input id="ticketNombre" placeholder="Ticketera">
+  <button onclick="crearTicketera()">Crear</button>
+  <div id="listaTicket"></div>
 </div>
 
 <!-- CREAR EVENTO -->
 <div id="crearEvento" class="screen">
-  <button onclick="ir('home')">⬅ Volver</button>
+  <button onclick="ir('home')">⬅</button>
 
-  <input id="eventoNombre" placeholder="Nombre evento">
+  <input id="eventoNombre" placeholder="Nombre">
   <input id="eventoLugar" placeholder="Lugar">
 
   <h3>Zonas</h3>
@@ -67,20 +59,19 @@
 
 <!-- EVENTOS -->
 <div id="eventos" class="screen">
-  <button onclick="ir('home')">⬅ Volver</button>
+  <button onclick="ir('home')">⬅</button>
   <div id="listaEventos"></div>
 </div>
 
 <!-- GESTION -->
 <div id="gestion" class="screen">
-  <button onclick="ir('eventos')">⬅ Volver</button>
-
+  <button onclick="ir('eventos')">⬅</button>
   <button onclick="ir('upload')">Subir CSV</button>
 </div>
 
 <!-- UPLOAD -->
 <div id="upload" class="screen">
-  <button onclick="ir('gestion')">⬅ Volver</button>
+  <button onclick="ir('gestion')">⬅</button>
 
   <h3>Zona</h3>
   <select id="selectZona"></select>
@@ -115,83 +106,118 @@ function ir(p){
 // ZONAS
 async function crearZona(){
   const n=document.getElementById("zonaNombre").value;
-  await client.from("zones").insert({name:n});
+  const {error}=await client.from("zones").insert({name:n});
+  if(error) return alert(error.message);
   cargarZonas();
 }
+
 async function cargarZonas(){
   const {data}=await client.from("zones").select("*");
-  document.getElementById("listaZonas").innerHTML=data.map(z=>`<div class="card">${z.name}</div>`).join("");
+  document.getElementById("listaZonas").innerHTML =
+    data.map(z=>`<div class="card">${z.name}</div>`).join("");
 }
 
 // TICKETERAS
 async function crearTicketera(){
   const n=document.getElementById("ticketNombre").value;
-  await client.from("ticket_providers").insert({name:n});
+  const {error}=await client.from("ticket_providers").insert({name:n});
+  if(error) return alert(error.message);
   cargarTicketeras();
 }
+
 async function cargarTicketeras(){
   const {data}=await client.from("ticket_providers").select("*");
-  document.getElementById("listaTicket").innerHTML=data.map(t=>`<div class="card">${t.name}</div>`).join("");
+  document.getElementById("listaTicket").innerHTML =
+    data.map(t=>`<div class="card">${t.name}</div>`).join("");
 }
 
 // SELECTORES
 async function cargarZonasSel(){
   const {data}=await client.from("zones").select("*");
-  document.getElementById("zonasSeleccion").innerHTML=data.map(z=>`<input type="checkbox" value="${z.id}">${z.name}<br>`).join("");
-}
-async function cargarTicketSel(){
-  const {data}=await client.from("ticket_providers").select("*");
-  document.getElementById("ticketSeleccion").innerHTML=data.map(t=>`<input type="checkbox" value="${t.id}">${t.name}<br>`).join("");
+  document.getElementById("zonasSeleccion").innerHTML =
+    data.map(z=>`<input type="checkbox" value="${z.id}">${z.name}<br>`).join("");
 }
 
-// CREAR EVENTO
+async function cargarTicketSel(){
+  const {data}=await client.from("ticket_providers").select("*");
+  document.getElementById("ticketSeleccion").innerHTML =
+    data.map(t=>`<input type="checkbox" value="${t.id}">${t.name}<br>`).join("");
+}
+
+// CREAR EVENTO (CORREGIDO)
 async function guardarEvento(){
+
   const name=document.getElementById("eventoNombre").value;
   const venue=document.getElementById("eventoLugar").value;
 
-  const {data}=await client.from("events").insert({name,venue,status:"active"}).select();
+  const {data,error}=await client.from("events")
+    .insert({name,venue,status:"active"})
+    .select();
+
+  if(error) return alert(error.message);
+
   const eventId=data[0].id;
 
-  document.querySelectorAll("#zonasSeleccion input:checked").forEach(async c=>{
-    await client.from("event_zones").insert({event_id:eventId,zone_id:c.value});
-  });
+  const zonas = [...document.querySelectorAll("#zonasSeleccion input:checked")];
+  const tickets = [...document.querySelectorAll("#ticketSeleccion input:checked")];
 
-  document.querySelectorAll("#ticketSeleccion input:checked").forEach(async c=>{
-    await client.from("event_ticket_providers").insert({event_id:eventId,ticket_provider_id:c.value});
-  });
+  if(!zonas.length || !tickets.length){
+    alert("Selecciona zonas y ticketeras");
+    return;
+  }
 
-  alert("Evento creado");
+  // 🔥 IMPORTANTE: usar await en bucle
+  for(const z of zonas){
+    const {error}=await client.from("event_zones")
+      .insert({event_id:eventId,zone_id:z.value});
+    if(error) return alert(error.message);
+  }
+
+  for(const t of tickets){
+    const {error}=await client.from("event_ticket_providers")
+      .insert({event_id:eventId,ticket_provider_id:t.value});
+    if(error) return alert(error.message);
+  }
+
+  alert("Evento creado correctamente");
   ir("home");
 }
 
 // EVENTOS
 async function cargarEventos(){
   const {data}=await client.from("events").select("*");
-  document.getElementById("listaEventos").innerHTML=data.map(e=>`<div class="card">${e.name}<button onclick="entrar('${e.id}')">Entrar</button></div>`).join("");
+  document.getElementById("listaEventos").innerHTML =
+    data.map(e=>`<div class="card">${e.name}<button onclick="entrar('${e.id}')">Entrar</button></div>`).join("");
 }
-function entrar(id){ currentEvent=id; ir("gestion"); }
 
-// SELECTS UPLOAD
+function entrar(id){
+  currentEvent=id;
+  ir("gestion");
+}
+
+// SELECTS (CORREGIDO)
 async function cargarSelects(){
 
-  const {data:zonas}=await client.from("event_zones").select("zone_id").eq("event_id",currentEvent);
-  const {data:allZ}=await client.from("zones").select("*");
+  const {data:zonas}=await client
+    .from("event_zones")
+    .select("zone_id, zones(name)")
+    .eq("event_id",currentEvent);
 
   const selectZ=document.getElementById("selectZona");
   selectZ.innerHTML="";
   zonas.forEach(z=>{
-    const zona=allZ.find(a=>a.id===z.zone_id);
-    selectZ.innerHTML+=`<option value="${zona.id}">${zona.name}</option>`;
+    selectZ.innerHTML+=`<option value="${z.zone_id}">${z.zones.name}</option>`;
   });
 
-  const {data:tickets}=await client.from("event_ticket_providers").select("ticket_provider_id").eq("event_id",currentEvent);
-  const {data:allT}=await client.from("ticket_providers").select("*");
+  const {data:tickets}=await client
+    .from("event_ticket_providers")
+    .select("ticket_provider_id, ticket_providers(name)")
+    .eq("event_id",currentEvent);
 
   const selectT=document.getElementById("selectTicket");
   selectT.innerHTML="";
   tickets.forEach(t=>{
-    const tk=allT.find(a=>a.id===t.ticket_provider_id);
-    selectT.innerHTML+=`<option value="${tk.id}">${tk.name}</option>`;
+    selectT.innerHTML+=`<option value="${t.ticket_provider_id}">${t.ticket_providers.name}</option>`;
   });
 }
 
@@ -222,8 +248,7 @@ async function subir(){
   }
 
   const {error}=await client.from("codes").insert(insertar);
-
-  if(error){ alert(error.message); return; }
+  if(error) return alert(error.message);
 
   alert("Cargado correctamente");
 }
