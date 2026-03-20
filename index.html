@@ -54,12 +54,6 @@
 
   <div class="menu">
     <button onclick="mostrar('listaEventos')">Seleccionar evento</button>
-    <button>Crear evento</button>
-    <button>Usuarios</button>
-    <button>Usuarios avanzados</button>
-    <button>Configuración recintos</button>
-    <button>Configuración zonas</button>
-    <button>Configuración dispositivos</button>
   </div>
 </div>
 
@@ -70,42 +64,19 @@
   <div id="contenedorEventos">Cargando...</div>
 </div>
 
-<!-- GESTION -->
-<div id="gestionarEvento" class="screen">
-  <button class="back" onclick="mostrar('listaEventos')">⬅ Volver</button>
-
-  <h2>Gestión del evento</h2>
-
-  <button onclick="mostrar('estadisticas')">📊 Estadísticas</button>
-</div>
-
-<!-- ESTADISTICAS -->
-<div id="estadisticas" class="screen">
-  <button class="back" onclick="mostrar('gestionarEvento')">⬅ Volver</button>
-
-  <h2>📊 Estadísticas</h2>
-
-  <div id="stats">Cargando...</div>
-</div>
-
 <script>
 const client = window.supabase.createClient(
   "https://zuhssrhdezptsgemxofh.supabase.co",
-  "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
 );
 
-let currentEvent = null;
-
-// CAMBIO DE PANTALLA (SOLUCIÓN REAL)
 function mostrar(id) {
   document.querySelectorAll(".screen").forEach(d => d.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 
   if (id === "listaEventos") cargarEventos();
-  if (id === "estadisticas") cargarEstadisticas();
 }
 
-// EVENTOS
 async function cargarEventos() {
   const cont = document.getElementById("contenedorEventos");
   cont.innerHTML = "Cargando...";
@@ -115,12 +86,12 @@ async function cargarEventos() {
   console.log("EVENTOS:", data, error);
 
   if (error) {
-    cont.innerHTML = "Error cargando eventos";
+    cont.innerHTML = "Error: " + error.message;
     return;
   }
 
   if (!data || data.length === 0) {
-    cont.innerHTML = "⚠️ No hay eventos (revisar RLS)";
+    cont.innerHTML = "No hay eventos";
     return;
   }
 
@@ -133,30 +104,12 @@ async function cargarEventos() {
     div.innerHTML = `
       <strong>${e.name}</strong><br>
       ${e.venue || ""}<br>
-      ${e.event_date || ""}
-
-      <br><br>
-      <button onclick="seleccionarEvento('${e.id}')">Entrar</button>
+      ${e.event_date || ""}<br><br>
+      <button>Entrar</button>
     `;
 
     cont.appendChild(div);
   });
-}
-
-function seleccionarEvento(id) {
-  currentEvent = id;
-  mostrar("gestionarEvento");
-}
-
-// STATS
-async function cargarEstadisticas() {
-  const { data } = await client
-    .from("codes")
-    .select("*")
-    .eq("event_id", currentEvent);
-
-  document.getElementById("stats").innerText =
-    "Códigos totales: " + (data?.length || 0);
 }
 </script>
 
