@@ -27,7 +27,10 @@
     }
 
     input {
-      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -52,20 +55,38 @@
 
   <h2>Gestión del evento</h2>
 
+  <button onclick="mostrar('estadisticas')">📊 Estadísticas</button>
   <button onclick="mostrar('incidencias')">⚠️ Incidencias</button>
   <button onclick="mostrar('upload')">📂 Cargar Excel</button>
+</div>
+
+<!-- ESTADISTICAS -->
+<div id="estadisticas" class="screen">
+  <button onclick="mostrar('gestion')">⬅ Volver</button>
+
+  <h2>📊 Estadísticas</h2>
+  <div id="stats"></div>
+</div>
+
+<!-- INCIDENCIAS -->
+<div id="incidencias" class="screen">
+  <button onclick="mostrar('gestion')">⬅ Volver</button>
+
+  <h2>⚠️ Incidencias</h2>
+
+  <input id="buscador" placeholder="Buscar código..." oninput="filtrar()">
+
+  <ul id="listaCodigos"></ul>
 </div>
 
 <!-- UPLOAD -->
 <div id="upload" class="screen">
   <button onclick="mostrar('gestion')">⬅ Volver</button>
 
-  <h2>📂 Cargar códigos (CSV)</h2>
+  <h2>📂 Subir CSV</h2>
 
   <input type="file" id="fileInput">
-
-  <br>
-  <button onclick="procesarArchivo()">Subir archivo</button>
+  <button onclick="subir()">Subir</button>
 
   <div id="resultado"></div>
 </div>
@@ -73,17 +94,20 @@
 <script>
 const client = window.supabase.createClient(
   "https://zuhssrhdezptsgemxofh.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nz03NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
 );
 
 let currentEvent = null;
+let codigos = [];
 
-// NAV
+// NAV CENTRAL (CLAVE)
 function mostrar(id) {
   document.querySelectorAll(".screen").forEach(d => d.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 
   if (id === "listaEventos") cargarEventos();
+  if (id === "estadisticas") cargarStats();
+  if (id === "incidencias") cargarIncidencias();
 }
 
 // EVENTOS
@@ -97,58 +121,90 @@ async function cargarEventos() {
     const div = document.createElement("div");
 
     div.innerHTML = `
-      <strong>${e.name}</strong><br>
-      <button onclick="seleccionarEvento('${e.id}')">Entrar</button>
+      <strong>${e.name}</strong>
+      <button onclick="seleccionar('${e.id}')">Entrar</button>
     `;
 
     cont.appendChild(div);
   });
 }
 
-function seleccionarEvento(id) {
+function seleccionar(id) {
   currentEvent = id;
   mostrar("gestion");
 }
 
-// PROCESAR CSV
-async function procesarArchivo() {
+// ESTADISTICAS
+async function cargarStats() {
+  const { data } = await client
+    .from("codes")
+    .select("*")
+    .eq("event_id", currentEvent);
 
+  document.getElementById("stats").innerHTML =
+    "Total códigos: " + (data?.length || 0);
+}
+
+// INCIDENCIAS
+async function cargarIncidencias() {
+  const { data } = await client
+    .from("codes")
+    .select("*")
+    .eq("event_id", currentEvent);
+
+  codigos = data;
+  pintar(data);
+}
+
+function filtrar() {
+  const txt = document.getElementById("buscador").value.toLowerCase();
+
+  const filtrados = codigos.filter(c =>
+    c.code_value.toLowerCase().includes(txt)
+  );
+
+  pintar(filtrados);
+}
+
+function pintar(lista) {
+  const ul = document.getElementById("listaCodigos");
+  ul.innerHTML = "";
+
+  lista.forEach(c => {
+    const li = document.createElement("li");
+    li.textContent = c.code_value + " - " + c.status;
+    ul.appendChild(li);
+  });
+}
+
+// UPLOAD
+async function subir() {
   const file = document.getElementById("fileInput").files[0];
 
-  if (!file) {
-    alert("Selecciona un archivo");
-    return;
-  }
+  if (!file) return alert("Selecciona archivo");
 
   const text = await file.text();
   const lines = text.split("\n");
 
-  const headers = lines[0].split(",");
-
   let nuevos = 0;
   let duplicados = 0;
 
-  // 🔥 TRAER CÓDIGOS EXISTENTES
   const { data: existentes } = await client
     .from("codes")
     .select("code_value")
     .eq("event_id", currentEvent);
 
-  const setExistentes = new Set(existentes.map(c => c.code_value));
+  const set = new Set(existentes.map(c => c.code_value));
 
   const insertar = [];
 
   for (let i = 1; i < lines.length; i++) {
-
     const cols = lines[i].split(",");
 
-    if (!cols[0]) continue;
+    const codigo = cols[0]?.trim();
+    if (!codigo) continue;
 
-    const codigo = cols[0].trim();
-    const zona = cols[2] || null;
-    const operador = cols[3] || null;
-
-    if (setExistentes.has(codigo)) {
+    if (set.has(codigo)) {
       duplicados++;
       continue;
     }
@@ -156,10 +212,7 @@ async function procesarArchivo() {
     insertar.push({
       event_id: currentEvent,
       code_value: codigo,
-      status: "valid",
-      zone_id: zona,
-      ticket_provider_id: operador,
-      usage_count: 0
+      status: "valid"
     });
 
     nuevos++;
@@ -169,10 +222,8 @@ async function procesarArchivo() {
     await client.from("codes").insert(insertar);
   }
 
-  document.getElementById("resultado").innerHTML = `
-    ✅ Nuevos: ${nuevos}<br>
-    ⚠️ Duplicados ignorados: ${duplicados}
-  `;
+  document.getElementById("resultado").innerHTML =
+    `Nuevos: ${nuevos} | Duplicados: ${duplicados}`;
 }
 </script>
 
