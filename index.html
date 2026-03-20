@@ -13,6 +13,9 @@
       padding: 20px;
     }
 
+    .screen { display: none; }
+    .active { display: block; }
+
     .menu {
       display: flex;
       flex-direction: column;
@@ -29,25 +32,11 @@
       cursor: pointer;
     }
 
-    .hidden { display: none; }
-
     .evento {
       background: #1e293b;
       padding: 15px;
       border-radius: 10px;
       margin-bottom: 10px;
-    }
-
-    table {
-      width: 100%;
-      background: #1e293b;
-      border-radius: 10px;
-      margin-top: 20px;
-    }
-
-    td, th {
-      padding: 10px;
-      text-align: center;
     }
 
     .back {
@@ -60,11 +49,11 @@
 <body>
 
 <!-- HOME -->
-<div id="home">
+<div id="home" class="screen active">
   <h1>🎟️ Top Access</h1>
 
   <div class="menu">
-    <button onclick="irSeleccionar()">Seleccionar evento</button>
+    <button onclick="mostrar('listaEventos')">Seleccionar evento</button>
     <button>Crear evento</button>
     <button>Usuarios</button>
     <button>Usuarios avanzados</button>
@@ -74,43 +63,29 @@
   </div>
 </div>
 
-<!-- LISTA EVENTOS -->
-<div id="listaEventos" class="hidden">
-  <button class="back" onclick="volverInicio()">⬅ Volver</button>
+<!-- EVENTOS -->
+<div id="listaEventos" class="screen">
+  <button class="back" onclick="mostrar('home')">⬅ Volver</button>
   <h2>Eventos</h2>
-  <div id="contenedorEventos">Cargando eventos...</div>
+  <div id="contenedorEventos">Cargando...</div>
 </div>
 
-<!-- GESTION EVENTO -->
-<div id="gestionarEvento" class="hidden">
-  <button class="back" onclick="irSeleccionar()">⬅ Volver</button>
+<!-- GESTION -->
+<div id="gestionarEvento" class="screen">
+  <button class="back" onclick="mostrar('listaEventos')">⬅ Volver</button>
 
   <h2>Gestión del evento</h2>
 
-  <button onclick="irEstadisticas()">📊 Estadísticas</button>
-  <button>⚠️ Incidencias</button>
-  <button>🎯 Asociación visual</button>
-  <button>📂 Cargar códigos</button>
+  <button onclick="mostrar('estadisticas')">📊 Estadísticas</button>
 </div>
 
 <!-- ESTADISTICAS -->
-<div id="estadisticas" class="hidden">
-  <button class="back" onclick="volverGestion()">⬅ Volver</button>
+<div id="estadisticas" class="screen">
+  <button class="back" onclick="mostrar('gestionarEvento')">⬅ Volver</button>
 
   <h2>📊 Estadísticas</h2>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Zona</th>
-        <th>Ticketera</th>
-        <th>Pendientes</th>
-        <th>Usadas</th>
-        <th>Total</th>
-      </tr>
-    </thead>
-    <tbody id="tablaStats"></tbody>
-  </table>
+  <div id="stats">Cargando...</div>
 </div>
 
 <script>
@@ -121,141 +96,67 @@ const client = window.supabase.createClient(
 
 let currentEvent = null;
 
-// NAV
-function ocultarTodo() {
-  document.querySelectorAll("div").forEach(d => d.classList.add("hidden"));
-}
+// CAMBIO DE PANTALLA (SOLUCIÓN REAL)
+function mostrar(id) {
+  document.querySelectorAll(".screen").forEach(d => d.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 
-function volverInicio() {
-  ocultarTodo();
-  document.getElementById("home").classList.remove("hidden");
-}
-
-function volverGestion() {
-  ocultarTodo();
-  document.getElementById("gestionarEvento").classList.remove("hidden");
-}
-
-function irSeleccionar() {
-  ocultarTodo();
-  document.getElementById("listaEventos").classList.remove("hidden");
-  cargarEventos();
-}
-
-function irEstadisticas() {
-  ocultarTodo();
-  document.getElementById("estadisticas").classList.remove("hidden");
-  cargarEstadisticas();
+  if (id === "listaEventos") cargarEventos();
+  if (id === "estadisticas") cargarEstadisticas();
 }
 
 // EVENTOS
 async function cargarEventos() {
-
   const cont = document.getElementById("contenedorEventos");
-  cont.innerHTML = "Cargando eventos...";
+  cont.innerHTML = "Cargando...";
 
   const { data, error } = await client.from("events").select("*");
 
+  console.log("EVENTOS:", data, error);
+
   if (error) {
-    console.error("ERROR eventos:", error);
     cont.innerHTML = "Error cargando eventos";
     return;
   }
 
-  console.log("EVENTOS:", data);
-
   if (!data || data.length === 0) {
-    cont.innerHTML = "No hay eventos creados";
+    cont.innerHTML = "⚠️ No hay eventos (revisar RLS)";
     return;
   }
 
   cont.innerHTML = "";
 
   data.forEach(e => {
-
     const div = document.createElement("div");
     div.className = "evento";
 
     div.innerHTML = `
       <strong>${e.name}</strong><br>
-      📍 ${e.venue || "-"}<br>
-      📅 ${e.event_date || "-"}<br>
-      👥 Aforo: ${e.capacity_current || 0}
+      ${e.venue || ""}<br>
+      ${e.event_date || ""}
 
       <br><br>
-      <button onclick="entrarEvento('${e.id}')">Entrar</button>
+      <button onclick="seleccionarEvento('${e.id}')">Entrar</button>
     `;
 
     cont.appendChild(div);
   });
 }
 
-// ENTRAR EVENTO
-function entrarEvento(id) {
+function seleccionarEvento(id) {
   currentEvent = id;
-  ocultarTodo();
-  document.getElementById("gestionarEvento").classList.remove("hidden");
+  mostrar("gestionarEvento");
 }
 
-// ESTADISTICAS
+// STATS
 async function cargarEstadisticas() {
-
-  const { data, error } = await client
+  const { data } = await client
     .from("codes")
     .select("*")
     .eq("event_id", currentEvent);
 
-  if (error) {
-    console.error("ERROR codes:", error);
-    return;
-  }
-
-  console.log("CODES:", data);
-
-  const resumen = {};
-
-  data.forEach(c => {
-
-    const zona = c.zone_id || "Sin zona";
-    const ticket = c.ticket_provider_id || "Sin ticketera";
-
-    const key = zona + "_" + ticket;
-
-    if (!resumen[key]) {
-      resumen[key] = {
-        zona,
-        ticket,
-        usadas: 0,
-        pendientes: 0
-      };
-    }
-
-    if (c.status === "used") {
-      resumen[key].usadas++;
-    } else {
-      resumen[key].pendientes++;
-    }
-  });
-
-  const tbody = document.getElementById("tablaStats");
-  tbody.innerHTML = "";
-
-  Object.values(resumen).forEach(r => {
-
-    const total = r.usadas + r.pendientes;
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${r.zona}</td>
-      <td>${r.ticket}</td>
-      <td>${r.pendientes}</td>
-      <td>${r.usadas}</td>
-      <td>${total}</td>
-    `;
-
-    tbody.appendChild(tr);
-  });
+  document.getElementById("stats").innerText =
+    "Códigos totales: " + (data?.length || 0);
 }
 </script>
 
