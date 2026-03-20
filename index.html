@@ -7,30 +7,29 @@
   <style>
     body { font-family: Arial; background:#0f172a; color:white; padding:20px;}
     .screen{display:none;} .active{display:block;}
-    button{padding:8px;margin:4px;border:none;border-radius:6px;background:#1e293b;color:white;}
-    table{width:100%;margin-top:10px;border-collapse:collapse;}
+    button{padding:6px;margin:3px;border:none;border-radius:6px;background:#1e293b;color:white;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
     td,th{padding:6px;border-bottom:1px solid #333;}
-    .card{background:#1e293b;padding:10px;margin:5px;border-radius:8px;}
   </style>
 </head>
 
 <body>
 
-<div id="gestion" class="screen active">
+<div id="menu" class="screen active">
   <h1>⚙️ Gestión</h1>
   <button onclick="ir('stats')">📊 Estadísticas</button>
-  <button onclick="ir('incidencias')">⚠️ Incidencias</button>
+  <button onclick="ir('inc')">⚠️ Incidencias</button>
 </div>
 
 <div id="stats" class="screen">
   <h1>📊 Estadísticas</h1>
-  <button onclick="ir('gestion')">⬅</button>
+  <button onclick="ir('menu')">⬅</button>
   <div id="tablaStats"></div>
 </div>
 
-<div id="incidencias" class="screen">
+<div id="inc" class="screen">
   <h1>⚠️ Incidencias</h1>
-  <button onclick="ir('gestion')">⬅</button>
+  <button onclick="ir('menu')">⬅</button>
 
   <table>
     <thead>
@@ -38,9 +37,10 @@
         <th>Código</th>
         <th>Zona</th>
         <th>Ticketera</th>
-        <th>Estado</th>
-        <th>Hora</th>
+        <th>Usos</th>
+        <th>Primera entrada</th>
         <th>Dispositivo</th>
+        <th>Estado</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -54,19 +54,19 @@ const client = window.supabase.createClient(
  "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
 );
 
-let currentEvent = "d8026425-6e24-4b8a-8891-4ac81057e6f2"; // usa uno tuyo
+let currentEvent = "d8026425-6e24-4b8a-8891-4ac81057e6f2";
 
 function ir(p){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
  document.getElementById(p).classList.add("active");
 
  if(p==="stats") cargarStats();
- if(p==="incidencias") cargarInc();
+ if(p==="inc") cargarInc();
 }
 
-//////////////////////////////////////////////////////////
-// 📊 ESTADÍSTICAS
-//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// 📊 ESTADÍSTICAS (CORRECTAS)
+//////////////////////////////////////////////////
 
 async function cargarStats(){
 
@@ -79,7 +79,7 @@ async function cargarStats(){
 
  data.forEach(c=>{
 
-   const key = c.zones.name + " - " + c.ticket_providers.name;
+   const key = (c.zones?.name || "Sin zona") + " - " + (c.ticket_providers?.name || "Sin ticketera");
 
    if(!agrupado[key]){
      agrupado[key]={pend:0, used:0, total:0};
@@ -87,8 +87,8 @@ async function cargarStats(){
 
    agrupado[key].total++;
 
-   if(c.status==="valid") agrupado[key].pend++;
-   if(c.status==="used") agrupado[key].used++;
+   if(c.usage_count === 0) agrupado[key].pend++;
+   if(c.usage_count > 0) agrupado[key].used++;
 
  });
 
@@ -108,9 +108,9 @@ async function cargarStats(){
  document.getElementById("tablaStats").innerHTML=html;
 }
 
-//////////////////////////////////////////////////////////
-// ⚠️ INCIDENCIAS
-//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// ⚠️ INCIDENCIAS (PRO)
+//////////////////////////////////////////////////
 
 async function cargarInc(){
 
@@ -124,49 +124,56 @@ async function cargarInc(){
 
  data.forEach(c=>{
 
+   let estado="Pendiente";
+
+   if(c.status==="cancelled") estado="Cancelado";
+   else if(c.is_top_code) estado="Multiread";
+   else if(c.usage_count>0) estado="Usado";
+
    tbody.innerHTML+=`
    <tr>
      <td>${c.code_value}</td>
      <td>${c.zones?.name||""}</td>
      <td>${c.ticket_providers?.name||""}</td>
-     <td>${c.status}</td>
-     <td>${c.used_at||"-"}</td>
-     <td>${c.used_device||"-"}</td>
+     <td>${c.usage_count}</td>
+     <td>${c.first_entry_at || "-"}</td>
+     <td>${c.first_entry_device_id || "-"}</td>
+     <td>${estado}</td>
      <td>
        <button onclick="usar('${c.id}')">Usar</button>
-       <button onclick="liberar('${c.id}')">Liberar</button>
-       <button onclick="cancelar('${c.id}')">Cancelar</button>
+       <button onclick="reset('${c.id}')">Reset</button>
+       <button onclick="cancel('${c.id}')">Cancel</button>
        <button onclick="multi('${c.id}')">Multi</button>
      </td>
    </tr>`;
  });
 }
 
-//////////////////////////////////////////////////////////
-// ✏️ ACCIONES
-//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////
+// ✏️ ACCIONES REALES
+//////////////////////////////////////////////////
 
 async function usar(id){
  await client.from("codes").update({
-   status:"used",
-   used_at:new Date(),
-   used_device:"web"
+   usage_count:1,
+   first_entry_at:new Date(),
+   first_entry_device_id:"web"
  }).eq("id",id);
 
  cargarInc(); cargarStats();
 }
 
-async function liberar(id){
+async function reset(id){
  await client.from("codes").update({
-   status:"valid",
-   used_at:null,
-   used_device:null
+   usage_count:0,
+   first_entry_at:null,
+   first_entry_device_id:null
  }).eq("id",id);
 
  cargarInc(); cargarStats();
 }
 
-async function cancelar(id){
+async function cancel(id){
  await client.from("codes").update({
    status:"cancelled"
  }).eq("id",id);
@@ -176,12 +183,11 @@ async function cancelar(id){
 
 async function multi(id){
  await client.from("codes").update({
-   is_multi:true
+   is_top_code:true
  }).eq("id",id);
 
- alert("Código multiread activado");
+ alert("MULTIREAD activado");
 }
-
 </script>
 
 </body>
