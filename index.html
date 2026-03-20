@@ -7,8 +7,19 @@
   <style>
     body { font-family: Arial; background:#0f172a; color:white; padding:20px;}
     .screen{display:none;} .active{display:block;}
-    button{padding:10px;margin:5px;border:none;border-radius:8px;background:#1e293b;color:white;}
-    .card{background:#1e293b;padding:10px;margin:5px;border-radius:8px;}
+    button{padding:8px;margin:4px;border:none;border-radius:6px;background:#1e293b;color:white;}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:10px;
+    }
+
+    th,td{
+      padding:6px;
+      border:1px solid #333;
+      text-align:center;
+    }
   </style>
 </head>
 
@@ -17,28 +28,16 @@
 <!-- HOME -->
 <div id="home" class="screen active">
   <h1>🏠 Inicio</h1>
-  <button onclick="ir('crearEvento')">Crear evento</button>
-  <button onclick="ir('eventos')">Seleccionar evento</button>
-  <button onclick="ir('grupos')">Grupo de tornos</button>
-</div>
 
-<!-- GRUPOS -->
-<div id="grupos" class="screen">
-  <h1>🎛️ Grupo de tornos</h1>
-  <button onclick="ir('home')">⬅</button>
-
-  <input id="nombreGrupo" placeholder="Nombre (PISTA)">
-  <input id="cantidadGrupo" placeholder="Cantidad">
-
-  <button onclick="crearGrupo()">Crear</button>
-
-  <div id="listaGrupos"></div>
+  <button onclick="ir('eventos')">Eventos</button>
+  <button onclick="ir('accesos')">Crear accesos</button>
 </div>
 
 <!-- EVENTOS -->
 <div id="eventos" class="screen">
   <h1>Eventos</h1>
   <button onclick="ir('home')">⬅</button>
+
   <div id="listaEventos"></div>
 </div>
 
@@ -46,19 +45,28 @@
 <div id="gestion" class="screen">
   <h1>Gestión</h1>
 
-  <button onclick="ir('eventos')">Cambiar evento</button>
-
-  <button onclick="ir('asociacion')">🔗 Asociación accesos</button>
-  <button onclick="ir('stats')">📊 Estadísticas</button>
-  <button onclick="ir('inc')">⚠️ Incidencias</button>
+  <button onclick="ir('asociacion')">🔗 Asociación</button>
 </div>
 
-<!-- ASOCIACION -->
+<!-- ACCESOS -->
+<div id="accesos" class="screen">
+  <h1>Crear accesos</h1>
+
+  <button onclick="ir('home')">⬅</button>
+
+  <input id="nombreAcceso" placeholder="Ej: PISTA">
+  <button onclick="crearAcceso()">Crear</button>
+
+  <div id="listaAccesos"></div>
+</div>
+
+<!-- ASOCIACION MATRIZ -->
 <div id="asociacion" class="screen">
-  <h1>🔗 Asociación ticketera → zona</h1>
+  <h1>🔗 Asociación visual</h1>
+
   <button onclick="ir('gestion')">⬅</button>
 
-  <div id="tablaAsociacion"></div>
+  <div id="tabla"></div>
 </div>
 
 <script>
@@ -68,14 +76,15 @@ const client = window.supabase.createClient(
 );
 
 let currentEvent=null;
+let currentVenue=null;
 
 function ir(p){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
  document.getElementById(p).classList.add("active");
 
  if(p==="eventos") cargarEventos();
- if(p==="asociacion") cargarAsociacion();
- if(p==="grupos") cargarGrupos();
+ if(p==="accesos") cargarAccesos();
+ if(p==="asociacion") cargarMatriz();
 }
 
 //////////////////////////////////////////////////
@@ -86,105 +95,107 @@ async function cargarEventos(){
  const {data}=await client.from("events").select("*");
 
  document.getElementById("listaEventos").innerHTML =
- data.map(e=>`<div class="card">${e.name}
-   <button onclick="entrar('${e.id}')">Entrar</button>
- </div>`).join("");
+ data.map(e=>`
+   <div>
+     ${e.name}
+     <button onclick="entrar('${e.id}','${e.venue}')">Entrar</button>
+   </div>
+ `).join("");
 }
 
-function entrar(id){
+function entrar(id,venue){
  currentEvent=id;
+ currentVenue=venue;
  ir("gestion");
 }
 
 //////////////////////////////////////////////////
-// 🔗 ASOCIACION
+// ACCESOS (POR RECINTO)
 //////////////////////////////////////////////////
 
-async function cargarAsociacion(){
+async function crearAcceso(){
 
- const {data:zonas}=await client.from("zones").select("*");
+ const nombre=document.getElementById("nombreAcceso").value;
+
+ await client.from("access_points").insert({
+   name:nombre,
+   venue:currentVenue || "GLOBAL"
+ });
+
+ cargarAccesos();
+}
+
+async function cargarAccesos(){
+
+ const {data}=await client
+   .from("access_points")
+   .select("*");
+
+ document.getElementById("listaAccesos").innerHTML =
+ data.map(a=>`<div>${a.name} (${a.venue})</div>`).join("");
+}
+
+//////////////////////////////////////////////////
+// MATRIZ VISUAL
+//////////////////////////////////////////////////
+
+async function cargarMatriz(){
+
  const {data:tickets}=await client.from("ticket_providers").select("*");
- const {data:rel}=await client.from("ticket_zone_access").select("*");
+ const {data:accesos}=await client
+   .from("access_points")
+   .select("*")
+   .eq("venue",currentVenue);
 
- let html="";
+ const {data:rel}=await client.from("ticket_access").select("*");
+
+ let html="<table><tr><th>Concepto</th>";
+
+ accesos.forEach(a=>{
+   html+=`<th>${a.name}</th>`;
+ });
+
+ html+="</tr>";
 
  tickets.forEach(t=>{
 
-   html+=`<div class="card"><b>${t.name}</b><br>`;
+   html+=`<tr><td>${t.name}</td>`;
 
-   zonas.forEach(z=>{
+   accesos.forEach(a=>{
 
-     const existe = rel.find(r=>r.ticket_provider_id===t.id && r.zone_id===z.id);
+     const existe=rel.find(r=>r.ticket_provider_id===t.id && r.access_id===a.id);
 
      html+=`
-       <label>
+       <td>
          <input type="checkbox"
            ${existe?"checked":""}
-           onchange="toggle('${t.id}','${z.id}',this.checked)">
-         ${z.name}
-       </label><br>
+           onchange="toggle('${t.id}','${a.id}',this.checked)">
+       </td>
      `;
    });
 
-   html+="</div>";
+   html+="</tr>";
  });
 
- document.getElementById("tablaAsociacion").innerHTML=html;
+ html+="</table>";
+
+ document.getElementById("tabla").innerHTML=html;
 }
 
-async function toggle(ticket, zona, estado){
+async function toggle(ticket,access,estado){
 
  if(estado){
-   await client.from("ticket_zone_access").insert({
+   await client.from("ticket_access").insert({
      ticket_provider_id:ticket,
-     zone_id:zona
+     access_id:access
    });
  }else{
-   await client.from("ticket_zone_access")
+   await client.from("ticket_access")
      .delete()
      .eq("ticket_provider_id",ticket)
-     .eq("zone_id",zona);
+     .eq("access_id",access);
  }
 }
-
-//////////////////////////////////////////////////
-// 🎛️ GRUPOS DE TORNOS
-//////////////////////////////////////////////////
-
-async function crearGrupo(){
-
- const nombre=document.getElementById("nombreGrupo").value;
- const cantidad=parseInt(document.getElementById("cantidadGrupo").value);
-
- if(!nombre||!cantidad) return alert("Datos incompletos");
-
- await client.from("device_groups").insert({
-   event_id:currentEvent,
-   name:nombre,
-   quantity:cantidad
- });
-
- // crear dispositivos
- for(let i=1;i<=cantidad;i++){
-   await client.from("devices").insert({
-     event_id:currentEvent,
-     name: nombre+" "+i,
-     group_name:nombre
-   });
- }
-
- alert("Grupo creado");
- cargarGrupos();
-}
-
-async function cargarGrupos(){
-
- const {data}=await client.from("device_groups").select("*");
-
- document.getElementById("listaGrupos").innerHTML =
- data.map(g=>`<div class="card">${g.name} (${g.quantity})</div>`).join("");
-}
-
 </script>
 
 </body>
