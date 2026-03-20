@@ -16,34 +16,14 @@
     .screen { display: none; }
     .active { display: block; }
 
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 300px;
-    }
-
     button {
-      padding: 12px;
+      padding: 10px;
+      margin: 5px;
       border-radius: 8px;
       border: none;
       background: #1e293b;
       color: white;
       cursor: pointer;
-    }
-
-    .card {
-      background: #1e293b;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-    }
-
-    input {
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -53,22 +33,12 @@
 <!-- HOME -->
 <div id="home" class="screen active">
   <h1>🎟️ Top Access</h1>
-
-  <div class="menu">
-    <button onclick="ir('eventos')">Seleccionar evento</button>
-    <button>Crear evento</button>
-    <button>Usuarios</button>
-    <button>Usuarios avanzados</button>
-    <button>Configuración recintos</button>
-    <button>Configuración zonas</button>
-    <button>Configuración dispositivos</button>
-  </div>
+  <button onclick="ir('eventos')">Seleccionar evento</button>
 </div>
 
 <!-- EVENTOS -->
 <div id="eventos" class="screen">
   <button onclick="ir('home')">⬅ Volver</button>
-  <h2>Eventos</h2>
   <div id="listaEventos"></div>
 </div>
 
@@ -76,38 +46,20 @@
 <div id="gestion" class="screen">
   <button onclick="ir('eventos')">⬅ Volver</button>
 
-  <h2>Gestión del evento</h2>
+  <h2>Gestión</h2>
 
-  <button onclick="ir('stats')">📊 Estadísticas</button>
-  <button onclick="ir('incidencias')">⚠️ Incidencias</button>
-  <button onclick="ir('upload')">📂 Cargar CSV</button>
-</div>
-
-<!-- STATS -->
-<div id="stats" class="screen">
-  <button onclick="ir('gestion')">⬅ Volver</button>
-  <h2>Estadísticas</h2>
-  <div id="statsContent"></div>
-</div>
-
-<!-- INCIDENCIAS -->
-<div id="incidencias" class="screen">
-  <button onclick="ir('gestion')">⬅ Volver</button>
-
-  <h2>Incidencias</h2>
-
-  <input id="buscar" placeholder="Buscar..." oninput="filtrar()">
-  <ul id="listaCodigos"></ul>
+  <button onclick="ir('upload')">📂 Subir CSV</button>
 </div>
 
 <!-- UPLOAD -->
 <div id="upload" class="screen">
   <button onclick="ir('gestion')">⬅ Volver</button>
 
-  <h2>Subir CSV</h2>
+  <h2>Subir códigos</h2>
 
   <input type="file" id="fileInput">
-  <button onclick="subir()">Subir</button>
+  <br>
+  <button onclick="subir()">Subir archivo</button>
 
   <div id="resultado"></div>
 </div>
@@ -119,124 +71,90 @@ const client = window.supabase.createClient(
 );
 
 let currentEvent = null;
-let codigos = [];
 
 // NAVEGACIÓN
-function ir(pantalla) {
+function ir(p) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(pantalla).classList.add("active");
+  document.getElementById(p).classList.add("active");
 
-  if (pantalla === "eventos") cargarEventos();
-  if (pantalla === "stats") cargarStats();
-  if (pantalla === "incidencias") cargarIncidencias();
+  if (p === "eventos") cargarEventos();
 }
 
 // EVENTOS
 async function cargarEventos() {
-  const { data, error } = await client.from("events").select("*");
+  const { data } = await client.from("events").select("*");
 
   const cont = document.getElementById("listaEventos");
   cont.innerHTML = "";
 
-  if (error) {
-    cont.innerHTML = "Error cargando eventos";
-    return;
-  }
-
   data.forEach(e => {
     const div = document.createElement("div");
-    div.className = "card";
 
     div.innerHTML = `
-      <strong>${e.name}</strong><br>
-      ${e.venue || ""}<br>
-      <button onclick="entrar('${e.id}')">Entrar</button>
+      <strong>${e.name}</strong>
+      <button onclick="seleccionar('${e.id}')">Entrar</button>
     `;
 
     cont.appendChild(div);
   });
 }
 
-function entrar(id) {
+function seleccionar(id) {
   currentEvent = id;
   ir("gestion");
 }
 
-// STATS
-async function cargarStats() {
-  const { data } = await client
-    .from("codes")
-    .select("*")
-    .eq("event_id", currentEvent);
-
-  document.getElementById("statsContent").innerText =
-    "Total códigos: " + (data?.length || 0);
-}
-
-// INCIDENCIAS
-async function cargarIncidencias() {
-  const { data } = await client
-    .from("codes")
-    .select("*")
-    .eq("event_id", currentEvent);
-
-  codigos = data;
-  pintar(data);
-}
-
-function filtrar() {
-  const txt = document.getElementById("buscar").value.toLowerCase();
-
-  const filtrados = codigos.filter(c =>
-    c.code_value.toLowerCase().includes(txt)
-  );
-
-  pintar(filtrados);
-}
-
-function pintar(lista) {
-  const ul = document.getElementById("listaCodigos");
-  ul.innerHTML = "";
-
-  lista.forEach(c => {
-    const li = document.createElement("li");
-    li.textContent = c.code_value + " - " + c.status;
-    ul.appendChild(li);
-  });
-}
-
-// UPLOAD
+// 🔥 SUBIDA REAL (CORREGIDA)
 async function subir() {
+
+  if (!currentEvent) {
+    alert("Selecciona un evento primero");
+    return;
+  }
+
   const file = document.getElementById("fileInput").files[0];
 
-  if (!file) return alert("Selecciona archivo");
+  if (!file) {
+    alert("Selecciona un archivo");
+    return;
+  }
 
   const text = await file.text();
   const lines = text.split("\n");
-
-  let nuevos = 0;
 
   const insertar = [];
 
   for (let i = 1; i < lines.length; i++) {
     const codigo = lines[i].split(",")[0]?.trim();
+
     if (!codigo) continue;
 
     insertar.push({
       event_id: currentEvent,
       code_value: codigo,
-      status: "valid"
+      status: "valid",
+      usage_count: 0
     });
-
-    nuevos++;
   }
 
-  if (insertar.length > 0) {
-    await client.from("codes").insert(insertar);
+  console.log("DATOS A INSERTAR:", insertar);
+
+  const { data, error } = await client
+    .from("codes")
+    .insert(insertar)
+    .select();
+
+  console.log("RESPUESTA:", data, error);
+
+  if (error) {
+    alert("ERROR: " + error.message);
+    return;
   }
+
+  alert("Códigos insertados: " + data.length);
 
   document.getElementById("resultado").innerText =
-    "Códigos insertados: " + nuevos;
+    "Insertados correctamente: " + data.length;
 }
 </script>
 
