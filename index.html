@@ -13,15 +13,9 @@
       padding: 20px;
     }
 
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-width: 300px;
-    }
-
     button {
-      padding: 12px;
+      padding: 10px;
+      margin: 5px;
       border-radius: 8px;
       border: none;
       background: #1e293b;
@@ -31,23 +25,19 @@
 
     .hidden { display: none; }
 
-    .evento {
+    table {
+      width: 100%;
       background: #1e293b;
-      padding: 15px;
       border-radius: 10px;
-      margin-bottom: 10px;
+      padding: 10px;
     }
 
-    .row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 5px;
+    td, th {
+      padding: 10px;
+      text-align: center;
     }
 
-    .back {
-      margin-bottom: 20px;
-      background: #334155;
-    }
+    .back { margin-bottom: 20px; }
   </style>
 </head>
 
@@ -56,40 +46,43 @@
 <!-- HOME -->
 <div id="home">
   <h1>🎟️ Top Access</h1>
-
-  <div class="menu">
-    <button onclick="irSeleccionar()">Seleccionar evento</button>
-    <button onclick="irCrearEvento()">Crear evento</button>
-    <button>Usuarios</button>
-    <button>Usuarios avanzados</button>
-    <button>Configuración recintos</button>
-    <button>Configuración zonas</button>
-    <button>Configuración dispositivos</button>
-  </div>
+  <button onclick="irSeleccionar()">Seleccionar evento</button>
 </div>
 
-<!-- LISTA EVENTOS -->
+<!-- EVENTOS -->
 <div id="listaEventos" class="hidden">
-
   <button class="back" onclick="volverInicio()">⬅ Volver</button>
-
-  <h2>Eventos</h2>
-
   <div id="contenedorEventos"></div>
-
 </div>
 
-<!-- GESTION EVENTO -->
+<!-- GESTION -->
 <div id="gestionarEvento" class="hidden">
-
   <button class="back" onclick="volverInicio()">⬅ Volver</button>
 
   <h2>Gestión del evento</h2>
 
-  <button>📊 Estadísticas</button>
-  <button>⚠️ Incidencias</button>
-  <button>🎯 Asociación visual</button>
-  <button>📂 Cargar códigos</button>
+  <button onclick="irEstadisticas()">📊 Estadísticas</button>
+</div>
+
+<!-- ESTADISTICAS -->
+<div id="estadisticas" class="hidden">
+
+  <button class="back" onclick="volverGestion()">⬅ Volver</button>
+
+  <h2>📊 Estadísticas</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Zona</th>
+        <th>Ticketera</th>
+        <th>Pendientes</th>
+        <th>Usadas</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="tablaStats"></tbody>
+  </table>
 
 </div>
 
@@ -111,13 +104,24 @@ function volverInicio() {
   document.getElementById("home").classList.remove("hidden");
 }
 
+function volverGestion() {
+  ocultarTodo();
+  document.getElementById("gestionarEvento").classList.remove("hidden");
+}
+
 function irSeleccionar() {
   ocultarTodo();
   document.getElementById("listaEventos").classList.remove("hidden");
   cargarEventos();
 }
 
-// CARGAR EVENTOS (VERSIÓN PRO)
+function irEstadisticas() {
+  ocultarTodo();
+  document.getElementById("estadisticas").classList.remove("hidden");
+  cargarEstadisticas();
+}
+
+// EVENTOS
 async function cargarEventos() {
   const { data } = await client.from("events").select("*");
 
@@ -125,44 +129,69 @@ async function cargarEventos() {
   cont.innerHTML = "";
 
   data.forEach(e => {
-
-    const div = document.createElement("div");
-    div.className = "evento";
-
-    div.innerHTML = `
-      <strong>${e.name}</strong>
-
-      <div class="row">📍 ${e.venue || "-"}</div>
-      <div class="row">📅 ${e.event_date || "-"}</div>
-      <div class="row">👥 Aforo: ${e.capacity_current || 0}</div>
-
-      <div class="row">
-        <button onclick="entrarEvento('${e.id}')">Entrar</button>
-        <button onclick="toggleEvento('${e.id}', ${e.is_active})">
-          ${e.is_active ? "Desactivar" : "Activar"}
-        </button>
-      </div>
-    `;
-
-    cont.appendChild(div);
+    const btn = document.createElement("button");
+    btn.textContent = e.name;
+    btn.onclick = () => {
+      currentEvent = e.id;
+      ocultarTodo();
+      document.getElementById("gestionarEvento").classList.remove("hidden");
+    };
+    cont.appendChild(btn);
   });
 }
 
-// ACTIVAR / DESACTIVAR
-async function toggleEvento(id, estado) {
-  await client
-    .from("events")
-    .update({ is_active: !estado })
-    .eq("id", id);
+// ESTADISTICAS
+async function cargarEstadisticas() {
 
-  cargarEventos();
-}
+  const { data } = await client
+    .from("codes")
+    .select("*")
+    .eq("event_id", currentEvent);
 
-// ENTRAR EVENTO
-function entrarEvento(id) {
-  currentEvent = id;
-  ocultarTodo();
-  document.getElementById("gestionarEvento").classList.remove("hidden");
+  const resumen = {};
+
+  data.forEach(c => {
+
+    const zona = c.zone_id || "Sin zona";
+    const ticket = c.ticket_provider_id || "Sin ticketera";
+
+    const key = zona + "_" + ticket;
+
+    if (!resumen[key]) {
+      resumen[key] = {
+        zona,
+        ticket,
+        usadas: 0,
+        pendientes: 0
+      };
+    }
+
+    if (c.status === "used") {
+      resumen[key].usadas++;
+    } else {
+      resumen[key].pendientes++;
+    }
+  });
+
+  const tbody = document.getElementById("tablaStats");
+  tbody.innerHTML = "";
+
+  Object.values(resumen).forEach(r => {
+
+    const total = r.usadas + r.pendientes;
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${r.zona}</td>
+      <td>${r.ticket}</td>
+      <td>${r.pendientes}</td>
+      <td>${r.usadas}</td>
+      <td>${total}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
 }
 </script>
 
