@@ -113,6 +113,7 @@
         <th>Ticketera</th>
         <th>Usos</th>
         <th>Estado</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody id="tablaInc"></tbody>
@@ -191,6 +192,8 @@ function entrar(id,venue){
 async function crearAcceso(){
  const nombre=document.getElementById("nombreAcceso").value;
 
+ if(!nombre) return alert("Nombre requerido");
+
  await client.from("access_points").insert({
    name:nombre,
    venue:currentVenue
@@ -209,7 +212,7 @@ async function cargarAccesos(){
 }
 
 //////////////////////////////////////////////////
-// MATRIZ
+// MATRIZ ASOCIACION (ARREGLADA)
 //////////////////////////////////////////////////
 
 async function cargarMatriz(){
@@ -233,13 +236,17 @@ async function cargarMatriz(){
    html+=`<tr><td>${t.name}</td>`;
 
    accesos.forEach(a=>{
-     const existe=rel.find(r=>r.ticket_provider_id===t.id && r.access_id===a.id);
+
+     const existe = rel.some(r =>
+       r.ticket_provider_id === t.id &&
+       r.access_id === a.id
+     );
 
      html+=`
        <td>
          <input type="checkbox"
-         ${existe?"checked":""}
-         onchange="toggle('${t.id}','${a.id}',this.checked)">
+         ${existe ? "checked" : ""}
+         onchange="toggleAcceso('${t.id}','${a.id}',this.checked)">
        </td>`;
    });
 
@@ -251,7 +258,8 @@ async function cargarMatriz(){
  document.getElementById("tabla").innerHTML=html;
 }
 
-async function toggle(ticket,access,estado){
+async function toggleAcceso(ticket,access,estado){
+
  if(estado){
    await client.from("ticket_access").insert({
      ticket_provider_id:ticket,
@@ -266,37 +274,122 @@ async function toggle(ticket,access,estado){
 }
 
 //////////////////////////////////////////////////
-// STATS
+// STATS (CORRECTAS)
 //////////////////////////////////////////////////
 
 async function cargarStats(){
- const {data}=await client.from("codes")
-   .select("*")
+
+ const {data}=await client
+   .from("codes")
+   .select("*, zones(name), ticket_providers(name)")
    .eq("event_id",currentEvent);
 
- document.getElementById("tablaStats").innerText =
-   "Total códigos: "+(data?.length||0);
+ const agrupado={};
+
+ data.forEach(c=>{
+
+   const key = (c.ticket_providers?.name || "Sin ticketera") +
+               " - " +
+               (c.zones?.name || "Sin zona");
+
+   if(!agrupado[key]){
+     agrupado[key]={pend:0,used:0,total:0};
+   }
+
+   agrupado[key].total++;
+
+   if(c.usage_count === 0) agrupado[key].pend++;
+   if(c.usage_count > 0) agrupado[key].used++;
+
+ });
+
+ let html="<table><tr><th>Concepto</th><th>Pendientes</th><th>Usadas</th><th>Total</th></tr>";
+
+ for(let k in agrupado){
+   html+=`<tr>
+     <td>${k}</td>
+     <td>${agrupado[k].pend}</td>
+     <td>${agrupado[k].used}</td>
+     <td>${agrupado[k].total}</td>
+   </tr>`;
+ }
+
+ html+="</table>";
+
+ document.getElementById("tablaStats").innerHTML=html;
 }
 
 //////////////////////////////////////////////////
-// INCIDENCIAS
+// INCIDENCIAS (CON ACCIONES)
 //////////////////////////////////////////////////
 
 async function cargarInc(){
- const {data}=await client.from("codes")
+
+ const {data}=await client
+   .from("codes")
    .select("*, zones(name), ticket_providers(name)")
    .eq("event_id",currentEvent);
 
  document.getElementById("tablaInc").innerHTML =
- data.map(c=>`
+ data.map(c=>{
+
+   let estado="Pendiente";
+
+   if(c.status==="cancelled") estado="Cancelado";
+   else if(c.is_top_code) estado="Multiread";
+   else if(c.usage_count>0) estado="Usado";
+
+   return `
    <tr>
      <td>${c.code_value}</td>
      <td>${c.zones?.name||""}</td>
      <td>${c.ticket_providers?.name||""}</td>
      <td>${c.usage_count}</td>
-     <td>${c.status}</td>
-   </tr>
- `).join("");
+     <td>${estado}</td>
+     <td>
+       <button onclick="usar('${c.id}')">Usar</button>
+       <button onclick="reset('${c.id}')">Reset</button>
+       <button onclick="cancelar('${c.id}')">Cancel</button>
+       <button onclick="multi('${c.id}')">Multi</button>
+     </td>
+   </tr>`;
+ }).join("");
+}
+
+async function usar(id){
+ await client.from("codes").update({
+   usage_count:1,
+   first_entry_at:new Date(),
+   first_entry_device_id:"web"
+ }).eq("id",id);
+
+ cargarInc(); cargarStats();
+}
+
+async function reset(id){
+ await client.from("codes").update({
+   usage_count:0,
+   first_entry_at:null,
+   first_entry_device_id:null
+ }).eq("id",id);
+
+ cargarInc(); cargarStats();
+}
+
+async function cancelar(id){
+ await client.from("codes").update({
+   status:"cancelled"
+ }).eq("id",id);
+
+ cargarInc(); cargarStats();
+}
+
+async function multi(id){
+ await client.from("codes").update({
+   is_top_code:true
+ }).eq("id",id);
+
+ alert("Multiread activado");
 }
 
 //////////////////////////////////////////////////
@@ -306,6 +399,8 @@ async function cargarInc(){
 async function subir(){
 
  const file=document.getElementById("fileInput").files[0];
+ if(!file) return alert("Selecciona archivo");
+
  const text=await file.text();
  const lines=text.split("\n");
 
@@ -317,6 +412,7 @@ async function subir(){
  for(let i=1;i<lines.length;i++){
 
    const cols=lines[i].split(";");
+
    const codigo=cols[0]?.trim();
    const zona=zonas.find(z=>z.name===cols[1]);
    const ticket=tickets.find(t=>t.name===cols[2]);
