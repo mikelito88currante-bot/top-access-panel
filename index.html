@@ -8,6 +8,7 @@
     body { font-family: Arial; background:#0f172a; color:white; padding:20px;}
     .screen{display:none;} .active{display:block;}
     button{padding:8px;margin:4px;border:none;border-radius:6px;background:#1e293b;color:white;}
+    input{padding:6px;margin:4px;border-radius:6px;border:none;}
 
     table{
       width:100%;
@@ -20,6 +21,13 @@
       border:1px solid #333;
       text-align:center;
     }
+
+    .card{
+      background:#1e293b;
+      padding:10px;
+      margin:5px 0;
+      border-radius:8px;
+    }
   </style>
 </head>
 
@@ -29,8 +37,19 @@
 <div id="home" class="screen active">
   <h1>🏠 Inicio</h1>
 
-  <button onclick="ir('eventos')">Eventos</button>
-  <button onclick="ir('accesos')">Crear accesos</button>
+  <button onclick="ir('crearEvento')">➕ Crear evento</button>
+  <button onclick="ir('eventos')">📅 Eventos</button>
+</div>
+
+<!-- CREAR EVENTO -->
+<div id="crearEvento" class="screen">
+  <h1>Crear evento</h1>
+  <button onclick="ir('home')">⬅</button>
+
+  <input id="nombreEvento" placeholder="Nombre">
+  <input id="venueEvento" placeholder="Venue">
+
+  <button onclick="crearEvento()">Guardar</button>
 </div>
 
 <!-- EVENTOS -->
@@ -45,14 +64,19 @@
 <div id="gestion" class="screen">
   <h1>Gestión</h1>
 
+  <button onclick="ir('eventos')">⬅ Cambiar evento</button>
+
+  <button onclick="ir('stats')">📊 Estadísticas</button>
+  <button onclick="ir('inc')">⚠️ Incidencias</button>
+  <button onclick="ir('upload')">📂 CSV</button>
+  <button onclick="ir('accesos')">🚪 Accesos</button>
   <button onclick="ir('asociacion')">🔗 Asociación</button>
 </div>
 
 <!-- ACCESOS -->
 <div id="accesos" class="screen">
-  <h1>Crear accesos</h1>
-
-  <button onclick="ir('home')">⬅</button>
+  <h1>Accesos</h1>
+  <button onclick="ir('gestion')">⬅</button>
 
   <input id="nombreAcceso" placeholder="Ej: PISTA">
   <button onclick="crearAcceso()">Crear</button>
@@ -60,13 +84,48 @@
   <div id="listaAccesos"></div>
 </div>
 
-<!-- ASOCIACION MATRIZ -->
+<!-- ASOCIACION -->
 <div id="asociacion" class="screen">
-  <h1>🔗 Asociación visual</h1>
-
+  <h1>Asociación visual</h1>
   <button onclick="ir('gestion')">⬅</button>
 
   <div id="tabla"></div>
+</div>
+
+<!-- STATS -->
+<div id="stats" class="screen">
+  <h1>📊 Estadísticas</h1>
+  <button onclick="ir('gestion')">⬅</button>
+
+  <div id="tablaStats"></div>
+</div>
+
+<!-- INCIDENCIAS -->
+<div id="inc" class="screen">
+  <h1>⚠️ Incidencias</h1>
+  <button onclick="ir('gestion')">⬅</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Zona</th>
+        <th>Ticketera</th>
+        <th>Usos</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="tablaInc"></tbody>
+  </table>
+</div>
+
+<!-- CSV -->
+<div id="upload" class="screen">
+  <h1>Subida CSV</h1>
+  <button onclick="ir('gestion')">⬅</button>
+
+  <input type="file" id="fileInput">
+  <button onclick="subir()">Subir</button>
 </div>
 
 <script>
@@ -85,18 +144,34 @@ function ir(p){
  if(p==="eventos") cargarEventos();
  if(p==="accesos") cargarAccesos();
  if(p==="asociacion") cargarMatriz();
+ if(p==="stats") cargarStats();
+ if(p==="inc") cargarInc();
 }
 
 //////////////////////////////////////////////////
 // EVENTOS
 //////////////////////////////////////////////////
 
+async function crearEvento(){
+ const nombre=document.getElementById("nombreEvento").value;
+ const venue=document.getElementById("venueEvento").value;
+
+ await client.from("events").insert({
+   name:nombre,
+   venue:venue,
+   status:"active"
+ });
+
+ alert("Evento creado");
+ ir("eventos");
+}
+
 async function cargarEventos(){
  const {data}=await client.from("events").select("*");
 
  document.getElementById("listaEventos").innerHTML =
  data.map(e=>`
-   <div>
+   <div class="card">
      ${e.name}
      <button onclick="entrar('${e.id}','${e.venue}')">Entrar</button>
    </div>
@@ -110,40 +185,37 @@ function entrar(id,venue){
 }
 
 //////////////////////////////////////////////////
-// ACCESOS (POR RECINTO)
+// ACCESOS
 //////////////////////////////////////////////////
 
 async function crearAcceso(){
-
  const nombre=document.getElementById("nombreAcceso").value;
 
  await client.from("access_points").insert({
    name:nombre,
-   venue:currentVenue || "GLOBAL"
+   venue:currentVenue
  });
 
  cargarAccesos();
 }
 
 async function cargarAccesos(){
-
- const {data}=await client
-   .from("access_points")
-   .select("*");
+ const {data}=await client.from("access_points")
+   .select("*")
+   .eq("venue",currentVenue);
 
  document.getElementById("listaAccesos").innerHTML =
- data.map(a=>`<div>${a.name} (${a.venue})</div>`).join("");
+ data.map(a=>`<div class="card">${a.name}</div>`).join("");
 }
 
 //////////////////////////////////////////////////
-// MATRIZ VISUAL
+// MATRIZ
 //////////////////////////////////////////////////
 
 async function cargarMatriz(){
 
  const {data:tickets}=await client.from("ticket_providers").select("*");
- const {data:accesos}=await client
-   .from("access_points")
+ const {data:accesos}=await client.from("access_points")
    .select("*")
    .eq("venue",currentVenue);
 
@@ -158,20 +230,17 @@ async function cargarMatriz(){
  html+="</tr>";
 
  tickets.forEach(t=>{
-
    html+=`<tr><td>${t.name}</td>`;
 
    accesos.forEach(a=>{
-
      const existe=rel.find(r=>r.ticket_provider_id===t.id && r.access_id===a.id);
 
      html+=`
        <td>
          <input type="checkbox"
-           ${existe?"checked":""}
-           onchange="toggle('${t.id}','${a.id}',this.checked)">
-       </td>
-     `;
+         ${existe?"checked":""}
+         onchange="toggle('${t.id}','${a.id}',this.checked)">
+       </td>`;
    });
 
    html+="</tr>";
@@ -183,7 +252,6 @@ async function cargarMatriz(){
 }
 
 async function toggle(ticket,access,estado){
-
  if(estado){
    await client.from("ticket_access").insert({
      ticket_provider_id:ticket,
@@ -195,6 +263,79 @@ async function toggle(ticket,access,estado){
      .eq("ticket_provider_id",ticket)
      .eq("access_id",access);
  }
+}
+
+//////////////////////////////////////////////////
+// STATS
+//////////////////////////////////////////////////
+
+async function cargarStats(){
+ const {data}=await client.from("codes")
+   .select("*")
+   .eq("event_id",currentEvent);
+
+ document.getElementById("tablaStats").innerText =
+   "Total códigos: "+(data?.length||0);
+}
+
+//////////////////////////////////////////////////
+// INCIDENCIAS
+//////////////////////////////////////////////////
+
+async function cargarInc(){
+ const {data}=await client.from("codes")
+   .select("*, zones(name), ticket_providers(name)")
+   .eq("event_id",currentEvent);
+
+ document.getElementById("tablaInc").innerHTML =
+ data.map(c=>`
+   <tr>
+     <td>${c.code_value}</td>
+     <td>${c.zones?.name||""}</td>
+     <td>${c.ticket_providers?.name||""}</td>
+     <td>${c.usage_count}</td>
+     <td>${c.status}</td>
+   </tr>
+ `).join("");
+}
+
+//////////////////////////////////////////////////
+// CSV
+//////////////////////////////////////////////////
+
+async function subir(){
+
+ const file=document.getElementById("fileInput").files[0];
+ const text=await file.text();
+ const lines=text.split("\n");
+
+ const {data:zonas}=await client.from("zones").select("*");
+ const {data:tickets}=await client.from("ticket_providers").select("*");
+
+ const insertar=[];
+
+ for(let i=1;i<lines.length;i++){
+
+   const cols=lines[i].split(";");
+   const codigo=cols[0]?.trim();
+   const zona=zonas.find(z=>z.name===cols[1]);
+   const ticket=tickets.find(t=>t.name===cols[2]);
+
+   if(!codigo||!zona||!ticket) continue;
+
+   insertar.push({
+     event_id:currentEvent,
+     code_value:codigo,
+     status:"valid",
+     zone_id:zona.id,
+     ticket_provider_id:ticket.id,
+     usage_count:0
+   });
+ }
+
+ await client.from("codes").insert(insertar);
+
+ alert("CSV cargado");
 }
 </script>
 
