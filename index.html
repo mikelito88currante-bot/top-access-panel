@@ -217,12 +217,35 @@ async function cargarAccesos(){
 
 async function cargarMatriz(){
 
- const {data:tickets}=await client.from("ticket_providers").select("*");
- const {data:accesos}=await client.from("access_points")
+ const {data:codes}=await client
+   .from("codes")
+   .select("zone_id, ticket_provider_id, zones(name), ticket_providers(name)")
+   .eq("event_id",currentEvent);
+
+ const {data:accesos}=await client
+   .from("access_points")
    .select("*")
    .eq("venue",currentVenue);
 
  const {data:rel}=await client.from("ticket_access").select("*");
+
+ // 🔥 combinaciones únicas zona + ticketera
+ const combinaciones={};
+
+ codes.forEach(c=>{
+   const key = c.zone_id + "_" + c.ticket_provider_id;
+
+   if(!combinaciones[key]){
+     combinaciones[key]={
+       zone_id:c.zone_id,
+       ticket_provider_id:c.ticket_provider_id,
+       zona:c.zones?.name || "Sin zona",
+       ticket:c.ticket_providers?.name || "Sin ticketera"
+     };
+   }
+ });
+
+ const lista = Object.values(combinaciones);
 
  let html="<table><tr><th>Concepto</th>";
 
@@ -232,21 +255,25 @@ async function cargarMatriz(){
 
  html+="</tr>";
 
- tickets.forEach(t=>{
-   html+=`<tr><td>${t.name}</td>`;
+ lista.forEach(item=>{
+
+   const nombre = item.zona + " - " + item.ticket;
+
+   html+=`<tr><td>${nombre}</td>`;
 
    accesos.forEach(a=>{
 
      const existe = rel.some(r =>
-       r.ticket_provider_id === t.id &&
-       r.access_id === a.id
+       r.ticket_provider_id === item.ticket_provider_id &&
+       r.access_id === a.id &&
+       r.zone_id === item.zone_id
      );
 
      html+=`
        <td>
          <input type="checkbox"
          ${existe ? "checked" : ""}
-         onchange="toggleAcceso('${t.id}','${a.id}',this.checked)">
+         onchange="toggleAcceso('${item.ticket_provider_id}','${a.id}','${item.zone_id}',this.checked)">
        </td>`;
    });
 
@@ -258,18 +285,23 @@ async function cargarMatriz(){
  document.getElementById("tabla").innerHTML=html;
 }
 
-async function toggleAcceso(ticket,access,estado){
+async function toggleAcceso(ticket,access,zona,estado){
 
  if(estado){
-   await client.from("ticket_access").insert({
+   const {error}=await client.from("ticket_access").insert({
      ticket_provider_id:ticket,
-     access_id:access
+     access_id:access,
+     zone_id:zona
    });
+
+   if(error) console.log(error.message);
+
  }else{
    await client.from("ticket_access")
      .delete()
      .eq("ticket_provider_id",ticket)
-     .eq("access_id",access);
+     .eq("access_id",access)
+     .eq("zone_id",zona);
  }
 }
 
@@ -281,42 +313,43 @@ async function cargarStats(){
 
  const {data}=await client
    .from("codes")
-   .select("*, zones(name), ticket_providers(name)")
+   .select("*, ticket_providers(name)")
    .eq("event_id",currentEvent);
 
- const agrupado={};
+ let total = data.length;
+ let usados = 0;
+ let pendientes = 0;
+
+ const porTicketera = {};
 
  data.forEach(c=>{
 
-   const key = (c.ticket_providers?.name || "Sin ticketera") +
-               " - " +
-               (c.zones?.name || "Sin zona");
+   if(c.usage_count > 0) usados++;
+   else pendientes++;
 
-   if(!agrupado[key]){
-     agrupado[key]={pend:0,used:0,total:0};
+   const t = c.ticket_providers?.name || "Sin ticketera";
+
+   if(!porTicketera[t]){
+     porTicketera[t]=0;
    }
 
-   agrupado[key].total++;
-
-   if(c.usage_count === 0) agrupado[key].pend++;
-   if(c.usage_count > 0) agrupado[key].used++;
-
+   porTicketera[t]++;
  });
 
- let html="<table><tr><th>Concepto</th><th>Pendientes</th><th>Usadas</th><th>Total</th></tr>";
+ let html = `
+   <h2>Resumen global</h2>
+   Total: ${total}<br>
+   Usados: ${usados}<br>
+   Pendientes: ${pendientes}<br>
+   <hr>
+   <h2>Por ticketera</h2>
+ `;
 
- for(let k in agrupado){
-   html+=`<tr>
-     <td>${k}</td>
-     <td>${agrupado[k].pend}</td>
-     <td>${agrupado[k].used}</td>
-     <td>${agrupado[k].total}</td>
-   </tr>`;
+ for(let t in porTicketera){
+   html += `${t}: ${porTicketera[t]} códigos<br>`;
  }
 
- html+="</table>";
-
- document.getElementById("tablaStats").innerHTML=html;
+ document.getElementById("tablaStats").innerHTML = html;
 }
 
 //////////////////////////////////////////////////
