@@ -32,7 +32,8 @@
 </head>
 
 <body>
-
+<div id="headerEvento" style="margin-bottom:20px;"></div>
+  
 <!-- HOME -->
 <div id="home" class="screen active">
   <h1>🏠 Inicio</h1>
@@ -135,6 +136,26 @@ const client = window.supabase.createClient(
  "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
 );
 
+//////////////////////////////////////////////////
+// 🔹 CABECERA EVENTO (AÑADIR AQUÍ)
+//////////////////////////////////////////////////
+
+function renderHeaderEvento(evento){
+
+ if(!evento) return;
+
+ const fecha = evento.event_date || "";
+
+ document.getElementById("headerEvento").innerHTML = `
+   <h2>
+     ${evento.name || ""} 
+     ${fecha ? " | " + fecha : ""} 
+     ${evento.venue ? " | " + evento.venue : ""}
+   </h2>
+   <hr>
+ `;
+}
+
 let currentEvent=null;
 let currentVenue=null;
 
@@ -179,9 +200,19 @@ async function cargarEventos(){
  `).join("");
 }
 
-function entrar(id,venue){
+async function entrar(id,venue){
+
  currentEvent=id;
  currentVenue=venue;
+
+ const {data} = await client
+   .from("events")
+   .select("*")
+   .eq("id",id)
+   .single();
+
+ renderHeaderEvento(data);
+
  ir("gestion");
 }
 
@@ -313,40 +344,93 @@ async function cargarStats(){
 
  const {data}=await client
    .from("codes")
-   .select("*, ticket_providers(name)")
+   .select("*, zones(name), ticket_providers(name)")
    .eq("event_id",currentEvent);
 
- let total = data.length;
- let usados = 0;
- let pendientes = 0;
+ // 🔹 agrupación principal
+ const agrupado={};
 
- const porTicketera = {};
+ let total=0;
+ let usados=0;
+ let pendientes=0;
+
+ const porTicketera={};
+ const porZona={};
 
  data.forEach(c=>{
 
-   if(c.usage_count > 0) usados++;
+   total++;
+
+   if(c.usage_count>0) usados++;
    else pendientes++;
 
-   const t = c.ticket_providers?.name || "Sin ticketera";
+   const zona = c.zones?.name || "Sin zona";
+   const ticket = c.ticket_providers?.name || "Sin ticketera";
 
-   if(!porTicketera[t]){
-     porTicketera[t]=0;
+   const key = ticket + " " + zona;
+
+   if(!agrupado[key]){
+     agrupado[key]={pend:0,used:0,total:0};
    }
 
-   porTicketera[t]++;
+   agrupado[key].total++;
+
+   if(c.usage_count>0) agrupado[key].used++;
+   else agrupado[key].pend++;
+
+   // por ticketera
+   if(!porTicketera[ticket]) porTicketera[ticket]=0;
+   porTicketera[ticket]++;
+
+   // por zona
+   if(!porZona[zona]) porZona[zona]=0;
+   porZona[zona]++;
  });
 
+ // 🔥 TABLA PRINCIPAL
  let html = `
-   <h2>Resumen global</h2>
-   Total: ${total}<br>
-   Usados: ${usados}<br>
-   Pendientes: ${pendientes}<br>
-   <hr>
-   <h2>Por ticketera</h2>
+ <h2>ESTADÍSTICAS DE ACCESO</h2>
+
+ <table>
+   <tr>
+     <th>Origen</th>
+     <th>Pendientes</th>
+     <th>Usadas</th>
+     <th>Totales</th>
+   </tr>
  `;
 
+ for(let k in agrupado){
+   html+=`
+     <tr>
+       <td>${k}</td>
+       <td>${agrupado[k].pend}</td>
+       <td>${agrupado[k].used}</td>
+       <td>${agrupado[k].total}</td>
+     </tr>
+   `;
+ }
+
+ html+=`
+   <tr>
+     <td><b>Totales</b></td>
+     <td><b>${pendientes}</b></td>
+     <td><b>${usados}</b></td>
+     <td><b>${total}</b></td>
+   </tr>
+ </table>
+ <br>
+ `;
+
+ // 🔥 POR TICKETERA
+ html += `<h3>Por ticketera</h3>`;
  for(let t in porTicketera){
-   html += `${t}: ${porTicketera[t]} códigos<br>`;
+   html += `${t}: ${porTicketera[t]}<br>`;
+ }
+
+ html += `<br><h3>Por zonas</h3>`;
+ for(let z in porZona){
+   html += `${z}: ${porZona[z]}<br>`;
  }
 
  document.getElementById("tablaStats").innerHTML = html;
@@ -469,4 +553,5 @@ async function subir(){
 </script>
 
 </body>
+  <div id="headerEvento" style="margin-bottom:20px;"></div>
 </html>
