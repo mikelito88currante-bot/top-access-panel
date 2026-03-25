@@ -362,30 +362,93 @@ async function multi(id){
 async function subir(){
 
  const file=document.getElementById("fileInput").files[0];
+ if(!file) return alert("Selecciona archivo");
+
  const text=await file.text();
  const lines=text.split("\n");
 
- const {data:exist}=await client.from("codes")
- .select("code_value").eq("event_id",currentEvent);
+ if(lines.length<2) return alert("Archivo vacío");
 
- const set=new Set(exist.map(e=>e.code_value));
+ // 🔹 DETECTAR CABECERAS
+ const headers = lines[0].toLowerCase().split(";");
+
+ const idxCodigo = headers.findIndex(h => h.includes("code") || h.includes("codigo"));
+ const idxZona = headers.findIndex(h => h.includes("zone") || h.includes("zona"));
+ const idxTicket = headers.findIndex(h => h.includes("ticket") || h.includes("provider"));
+
+ if(idxCodigo === -1) return alert("No se detecta columna código");
+
+ // 🔹 CARGAR DATOS EXISTENTES
+ const {data:exist} = await client
+   .from("codes")
+   .select("code_value")
+   .eq("event_id",currentEvent);
+
+ const existentes = new Set(exist.map(e=>e.code_value));
+
+ const {data:zonas} = await client.from("zones").select("*");
+ const {data:ticket} = await client.from("ticket_providers").select("*");
+
+ const zonasMap = {};
+ zonas.forEach(z=>zonasMap[z.name.toLowerCase()] = z);
+
+ const ticketMap = {};
+ ticket.forEach(t=>ticketMap[t.name.toLowerCase()] = t);
 
  const insertar=[];
 
+ // 🔹 PROCESAR FILAS
  for(let i=1;i<lines.length;i++){
-  const c=lines[i].split(";")[0];
-  if(!c||set.has(c)) continue;
 
-  insertar.push({
-   event_id:currentEvent,
-   code_value:c,
-   usage_count:0,
-   status:"valid"
-  });
+   const cols = lines[i].split(";");
+
+   const codigo = cols[idxCodigo]?.trim();
+   if(!codigo || existentes.has(codigo)) continue;
+
+   let zonaId=null;
+   let ticketId=null;
+
+   // 🔹 ZONA
+   if(idxZona !== -1){
+     const nombreZona = cols[idxZona]?.trim().toLowerCase();
+
+     if(nombreZona){
+       if(!zonasMap[nombreZona]){
+         const {data:newZona} = await client.from("zones").insert({name:nombreZona}).select().single();
+         zonasMap[nombreZona] = newZona;
+       }
+       zonaId = zonasMap[nombreZona].id;
+     }
+   }
+
+   // 🔹 TICKETERA
+   if(idxTicket !== -1){
+     const nombreTicket = cols[idxTicket]?.trim().toLowerCase();
+
+     if(nombreTicket){
+       if(!ticketMap[nombreTicket]){
+         const {data:newTicket} = await client.from("ticket_providers").insert({name:nombreTicket}).select().single();
+         ticketMap[nombreTicket] = newTicket;
+       }
+       ticketId = ticketMap[nombreTicket].id;
+     }
+   }
+
+   insertar.push({
+     event_id:currentEvent,
+     code_value:codigo,
+     zone_id:zonaId,
+     ticket_provider_id:ticketId,
+     status:"valid",
+     usage_count:0
+   });
  }
 
+ if(insertar.length===0) return alert("No hay nuevos códigos");
+
  await client.from("codes").insert(insertar);
- alert("CSV OK");
+
+ alert("CSV inteligente cargado correctamente");
 }
 
 //////////////////////////////////////////////////
