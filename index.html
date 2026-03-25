@@ -46,8 +46,20 @@
 <div id="eventos" class="screen">
   <h1>Eventos</h1>
   <button onclick="ir('home')">⬅</button>
-  <input id="busquedaEvento" oninput="filtrarEventos()" placeholder="Buscar...">
-  <input type="date" id="filtroFecha" onchange="filtrarEventos()">
+
+  <input id="busquedaEvento" placeholder="Buscar evento...">
+
+  <br>
+
+  <label>Desde:</label>
+  <input type="date" id="fechaInicio">
+
+  <label>Hasta:</label>
+  <input type="date" id="fechaFin">
+
+  <button onclick="filtrarEventos()">🔍 Buscar</button>
+  <button onclick="cargarEventos()">♻ Reset</button>
+
   <div id="listaEventos"></div>
 </div>
 
@@ -123,23 +135,75 @@ async function crearEvento(){
 }
 
 async function cargarEventos(){
- const {data}=await client.from("events").select("*");
- eventosGlobal=data;
- renderEventos(data);
+
+ const {data,error}=await client.from("events").select("*");
+
+ if(error){
+   console.log(error);
+   alert("Error cargando eventos");
+   return;
+ }
+
+ eventosGlobal = data || [];
+
+ // 🔥 ORDENAR POR FECHA (más recientes primero)
+ eventosGlobal.sort((a,b)=> 
+   new Date(b.event_date || 0) - new Date(a.event_date || 0)
+ );
+
+ // 🔥 SIEMPRE mostrar todos al entrar
+ renderEventos(eventosGlobal);
 }
 
 function renderEventos(lista){
- document.getElementById("listaEventos").innerHTML=
+
+ if(!lista || lista.length === 0){
+   document.getElementById("listaEventos").innerHTML = "No hay eventos";
+   return;
+ }
+
+ document.getElementById("listaEventos").innerHTML =
  lista.map(e=>`
- <div class="card">
- ${e.name}
- <button onclick="entrar('${e.id}','${e.venue}')">Entrar</button>
- </div>`).join("");
+   <div class="card">
+     <b>${e.name}</b><br>
+     📍 ${e.venue || ""}<br>
+     📅 ${e.event_date || "Sin fecha"}<br>
+     <br>
+     <button onclick="entrar('${e.id}','${e.venue}')">Entrar</button>
+   </div>
+ `).join("");
 }
 
 function filtrarEventos(){
- const t=document.getElementById("busquedaEvento").value.toLowerCase();
- renderEventos(eventosGlobal.filter(e=>e.name.toLowerCase().includes(t)));
+
+ const texto = document.getElementById("busquedaEvento").value.toLowerCase();
+ const inicio = document.getElementById("fechaInicio").value;
+ const fin = document.getElementById("fechaFin").value;
+
+ let filtrados = eventosGlobal;
+
+ // 🔍 FILTRO TEXTO
+ if(texto){
+   filtrados = filtrados.filter(e =>
+     (e.name || "").toLowerCase().includes(texto)
+   );
+ }
+
+ // 📅 FILTRO FECHA DESDE
+ if(inicio){
+   filtrados = filtrados.filter(e =>
+     e.event_date && e.event_date >= inicio
+   );
+ }
+
+ // 📅 FILTRO FECHA HASTA
+ if(fin){
+   filtrados = filtrados.filter(e =>
+     e.event_date && e.event_date <= fin
+   );
+ }
+
+ renderEventos(filtrados);
 }
 
 async function entrar(id,venue){
