@@ -606,61 +606,140 @@ async function generarPDF(){
  const { jsPDF } = window.jspdf;
  const doc = new jsPDF();
 
- // 🔹 INFO EVENTO
+ // 🔹 EVENTO
  const {data:evento} = await client
    .from("events")
    .select("*")
    .eq("id",currentEvent)
    .single();
 
- const nombre = evento?.name || "evento";
+ const nombre = evento?.name || "";
  const recinto = evento?.venue || "";
  const fecha = evento?.event_date || "";
 
- // 🔹 LOGO (IMPORTANTE: debe existir logo.png en tu proyecto)
+ let y = 15;
+
+ // 🔥 LOGO CENTRADO (SIN DEFORMAR)
  try{
    const img = new Image();
    img.src = "logo.png";
 
-   await new Promise(resolve=>{
-     img.onload = resolve;
-   });
+   await new Promise(res=>img.onload=res);
 
-   doc.addImage(img, "PNG", 10, 10, 40, 15);
+   const width = 50;
+   const height = (img.height / img.width) * width;
+
+   const x = (210 - width) / 2;
+
+   doc.addImage(img, "PNG", x, y, width, height);
+   y += height + 10;
+
  }catch(e){}
 
  // 🔹 CABECERA
- doc.setFontSize(18);
- doc.text("INFORME EVENTO", 10, 35);
+ doc.setFont("helvetica","bold");
+ doc.setFontSize(16);
+ doc.text("INFORME EVENTO", 105, y, {align:"center"});
 
- doc.setFontSize(12);
- doc.text(`Evento: ${nombre}`, 10, 45);
- doc.text(`Recinto: ${recinto}`, 10, 52);
- doc.text(`Fecha: ${fecha}`, 10, 59);
+ y += 10;
 
- // 🔹 ESTADISTICAS TEXTO
- const contenido = document.getElementById("tablaStats").innerText;
+ doc.setFont("helvetica","normal");
+ doc.setFontSize(11);
 
- const lineas = doc.splitTextToSize(contenido, 180);
+ doc.text(`Evento: ${nombre}`, 10, y);
+ y+=6;
+ doc.text(`Recinto: ${recinto}`, 10, y);
+ y+=6;
+ doc.text(`Fecha: ${fecha}`, 10, y);
 
- doc.setFontSize(9);
- doc.text(lineas, 10, 70);
+ y+=10;
 
- // 🔥 GRÁFICO FLUJO 20 MIN
- const canvasFlujo = document.getElementById("graficoFlujo");
+ // 🔥 FUNCION PARA TABLAS
+ function dibujarTabla(titulo, dataObj){
 
- if(canvasFlujo){
-   const imgData = canvasFlujo.toDataURL("image/png");
+   doc.setFont("helvetica","bold");
+   doc.text(titulo, 10, y);
+   y+=6;
+
+   doc.setFontSize(10);
+
+   // cabecera
+   doc.setFont("helvetica","bold");
+   doc.text("Origen", 10, y);
+   doc.text("Pend.", 100, y);
+   doc.text("Usadas", 130, y);
+   doc.text("Total", 170, y);
+
+   y+=5;
+
+   doc.setFont("helvetica","normal");
+
+   for(let k in dataObj){
+
+     doc.text(String(k), 10, y);
+     doc.text(String(dataObj[k].pend), 100, y);
+     doc.text(String(dataObj[k].used), 130, y);
+     doc.text(String(dataObj[k].total), 170, y);
+
+     y+=5;
+
+     if(y>270){
+       doc.addPage();
+       y=15;
+     }
+   }
+
+   y+=8;
+ }
+
+ // 🔹 REUTILIZAMOS DATOS DEL FRONT
+ const {data}=await client.from("codes")
+   .select("*,zones(name),ticket_providers(name)")
+   .eq("event_id",currentEvent);
+
+ const combo={}, porTicket={}, porZona={};
+
+ data.forEach(c=>{
+   const zona=c.zones?.name || "Sin zona";
+   const ticket=c.ticket_providers?.name || "Sin ticketera";
+   const key = ticket+" "+zona;
+
+   const usado = c.usage_count>0;
+
+   if(!combo[key]) combo[key]={used:0,pend:0,total:0};
+   combo[key].total++;
+   usado ? combo[key].used++ : combo[key].pend++;
+
+   if(!porTicket[ticket]) porTicket[ticket]={used:0,pend:0,total:0};
+   porTicket[ticket].total++;
+   usado ? porTicket[ticket].used++ : porTicket[ticket].pend++;
+
+   if(!porZona[zona]) porZona[zona]={used:0,pend:0,total:0};
+   porZona[zona].total++;
+   usado ? porZona[zona].used++ : porZona[zona].pend++;
+ });
+
+ // 🔥 TABLAS BIEN FORMATEADAS
+ dibujarTabla("COMPARATIVA TICKETERA / ZONA", combo);
+ dibujarTabla("COMPARATIVA POR TICKETERA", porTicket);
+ dibujarTabla("COMPARATIVA POR ZONAS", porZona);
+
+ // 🔥 GRAFICO FLUJO (PAGINA NUEVA)
+ const canvas = document.getElementById("graficoFlujo");
+
+ if(canvas){
+   const imgData = canvas.toDataURL("image/png");
 
    doc.addPage();
 
+   doc.setFont("helvetica","bold");
    doc.setFontSize(14);
-   doc.text("Flujo de accesos cada 20 minutos", 10, 15);
+   doc.text("FLUJO DE ACCESOS CADA 20 MIN", 105, 15, {align:"center"});
 
-   doc.addImage(imgData, "PNG", 10, 20, 180, 100);
+   doc.addImage(imgData, "PNG", 10, 25, 190, 100);
  }
 
- // 🔥 DESCARGA CON NOMBRE DINÁMICO
+ // 🔥 NOMBRE ARCHIVO
  const nombreArchivo = `${nombre}_${fecha}.pdf`.replace(/\s+/g,"_");
 
  doc.save(nombreArchivo);
