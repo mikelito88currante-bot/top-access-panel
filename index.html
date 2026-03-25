@@ -302,82 +302,114 @@ let chartTicket=null;
 
 async function cargarStats(){
 
- const {data}=await client.from("codes")
+ const {data,error}=await client.from("codes")
    .select("*,zones(name),ticket_providers(name)")
    .eq("event_id",currentEvent);
 
- if(!data || data.length === 0){
- document.getElementById("tablaStats").innerHTML = "Sin datos aún";
- return;
-}
+ if(error || !data){
+   document.getElementById("tablaStats").innerHTML = "Error cargando stats";
+   return;
+ }
 
- let total=0, usados=0;
+ let total=0, usados=0, pendientes=0;
 
- const porZona={};
- const porTicket={};
+ const combo={};       // ticketera + zona
+ const porTicket={};   // ticketera
+ const porZona={};     // zona
 
  data.forEach(c=>{
 
    total++;
 
-   if(c.usage_count>0){
-     usados++;
+   const zona=c.zones?.name || "Sin zona";
+   const ticket=c.ticket_providers?.name || "Sin ticketera";
+   const key = ticket + " " + zona;
 
-     const zona=c.zones?.name || "Sin zona";
-     const ticket=c.ticket_providers?.name || "Sin ticketera";
+   const usado = c.usage_count>0;
 
-     // zona
-     if(!porZona[zona]) porZona[zona]=0;
-     porZona[zona]++;
+   if(usado) usados++;
+   else pendientes++;
 
-     // ticketera
-     if(!porTicket[ticket]) porTicket[ticket]=0;
-     porTicket[ticket]++;
-   }
+   // 🔹 COMBINADO
+   if(!combo[key]) combo[key]={used:0,pend:0,total:0};
+   combo[key].total++;
+   usado ? combo[key].used++ : combo[key].pend++;
+
+   // 🔹 POR TICKETERA
+   if(!porTicket[ticket]) porTicket[ticket]={used:0,pend:0,total:0};
+   porTicket[ticket].total++;
+   usado ? porTicket[ticket].used++ : porTicket[ticket].pend++;
+
+   // 🔹 POR ZONA
+   if(!porZona[zona]) porZona[zona]={used:0,pend:0,total:0};
+   porZona[zona].total++;
+   usado ? porZona[zona].used++ : porZona[zona].pend++;
  });
 
- // 🔹 RESUMEN
- document.getElementById("tablaStats").innerHTML = `
-   <div class="card">
-     🎟 Total: ${total} <br>
-     ✅ Usados: ${usados} <br>
-     ⏳ Pendientes: ${total-usados}
-   </div>
+ let html="";
+
+ // 🔥 1. COMPARATIVA TICKETERA/ZONA
+ html+=`<h2>COMPARATIVA POR TICKETERA / ZONA</h2>
+ <table>
+ <tr><th>Origen</th><th>Pendientes</th><th>Usadas</th><th>Totales</th></tr>`;
+
+ for(let k in combo){
+   html+=`
+   <tr>
+     <td>${k}</td>
+     <td>${combo[k].pend}</td>
+     <td>${combo[k].used}</td>
+     <td>${combo[k].total}</td>
+   </tr>`;
+ }
+
+ html+="</table><br>";
+
+ // 🔥 2. POR TICKETERA
+ html+=`<h2>COMPARATIVA POR TICKETERA</h2>
+ <table>
+ <tr><th>Ticketera</th><th>Pendientes</th><th>Usadas</th><th>Totales</th></tr>`;
+
+ for(let t in porTicket){
+   html+=`
+   <tr>
+     <td>${t}</td>
+     <td>${porTicket[t].pend}</td>
+     <td>${porTicket[t].used}</td>
+     <td>${porTicket[t].total}</td>
+   </tr>`;
+ }
+
+ html+="</table><br>";
+
+ // 🔥 3. POR ZONA
+ html+=`<h2>COMPARATIVA POR ZONAS</h2>
+ <table>
+ <tr><th>Zona</th><th>Pendientes</th><th>Usadas</th><th>Totales</th></tr>`;
+
+ for(let z in porZona){
+   html+=`
+   <tr>
+     <td>${z}</td>
+     <td>${porZona[z].pend}</td>
+     <td>${porZona[z].used}</td>
+     <td>${porZona[z].total}</td>
+   </tr>`;
+ }
+
+ html+="</table><br>";
+
+ // 🔹 RESUMEN GLOBAL
+ html+=`
+ <h2>RESUMEN GLOBAL</h2>
+ <div class="card">
+   Total: ${total}<br>
+   Usadas: ${usados}<br>
+   Pendientes: ${pendientes}
+ </div>
  `;
 
- // 🔥 GRAFICO ZONAS
- const zonasLabels=Object.keys(porZona);
- const zonasData=Object.values(porZona);
-
- if(chartZonas) chartZonas.destroy();
-
- chartZonas=new Chart(document.getElementById("graficoZonas"),{
-   type:"bar",
-   data:{
-     labels:zonasLabels,
-     datasets:[{
-       label:"Accesos por zona",
-       data:zonasData
-     }]
-   }
- });
-
- // 🔥 GRAFICO TICKETERA
- const ticketLabels=Object.keys(porTicket);
- const ticketData=Object.values(porTicket);
-
- if(chartTicket) chartTicket.destroy();
-
- chartTicket=new Chart(document.getElementById("graficoTicket"),{
-   type:"pie",
-   data:{
-     labels:ticketLabels,
-     datasets:[{
-       label:"Ticketera",
-       data:ticketData
-     }]
-   }
- });
+ document.getElementById("tablaStats").innerHTML = html;
 }
 
 //////////////////////////////////////////////////
