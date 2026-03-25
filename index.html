@@ -114,7 +114,10 @@
 </div>
 
 <script>
-const client = supabase.createClient("https://zuhssrhdezptsgemxofh.supabase.co","KEY");
+const client = supabase.createClient(
+ "https://zuhssrhdezptsgemxofh.supabase.co",
+ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
+);
 
 let currentEvent=null;
 let currentVenue=null;
@@ -303,7 +306,10 @@ async function cargarStats(){
    .select("*,zones(name),ticket_providers(name)")
    .eq("event_id",currentEvent);
 
- if(!data) return;
+ if(!data || data.length === 0){
+ document.getElementById("tablaStats").innerHTML = "Sin datos aún";
+ return;
+}
 
  let total=0, usados=0;
 
@@ -445,7 +451,7 @@ async function subir(){
    .select("code_value")
    .eq("event_id",currentEvent);
 
- const existentes = new Set(exist.map(e=>e.code_value));
+ const existentes = new Set((exist || []).map(e=>e.code_value));
 
  const {data:zonas} = await client.from("zones").select("*");
  const {data:ticket} = await client.from("ticket_providers").select("*");
