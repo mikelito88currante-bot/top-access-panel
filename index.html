@@ -4,6 +4,7 @@
   <title>Top Access PRO</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     body { font-family: Arial; background:#0f172a; color:white; margin:0;}
@@ -91,6 +92,7 @@
 <div id="stats" class="screen">
   <h1>📊 Dashboard</h1>
   <button onclick="ir('gestion')">⬅</button>
+  <button onclick="generarPDF()">📄 Exportar PDF PRO</button>
 
   <div id="tablaStats"></div>
 
@@ -599,7 +601,71 @@ setInterval(()=>{
   cargarInc();
  }
 },5000);
+async function generarPDF(){
 
+ const { jsPDF } = window.jspdf;
+ const doc = new jsPDF();
+
+ // 🔹 INFO EVENTO
+ const {data:evento} = await client
+   .from("events")
+   .select("*")
+   .eq("id",currentEvent)
+   .single();
+
+ const nombre = evento?.name || "evento";
+ const recinto = evento?.venue || "";
+ const fecha = evento?.event_date || "";
+
+ // 🔹 LOGO (IMPORTANTE: debe existir logo.png en tu proyecto)
+ try{
+   const img = new Image();
+   img.src = "logo.png";
+
+   await new Promise(resolve=>{
+     img.onload = resolve;
+   });
+
+   doc.addImage(img, "PNG", 10, 10, 40, 15);
+ }catch(e){}
+
+ // 🔹 CABECERA
+ doc.setFontSize(18);
+ doc.text("INFORME EVENTO", 10, 35);
+
+ doc.setFontSize(12);
+ doc.text(`Evento: ${nombre}`, 10, 45);
+ doc.text(`Recinto: ${recinto}`, 10, 52);
+ doc.text(`Fecha: ${fecha}`, 10, 59);
+
+ // 🔹 ESTADISTICAS TEXTO
+ const contenido = document.getElementById("tablaStats").innerText;
+
+ const lineas = doc.splitTextToSize(contenido, 180);
+
+ doc.setFontSize(9);
+ doc.text(lineas, 10, 70);
+
+ // 🔥 GRÁFICO FLUJO 20 MIN
+ const canvasFlujo = document.getElementById("graficoFlujo");
+
+ if(canvasFlujo){
+   const imgData = canvasFlujo.toDataURL("image/png");
+
+   doc.addPage();
+
+   doc.setFontSize(14);
+   doc.text("Flujo de accesos cada 20 minutos", 10, 15);
+
+   doc.addImage(imgData, "PNG", 10, 20, 180, 100);
+ }
+
+ // 🔥 DESCARGA CON NOMBRE DINÁMICO
+ const nombreArchivo = `${nombre}_${fecha}.pdf`.replace(/\s+/g,"_");
+
+ doc.save(nombreArchivo);
+}
+  
 </script>
 
 </body>
