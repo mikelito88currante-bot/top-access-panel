@@ -147,11 +147,17 @@ function renderHeaderEvento(evento){
  const fecha = evento.event_date || "";
 
  document.getElementById("headerEvento").innerHTML = `
-   <h2>
-     ${evento.name || ""} 
-     ${fecha ? " | " + fecha : ""} 
-     ${evento.venue ? " | " + evento.venue : ""}
-   </h2>
+   <div style="display:flex; align-items:center; gap:15px;">
+     
+     <img src="logo.png" style="height:50px; border-radius:8px;">
+
+     <h2 style="margin:0;">
+       ${evento.name || ""} 
+       ${fecha ? " | " + fecha : ""} 
+       ${evento.venue ? " | " + evento.venue : ""}
+     </h2>
+
+   </div>
    <hr>
  `;
 }
