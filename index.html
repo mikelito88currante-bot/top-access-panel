@@ -6,190 +6,102 @@
 
   <style>
     body { font-family: Arial; background:#0f172a; color:white; margin:0;}
-
     .container{padding:20px;}
-
     .screen{display:none;} 
     .active{display:block;}
-
-    button{padding:8px;margin:4px;border:none;border-radius:6px;background:#1e293b;color:white;}
+    button{padding:8px;margin:4px;border:none;border-radius:6px;background:#1e293b;color:white;cursor:pointer;}
     input{padding:6px;margin:4px;border-radius:6px;border:none;}
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-    }
-
-    th,td{
-      padding:6px;
-      border:1px solid #333;
-      text-align:center;
-    }
-
-    .card{
-      background:#1e293b;
-      padding:10px;
-      margin:5px 0;
-      border-radius:8px;
-    }
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
+    th,td{padding:6px;border:1px solid #333;text-align:center;}
+    .card{background:#1e293b;padding:10px;margin:5px 0;border-radius:8px;}
   </style>
 </head>
 
 <body>
 
-<!-- 🔥 HEADER SaaS -->
-<div id="headerEvento" style="
-  position:sticky;
-  top:0;
-  z-index:1000;
-  background:#020617;
-  padding:15px;
-  border-bottom:1px solid #1e293b;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-">
-  <div style="display:flex; align-items:center; gap:15px;">
-    <img src="logo.png" style="height:45px; border-radius:8px;">
-    <h2 style="margin:0;">Top Access</h2>
+<div id="headerEvento" style="position:sticky;top:0;background:#020617;padding:15px;display:flex;justify-content:space-between;">
+  <div style="display:flex;gap:10px;align-items:center;">
+    <img src="logo.png" style="height:40px;">
+    <b>Top Access</b>
   </div>
-
   <div id="infoEvento"></div>
 </div>
 
-<div class
-  
-<!-- HOME -->
-<div id="home" class="screen active">
-  <h1>🏠 Inicio</h1>
+<div class="container">
 
-  <button onclick="ir('crearEvento')">➕ Crear evento</button>
-  <button onclick="ir('eventos')">📅 Eventos</button>
+<div id="home" class="screen active">
+  <h1>Inicio</h1>
+  <button onclick="ir('crearEvento')">Crear evento</button>
+  <button onclick="ir('eventos')">Eventos</button>
 </div>
 
-<!-- CREAR EVENTO -->
 <div id="crearEvento" class="screen">
   <h1>Crear evento</h1>
   <button onclick="ir('home')">⬅</button>
-
   <input id="nombreEvento" placeholder="Nombre">
   <input id="venueEvento" placeholder="Venue">
-
   <button onclick="crearEvento()">Guardar</button>
 </div>
 
-<!-- EVENTOS -->
 <div id="eventos" class="screen">
   <h1>Eventos</h1>
   <button onclick="ir('home')">⬅</button>
-
+  <input id="busquedaEvento" oninput="filtrarEventos()" placeholder="Buscar...">
+  <input type="date" id="filtroFecha" onchange="filtrarEventos()">
   <div id="listaEventos"></div>
 </div>
 
-<!-- GESTION -->
 <div id="gestion" class="screen">
   <h1>Gestión</h1>
-
-  <button onclick="ir('eventos')">⬅ Cambiar evento</button>
-
-  <button onclick="ir('stats')">📊 Estadísticas</button>
-  <button onclick="ir('inc')">⚠️ Incidencias</button>
-  <button onclick="ir('upload')">📂 CSV</button>
-  <button onclick="ir('accesos')">🚪 Accesos</button>
-  <button onclick="ir('asociacion')">🔗 Asociación</button>
+  <button onclick="ir('eventos')">⬅</button>
+  <button onclick="ir('stats')">Stats</button>
+  <button onclick="ir('inc')">Incidencias</button>
+  <button onclick="ir('upload')">CSV</button>
+  <button onclick="ir('accesos')">Accesos</button>
+  <button onclick="ir('asociacion')">Asociación</button>
 </div>
 
-<!-- ACCESOS -->
 <div id="accesos" class="screen">
   <h1>Accesos</h1>
   <button onclick="ir('gestion')">⬅</button>
-
-  <input id="nombreAcceso" placeholder="Ej: PISTA">
+  <input id="nombreAcceso">
   <button onclick="crearAcceso()">Crear</button>
-
   <div id="listaAccesos"></div>
 </div>
 
-<!-- ASOCIACION -->
 <div id="asociacion" class="screen">
-  <h1>Asociación visual</h1>
+  <h1>Asociación</h1>
   <button onclick="ir('gestion')">⬅</button>
-
   <div id="tabla"></div>
 </div>
 
-<!-- STATS -->
 <div id="stats" class="screen">
-  <h1>📊 Estadísticas</h1>
+  <h1>Stats</h1>
   <button onclick="ir('gestion')">⬅</button>
-
   <div id="tablaStats"></div>
 </div>
 
-<!-- INCIDENCIAS -->
 <div id="inc" class="screen">
-  <h1>⚠️ Incidencias</h1>
+  <h1>Incidencias</h1>
   <button onclick="ir('gestion')">⬅</button>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Zona</th>
-        <th>Ticketera</th>
-        <th>Usos</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tablaInc"></tbody>
-  </table>
+  <table><tbody id="tablaInc"></tbody></table>
 </div>
 
-<!-- CSV -->
 <div id="upload" class="screen">
-  <h1>Subida CSV</h1>
+  <h1>CSV</h1>
   <button onclick="ir('gestion')">⬅</button>
-
   <input type="file" id="fileInput">
   <button onclick="subir()">Subir</button>
 </div>
 
+</div>
+
 <script>
-const client = window.supabase.createClient(
- "https://zuhssrhdezptsgemxofh.supabase.co",
- "sb_publishable_gc37cVjzIaudeAfNDP63Jg_ATzjSEVv"
-);
-
-//////////////////////////////////////////////////
-// 🔹 CABECERA EVENTO (AÑADIR AQUÍ)
-//////////////////////////////////////////////////
-
-function renderHeaderEvento(evento){
-
- if(!evento) return;
-
- const fecha = evento.event_date || "";
-
- document.getElementById("headerEvento").innerHTML = `
-   <div style="display:flex; align-items:center; gap:15px;">
-     
-     <img src="logo.png" style="height:50px; border-radius:8px;">
-
-     <h2 style="margin:0;">
-       ${evento.name || ""} 
-       ${fecha ? " | " + fecha : ""} 
-       ${evento.venue ? " | " + evento.venue : ""}
-     </h2>
-
-   </div>
-   <hr>
- `;
-}
+const client = supabase.createClient("https://zuhssrhdezptsgemxofh.supabase.co","KEY");
 
 let currentEvent=null;
 let currentVenue=null;
+let eventosGlobal=[];
 
 function ir(p){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -202,49 +114,39 @@ function ir(p){
  if(p==="inc") cargarInc();
 }
 
-//////////////////////////////////////////////////
-// EVENTOS
-//////////////////////////////////////////////////
-
 async function crearEvento(){
- const nombre=document.getElementById("nombreEvento").value;
- const venue=document.getElementById("venueEvento").value;
-
  await client.from("events").insert({
-   name:nombre,
-   venue:venue,
-   status:"active"
+   name:document.getElementById("nombreEvento").value,
+   venue:document.getElementById("venueEvento").value
  });
-
- alert("Evento creado");
  ir("eventos");
 }
 
 async function cargarEventos(){
  const {data}=await client.from("events").select("*");
+ eventosGlobal=data;
+ renderEventos(data);
+}
 
- document.getElementById("listaEventos").innerHTML =
- data.map(e=>`
-   <div class="card">
-     ${e.name}
-     <button onclick="entrar('${e.id}','${e.venue}')">Entrar</button>
-   </div>
- `).join("");
+function renderEventos(lista){
+ document.getElementById("listaEventos").innerHTML=
+ lista.map(e=>`
+ <div class="card">
+ ${e.name}
+ <button onclick="entrar('${e.id}','${e.venue}')">Entrar</button>
+ </div>`).join("");
+}
+
+function filtrarEventos(){
+ const t=document.getElementById("busquedaEvento").value.toLowerCase();
+ renderEventos(eventosGlobal.filter(e=>e.name.toLowerCase().includes(t)));
 }
 
 async function entrar(id,venue){
-
  currentEvent=id;
  currentVenue=venue;
-
- const {data} = await client
-   .from("events")
-   .select("*")
-   .eq("id",id)
-   .single();
-
- renderHeaderEvento(data);
-
+ const {data}=await client.from("events").select("*").eq("id",id).single();
+ document.getElementById("infoEvento").innerText=data.name;
  ir("gestion");
 }
 
@@ -253,292 +155,140 @@ async function entrar(id,venue){
 //////////////////////////////////////////////////
 
 async function crearAcceso(){
- const nombre=document.getElementById("nombreAcceso").value;
-
- if(!nombre) return alert("Nombre requerido");
-
  await client.from("access_points").insert({
-   name:nombre,
+   name:document.getElementById("nombreAcceso").value,
    venue:currentVenue
  });
-
  cargarAccesos();
 }
 
 async function cargarAccesos(){
- const {data}=await client.from("access_points")
-   .select("*")
-   .eq("venue",currentVenue);
-
- document.getElementById("listaAccesos").innerHTML =
- data.map(a=>`<div class="card">${a.name}</div>`).join("");
+ const {data}=await client.from("access_points").select("*").eq("venue",currentVenue);
+ document.getElementById("listaAccesos").innerHTML=
+ data.map(a=>`<div>${a.name}</div>`).join("");
 }
 
 //////////////////////////////////////////////////
-// MATRIZ ASOCIACION (ARREGLADA)
+// ASOCIACION
 //////////////////////////////////////////////////
 
 async function cargarMatriz(){
 
- const {data:codes}=await client
-   .from("codes")
-   .select("zone_id, ticket_provider_id, zones(name), ticket_providers(name)")
-   .eq("event_id",currentEvent);
+ const {data:codes}=await client.from("codes")
+ .select("zone_id,ticket_provider_id,zones(name),ticket_providers(name)")
+ .eq("event_id",currentEvent);
 
- const {data:accesos}=await client
-   .from("access_points")
-   .select("*")
-   .eq("venue",currentVenue);
+ const {data:acc}=await client.from("access_points").select("*").eq("venue",currentVenue);
+ const {data:rel}=await client.from("ticket_zone_access").select("*");
 
- const {data:rel}=await client.from("ticket_access").select("*");
-
- // 🔥 combinaciones únicas zona + ticketera
- const combinaciones={};
-
+ const combos={};
  codes.forEach(c=>{
-   const key = c.zone_id + "_" + c.ticket_provider_id;
-
-   if(!combinaciones[key]){
-     combinaciones[key]={
-       zone_id:c.zone_id,
-       ticket_provider_id:c.ticket_provider_id,
-       zona:c.zones?.name || "Sin zona",
-       ticket:c.ticket_providers?.name || "Sin ticketera"
-     };
-   }
+  const k=c.zone_id+"_"+c.ticket_provider_id;
+  combos[k]=c;
  });
-
- const lista = Object.values(combinaciones);
 
  let html="<table><tr><th>Concepto</th>";
-
- accesos.forEach(a=>{
-   html+=`<th>${a.name}</th>`;
- });
-
+ acc.forEach(a=>html+=`<th>${a.name}</th>`);
  html+="</tr>";
 
- lista.forEach(item=>{
+ Object.values(combos).forEach(c=>{
+  html+=`<tr><td>${c.zones?.name} - ${c.ticket_providers?.name}</td>`;
 
-   const nombre = item.zona + " - " + item.ticket;
+  acc.forEach(a=>{
+   const ok=rel.some(r=>r.zone_id===c.zone_id && r.ticket_provider_id===c.ticket_provider_id && r.access_id===a.id);
+   html+=`<td><input type="checkbox" ${ok?"checked":""}
+   onchange="toggleAcceso('${c.zone_id}','${c.ticket_provider_id}','${a.id}',this.checked)"></td>`;
+  });
 
-   html+=`<tr><td>${nombre}</td>`;
-
-   accesos.forEach(a=>{
-
-     const existe = rel.some(r =>
-       r.ticket_provider_id === item.ticket_provider_id &&
-       r.access_id === a.id &&
-       r.zone_id === item.zone_id
-     );
-
-     html+=`
-       <td>
-         <input type="checkbox"
-         ${existe ? "checked" : ""}
-         onchange="toggleAcceso('${item.ticket_provider_id}','${a.id}','${item.zone_id}',this.checked)">
-       </td>`;
-   });
-
-   html+="</tr>";
+  html+="</tr>";
  });
 
  html+="</table>";
-
  document.getElementById("tabla").innerHTML=html;
 }
 
-async function toggleAcceso(ticket,access,zona,estado){
-
- if(estado){
-   const {error}=await client.from("ticket_access").insert({
-     ticket_provider_id:ticket,
-     access_id:access,
-     zone_id:zona
+async function toggleAcceso(z,t,a,e){
+ if(e){
+   await client.from("ticket_zone_access").insert({
+     zone_id:z,ticket_provider_id:t,access_id:a
    });
-
-   if(error) console.log(error.message);
-
  }else{
-   await client.from("ticket_access")
-     .delete()
-     .eq("ticket_provider_id",ticket)
-     .eq("access_id",access)
-     .eq("zone_id",zona);
+   await client.from("ticket_zone_access")
+   .delete()
+   .eq("zone_id",z)
+   .eq("ticket_provider_id",t)
+   .eq("access_id",a);
  }
 }
 
 //////////////////////////////////////////////////
-// STATS (CORRECTAS)
+// STATS PRO
 //////////////////////////////////////////////////
 
 async function cargarStats(){
+ const {data}=await client.from("codes")
+ .select("*,zones(name),ticket_providers(name)")
+ .eq("event_id",currentEvent);
 
- const {data}=await client
-   .from("codes")
-   .select("*, zones(name), ticket_providers(name)")
-   .eq("event_id",currentEvent);
+ let html="<table><tr><th>Zona</th><th>Ticketera</th><th>Usados</th><th>Total</th></tr>";
 
- // 🔹 agrupación principal
- const agrupado={};
-
- let total=0;
- let usados=0;
- let pendientes=0;
-
- const porTicketera={};
- const porZona={};
+ const map={};
 
  data.forEach(c=>{
-
-   total++;
-
-   if(c.usage_count>0) usados++;
-   else pendientes++;
-
-   const zona = c.zones?.name || "Sin zona";
-   const ticket = c.ticket_providers?.name || "Sin ticketera";
-
-   const key = ticket + " " + zona;
-
-   if(!agrupado[key]){
-     agrupado[key]={pend:0,used:0,total:0};
-   }
-
-   agrupado[key].total++;
-
-   if(c.usage_count>0) agrupado[key].used++;
-   else agrupado[key].pend++;
-
-   // por ticketera
-   if(!porTicketera[ticket]) porTicketera[ticket]=0;
-   porTicketera[ticket]++;
-
-   // por zona
-   if(!porZona[zona]) porZona[zona]=0;
-   porZona[zona]++;
+  const k=c.zone_id+"_"+c.ticket_provider_id;
+  if(!map[k]) map[k]={z:c.zones?.name,t:c.ticket_providers?.name,total:0,used:0};
+  map[k].total++;
+  if(c.usage_count>0) map[k].used++;
  });
 
- // 🔥 TABLA PRINCIPAL
- let html = `
- <h2>ESTADÍSTICAS DE ACCESO</h2>
+ Object.values(map).forEach(m=>{
+  html+=`<tr><td>${m.z}</td><td>${m.t}</td><td>${m.used}</td><td>${m.total}</td></tr>`;
+ });
 
- <table>
-   <tr>
-     <th>Origen</th>
-     <th>Pendientes</th>
-     <th>Usadas</th>
-     <th>Totales</th>
-   </tr>
- `;
-
- for(let k in agrupado){
-   html+=`
-     <tr>
-       <td>${k}</td>
-       <td>${agrupado[k].pend}</td>
-       <td>${agrupado[k].used}</td>
-       <td>${agrupado[k].total}</td>
-     </tr>
-   `;
- }
-
- html+=`
-   <tr>
-     <td><b>Totales</b></td>
-     <td><b>${pendientes}</b></td>
-     <td><b>${usados}</b></td>
-     <td><b>${total}</b></td>
-   </tr>
- </table>
- <br>
- `;
-
- // 🔥 POR TICKETERA
- html += `<h3>Por ticketera</h3>`;
- for(let t in porTicketera){
-   html += `${t}: ${porTicketera[t]}<br>`;
- }
-
- html += `<br><h3>Por zonas</h3>`;
- for(let z in porZona){
-   html += `${z}: ${porZona[z]}<br>`;
- }
-
- document.getElementById("tablaStats").innerHTML = html;
+ html+="</table>";
+ document.getElementById("tablaStats").innerHTML=html;
 }
 
 //////////////////////////////////////////////////
-// INCIDENCIAS (CON ACCIONES)
+// INCIDENCIAS
 //////////////////////////////////////////////////
 
 async function cargarInc(){
+ const {data}=await client.from("codes")
+ .select("*,zones(name),ticket_providers(name)")
+ .eq("event_id",currentEvent);
 
- const {data}=await client
-   .from("codes")
-   .select("*, zones(name), ticket_providers(name)")
-   .eq("event_id",currentEvent);
-
- document.getElementById("tablaInc").innerHTML =
- data.map(c=>{
-
-   let estado="Pendiente";
-
-   if(c.status==="cancelled") estado="Cancelado";
-   else if(c.is_top_code) estado="Multiread";
-   else if(c.usage_count>0) estado="Usado";
-
-   return `
-   <tr>
-     <td>${c.code_value}</td>
-     <td>${c.zones?.name||""}</td>
-     <td>${c.ticket_providers?.name||""}</td>
-     <td>${c.usage_count}</td>
-     <td>${estado}</td>
-     <td>
-       <button onclick="usar('${c.id}')">Usar</button>
-       <button onclick="reset('${c.id}')">Reset</button>
-       <button onclick="cancelar('${c.id}')">Cancel</button>
-       <button onclick="multi('${c.id}')">Multi</button>
-     </td>
-   </tr>`;
- }).join("");
+ document.getElementById("tablaInc").innerHTML=
+ data.map(c=>`
+ <tr>
+ <td>${c.code_value}</td>
+ <td>${c.zones?.name}</td>
+ <td>${c.ticket_providers?.name}</td>
+ <td>${c.usage_count}</td>
+ <td>${c.status}</td>
+ <td>
+ <button onclick="usar('${c.id}')">✔</button>
+ <button onclick="reset('${c.id}')">↺</button>
+ <button onclick="cancelar('${c.id}')">✖</button>
+ <button onclick="multi('${c.id}')">M</button>
+ </td>
+ </tr>`).join("");
 }
 
 async function usar(id){
- await client.from("codes").update({
-   usage_count:1,
-   first_entry_at:new Date(),
-   first_entry_device_id:"web"
- }).eq("id",id);
-
- cargarInc(); cargarStats();
+ await client.from("codes").update({usage_count:1}).eq("id",id);
 }
 
 async function reset(id){
- await client.from("codes").update({
-   usage_count:0,
-   first_entry_at:null,
-   first_entry_device_id:null
- }).eq("id",id);
-
- cargarInc(); cargarStats();
+ await client.from("codes").update({usage_count:0}).eq("id",id);
 }
 
 async function cancelar(id){
- await client.from("codes").update({
-   status:"cancelled"
- }).eq("id",id);
-
- cargarInc(); cargarStats();
+ await client.from("codes").update({status:"cancelled"}).eq("id",id);
 }
 
 async function multi(id){
- await client.from("codes").update({
-   is_top_code:true
- }).eq("id",id);
-
- alert("Multiread activado");
+ await client.from("codes").update({is_top_code:true}).eq("id",id);
 }
 
 //////////////////////////////////////////////////
@@ -548,40 +298,43 @@ async function multi(id){
 async function subir(){
 
  const file=document.getElementById("fileInput").files[0];
- if(!file) return alert("Selecciona archivo");
-
  const text=await file.text();
  const lines=text.split("\n");
 
- const {data:zonas}=await client.from("zones").select("*");
- const {data:tickets}=await client.from("ticket_providers").select("*");
+ const {data:exist}=await client.from("codes")
+ .select("code_value").eq("event_id",currentEvent);
+
+ const set=new Set(exist.map(e=>e.code_value));
 
  const insertar=[];
 
  for(let i=1;i<lines.length;i++){
+  const c=lines[i].split(";")[0];
+  if(!c||set.has(c)) continue;
 
-   const cols=lines[i].split(";");
-
-   const codigo=cols[0]?.trim();
-   const zona=zonas.find(z=>z.name===cols[1]);
-   const ticket=tickets.find(t=>t.name===cols[2]);
-
-   if(!codigo||!zona||!ticket) continue;
-
-   insertar.push({
-     event_id:currentEvent,
-     code_value:codigo,
-     status:"valid",
-     zone_id:zona.id,
-     ticket_provider_id:ticket.id,
-     usage_count:0
-   });
+  insertar.push({
+   event_id:currentEvent,
+   code_value:c,
+   usage_count:0,
+   status:"valid"
+  });
  }
 
  await client.from("codes").insert(insertar);
-
- alert("CSV cargado");
+ alert("CSV OK");
 }
+
+//////////////////////////////////////////////////
+// REFRESH
+//////////////////////////////////////////////////
+
+setInterval(()=>{
+ if(currentEvent){
+  cargarStats();
+  cargarInc();
+ }
+},5000);
+
 </script>
 
 </body>
