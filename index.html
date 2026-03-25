@@ -3,6 +3,7 @@
 <head>
   <title>Top Access PRO</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body { font-family: Arial; background:#0f172a; color:white; margin:0;}
@@ -88,9 +89,13 @@
 </div>
 
 <div id="stats" class="screen">
-  <h1>Stats</h1>
+  <h1>📊 Dashboard</h1>
   <button onclick="ir('gestion')">⬅</button>
+
   <div id="tablaStats"></div>
+
+  <canvas id="graficoZonas" height="120"></canvas>
+  <canvas id="graficoTicket" height="120"></canvas>
 </div>
 
 <div id="inc" class="screen">
@@ -289,28 +294,84 @@ async function toggleAcceso(z,t,a,e){
 // STATS PRO
 //////////////////////////////////////////////////
 
+let chartZonas=null;
+let chartTicket=null;
+
 async function cargarStats(){
+
  const {data}=await client.from("codes")
- .select("*,zones(name),ticket_providers(name)")
- .eq("event_id",currentEvent);
+   .select("*,zones(name),ticket_providers(name)")
+   .eq("event_id",currentEvent);
 
- let html="<table><tr><th>Zona</th><th>Ticketera</th><th>Usados</th><th>Total</th></tr>";
+ if(!data) return;
 
- const map={};
+ let total=0, usados=0;
+
+ const porZona={};
+ const porTicket={};
 
  data.forEach(c=>{
-  const k=c.zone_id+"_"+c.ticket_provider_id;
-  if(!map[k]) map[k]={z:c.zones?.name,t:c.ticket_providers?.name,total:0,used:0};
-  map[k].total++;
-  if(c.usage_count>0) map[k].used++;
+
+   total++;
+
+   if(c.usage_count>0){
+     usados++;
+
+     const zona=c.zones?.name || "Sin zona";
+     const ticket=c.ticket_providers?.name || "Sin ticketera";
+
+     // zona
+     if(!porZona[zona]) porZona[zona]=0;
+     porZona[zona]++;
+
+     // ticketera
+     if(!porTicket[ticket]) porTicket[ticket]=0;
+     porTicket[ticket]++;
+   }
  });
 
- Object.values(map).forEach(m=>{
-  html+=`<tr><td>${m.z}</td><td>${m.t}</td><td>${m.used}</td><td>${m.total}</td></tr>`;
+ // 🔹 RESUMEN
+ document.getElementById("tablaStats").innerHTML = `
+   <div class="card">
+     🎟 Total: ${total} <br>
+     ✅ Usados: ${usados} <br>
+     ⏳ Pendientes: ${total-usados}
+   </div>
+ `;
+
+ // 🔥 GRAFICO ZONAS
+ const zonasLabels=Object.keys(porZona);
+ const zonasData=Object.values(porZona);
+
+ if(chartZonas) chartZonas.destroy();
+
+ chartZonas=new Chart(document.getElementById("graficoZonas"),{
+   type:"bar",
+   data:{
+     labels:zonasLabels,
+     datasets:[{
+       label:"Accesos por zona",
+       data:zonasData
+     }]
+   }
  });
 
- html+="</table>";
- document.getElementById("tablaStats").innerHTML=html;
+ // 🔥 GRAFICO TICKETERA
+ const ticketLabels=Object.keys(porTicket);
+ const ticketData=Object.values(porTicket);
+
+ if(chartTicket) chartTicket.destroy();
+
+ chartTicket=new Chart(document.getElementById("graficoTicket"),{
+   type:"pie",
+   data:{
+     labels:ticketLabels,
+     datasets:[{
+       label:"Ticketera",
+       data:ticketData
+     }]
+   }
+ });
 }
 
 //////////////////////////////////////////////////
