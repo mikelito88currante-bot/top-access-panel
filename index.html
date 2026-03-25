@@ -96,6 +96,10 @@
 
   <canvas id="graficoZonas" height="120"></canvas>
   <canvas id="graficoTicket" height="120"></canvas>
+
+  <!-- 🔥 NUEVO -->
+  <canvas id="graficoFlujo" height="120"></canvas>
+
 </div>
 
 <div id="inc" class="screen">
@@ -299,6 +303,7 @@ async function toggleAcceso(z,t,a,e){
 
 let chartZonas=null;
 let chartTicket=null;
+let chartFlujo=null; // 🔥 NUEVO
 
 async function cargarStats(){
 
@@ -313,9 +318,10 @@ async function cargarStats(){
 
  let total=0, usados=0, pendientes=0;
 
- const combo={};       // ticketera + zona
- const porTicket={};   // ticketera
- const porZona={};     // zona
+ const combo={};       
+ const porTicket={};   
+ const porZona={};     
+ const flujo={}; // 🔥 NUEVO
 
  data.forEach(c=>{
 
@@ -344,6 +350,18 @@ async function cargarStats(){
    if(!porZona[zona]) porZona[zona]={used:0,pend:0,total:0};
    porZona[zona].total++;
    usado ? porZona[zona].used++ : porZona[zona].pend++;
+
+   // 🔥 FLUJO 20 MIN
+   if(c.first_entry_at){
+     const fecha = new Date(c.first_entry_at);
+
+     const minutos = Math.floor(fecha.getMinutes()/20)*20;
+     const keyTiempo = `${fecha.getHours()}:${minutos.toString().padStart(2,"0")}`;
+
+     if(!flujo[keyTiempo]) flujo[keyTiempo]=0;
+     flujo[keyTiempo]++;
+   }
+
  });
 
  let html="";
@@ -410,6 +428,27 @@ async function cargarStats(){
  `;
 
  document.getElementById("tablaStats").innerHTML = html;
+
+ // 🔥 GRAFICO FLUJO 20 MIN
+ const labels = Object.keys(flujo).sort((a,b)=>
+   a.localeCompare(b, undefined, {numeric:true})
+ );
+
+ const valores = labels.map(l=>flujo[l]);
+
+ if(chartFlujo) chartFlujo.destroy();
+
+ chartFlujo = new Chart(document.getElementById("graficoFlujo"),{
+   type:"line",
+   data:{
+     labels:labels,
+     datasets:[{
+       label:"Accesos cada 20 min",
+       data:valores,
+       fill:true
+     }]
+   }
+ });
 }
 
 //////////////////////////////////////////////////
