@@ -161,7 +161,7 @@ const client = supabase.createClient(
 
 let currentEvent=null;
 const params = new URLSearchParams(window.location.search);
-const modoPublico = params.get("public");
+const modoPublico = params.get("public") || null;
 let currentVenue=null;
 let eventosGlobal=[];
 
