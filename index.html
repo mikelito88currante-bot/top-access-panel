@@ -7,16 +7,49 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
-    body { font-family: Arial; background:#0f172a; color:white; margin:0;}
-    .container{padding:20px;}
-    .screen{display:none;} 
-    .active{display:block;}
-    button{padding:8px;margin:4px;border:none;border-radius:6px;background:#1e293b;color:white;cursor:pointer;}
-    input{padding:6px;margin:4px;border-radius:6px;border:none;}
-    table{width:100%;border-collapse:collapse;margin-top:10px;}
-    th,td{padding:6px;border:1px solid #333;text-align:center;}
-    .card{background:#1e293b;padding:10px;margin:5px 0;border-radius:8px;}
-  </style>
+  body { font-family: Arial; background:#0f172a; color:white; margin:0;}
+
+  .container{padding:20px;}
+  .screen{display:none;} 
+  .active{display:block;}
+
+  button{
+    padding:10px 14px;
+    margin:6px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(135deg,#1e293b,#334155);
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.2s;
+  }
+
+  button:hover{
+    transform:scale(1.05);
+    background:linear-gradient(135deg,#334155,#475569);
+  }
+
+  button.primary{
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+  }
+
+  button.danger{
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+  }
+
+  input{padding:6px;margin:4px;border-radius:6px;border:none;}
+
+  table{width:100%;border-collapse:collapse;margin-top:10px;}
+  th,td{padding:6px;border:1px solid #333;text-align:center;}
+
+  .card{
+    background:#1e293b;
+    padding:10px;
+    margin:5px 0;
+    border-radius:8px;
+  }
+</style>
 </head>
 
 <body>
@@ -68,11 +101,12 @@
 <div id="gestion" class="screen">
   <h1>Gestión</h1>
   <button onclick="ir('eventos')">⬅</button>
-  <button onclick="ir('stats')">Stats</button>
-  <button onclick="ir('inc')">Incidencias</button>
-  <button onclick="ir('upload')">CSV</button>
-  <button onclick="ir('accesos')">Accesos</button>
-  <button onclick="ir('asociacion')">Asociación</button>
+  <button onclick="ir('stats')" class="primary">📊 ESTADISTICAS</button>
+  <button onclick="ir('inc')">⚠️ Incidencias</button>
+<button onclick="ir('upload')">📂 CSV</button>
+<button onclick="ir('accesos')">🚪 Accesos</button>
+<button onclick="ir('asociacion')">🔗 Asociación</button>
+  <button onclick="abrirPublico()">🌐 URL SIN LOGIN</button>
 </div>
 
 <div id="accesos" class="screen">
@@ -126,6 +160,8 @@ const client = supabase.createClient(
 );
 
 let currentEvent=null;
+const params = new URLSearchParams(window.location.search);
+const modoPublico = params.get("public");
 let currentVenue=null;
 let eventosGlobal=[];
 
@@ -744,7 +780,107 @@ async function generarPDF(){
 
  doc.save(nombreArchivo);
 }
-  
+ 
+  function abrirPublico(){
+  const url = `${window.location.origin}${window.location.pathname}?public=${currentEvent}`;
+  window.open(url, "_blank");
+}
+  if(modoPublico){
+
+ document.body.innerHTML = `
+ <div style="
+   text-align:center;
+   padding:20px;
+   background:#f1f5f9;
+   color:#111;
+   font-family:sans-serif;
+ ">
+   <img src="logo.png" style="width:120px;margin-bottom:10px;">
+   <h2 id="tituloEvento"></h2>
+
+   <div id="datos"></div>
+
+   <div id="zonas"></div>
+ </div>
+ `;
+
+ cargarPublico();
+ setInterval(cargarPublico,20000);
+}
+  async function cargarPublico(){
+
+ const {data:evento} = await client
+   .from("events")
+   .select("*")
+   .eq("id",modoPublico)
+   .single();
+
+ const {data:codes} = await client
+   .from("codes")
+   .select("*,zones(name)")
+   .eq("event_id",modoPublico);
+
+ let total=0, usados=0;
+ const zonas={};
+
+ codes.forEach(c=>{
+   total++;
+   if(c.usage_count>0) usados++;
+
+   const z=c.zones?.name || "General";
+
+   if(!zonas[z]) zonas[z]={used:0,total:0};
+
+   zonas[z].total++;
+   if(c.usage_count>0) zonas[z].used++;
+ });
+
+ const porcentaje = Math.round((usados/total)*100);
+
+ document.getElementById("tituloEvento").innerHTML = `
+   <b>${evento.venue}</b><br>
+   ${evento.name}<br>
+   ${evento.event_date}
+ `;
+
+ document.getElementById("datos").innerHTML = `
+   <div style="background:#022c22;color:white;padding:12px;margin:10px;font-size:20px;">
+     ${usados} afluencia
+   </div>
+
+   <div style="background:#022c22;color:white;padding:12px;margin:10px;font-size:18px;">
+     ${total} códigos recibidos
+   </div>
+
+   <h2>AFLUENCIA TOTAL ${porcentaje}%</h2>
+
+   <div style="background:#ddd;height:20px;margin:10px;">
+     <div style="width:${porcentaje}%;background:red;height:100%;"></div>
+   </div>
+ `;
+
+ let html="";
+
+ for(let z in zonas){
+
+   const p = Math.round((zonas[z].used/zonas[z].total)*100);
+
+   html+=`
+   <div style="margin:15px;">
+     <div style="background:#022c22;color:white;padding:8px;">
+       ${zonas[z].used}/${zonas[z].total}
+     </div>
+
+     <div>${z} ${p}%</div>
+
+     <div style="background:#ddd;height:10px;">
+       <div style="width:${p}%;background:red;height:100%;"></div>
+     </div>
+   </div>`;
+ }
+
+ document.getElementById("zonas").innerHTML = html;
+}
 </script>
 
 </body>
