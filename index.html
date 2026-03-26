@@ -826,7 +826,7 @@ async function generarPDF(){
  cargarPublico();
  setInterval(cargarPublico,20000);
 
- throw new Error("Modo público activo"); // 🔥 CLAVE
+ return; // 🔥 CLAVE
 }
   async function cargarPublico(){
 
