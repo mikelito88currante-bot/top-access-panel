@@ -24,7 +24,13 @@
     cursor:pointer;
     transition:0.2s;
   }
+.progress-bar{
+  transition: width 1s ease-in-out;
+}
 
+.smooth{
+  transition: all 0.5s ease;
+}
   button:hover{
     transform:scale(1.05);
     background:linear-gradient(135deg,#334155,#475569);
@@ -790,6 +796,22 @@ async function generarPDF(){
  if(p <= 89) return "#f59e0b";
  return "#ef4444";
 }
+  function animarNumero(id, valorFinal, texto=""){
+
+ let actual = 0;
+ const incremento = Math.ceil(valorFinal / 30);
+
+ const intervalo = setInterval(()=>{
+   actual += incremento;
+
+   if(actual >= valorFinal){
+     actual = valorFinal;
+     clearInterval(intervalo);
+   }
+
+   document.getElementById(id).innerText = actual + texto;
+ }, 30);
+}
 if(modoPublico){
 
   currentEvent = modoPublico;
@@ -874,9 +896,11 @@ document.getElementById("tituloEvento").innerHTML = `
     ${evento.event_date}
   </div>
 `;
-
+animarNumero("contadorAfluencia", usados, " afluencia");
+animarNumero("contadorTotal", total, " códigos recibidos");
  document.getElementById("datos").innerHTML = `
-  <div style="
+
+  <div id="contadorAfluencia" style="
     background:${color};
     color:white;
     padding:15px;
@@ -886,10 +910,10 @@ document.getElementById("tituloEvento").innerHTML = `
     text-align:center;
     border-radius:10px;
   ">
-    ${usados} afluencia
+    0 afluencia
   </div>
 
-  <div style="
+  <div id="contadorTotal" style="
     background:#022c22;
     color:white;
     padding:15px;
@@ -898,18 +922,18 @@ document.getElementById("tituloEvento").innerHTML = `
     text-align:center;
     border-radius:10px;
   ">
-    ${total} códigos recibidos
+    0 códigos recibidos
   </div>
 
   <div style="
-  text-align:center;
-  font-size:20px;
-  margin-top:10px;
-  color:#111;
-  font-weight:600;
-">
-  AFLUENCIA TOTAL <b>${porcentaje}%</b>
-</div>
+    text-align:center;
+    font-size:20px;
+    margin-top:10px;
+    color:#111;
+    font-weight:600;
+  ">
+    AFLUENCIA TOTAL <b>${porcentaje}%</b>
+  </div>
 
   <div style="
     background:#e5e7eb;
@@ -918,14 +942,13 @@ document.getElementById("tituloEvento").innerHTML = `
     margin:10px 0;
     overflow:hidden;
   ">
-    <div style="
+    <div class="progress-bar smooth" style="
       width:${porcentaje}%;
       background:${color};
       height:100%;
     "></div>
   </div>
 `;
-
  // 🔥 ZONAS (VERSIÓN CORRECTA)
  let html="";
 
@@ -953,10 +976,11 @@ document.getElementById("tituloEvento").innerHTML = `
        border-radius:10px;
        overflow:hidden;
      ">
-       <div style="
-         width:${p}%;
-         background:${colorZona};
-         height:100%;
+       <div class="progress-bar smooth" style="
+  width:${p}%;
+  background:${colorZona};
+  height:100%;
+">
        "></div>
      </div>
 
