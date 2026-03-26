@@ -785,6 +785,11 @@ async function generarPDF(){
   const url = `${window.location.origin}${window.location.pathname}?public=${currentEvent}`;
   window.open(url, "_blank");
 }
+  function getColorAforo(p){
+ if(p <= 75) return "#22c55e";
+ if(p <= 89) return "#f59e0b";
+ return "#ef4444";
+}
   if(modoPublico){
 
  document.body.innerHTML = `
@@ -852,6 +857,7 @@ async function generarPDF(){
  });
 
  const porcentaje = Math.round((usados/total)*100);
+ const color = getColorAforo(porcentaje);
 
  document.getElementById("tituloEvento").innerHTML = `
    <b>${evento.venue}</b><br>
@@ -861,7 +867,7 @@ async function generarPDF(){
 
  document.getElementById("datos").innerHTML = `
   <div style="
-    background:#022c22;
+    background:${color};
     color:white;
     padding:15px;
     margin-bottom:10px;
@@ -898,76 +904,53 @@ async function generarPDF(){
   ">
     <div style="
       width:${porcentaje}%;
-      background:#ef4444;
+      background:${color};
       height:100%;
     "></div>
   </div>
 `;
 
+ // 🔥 ZONAS (VERSIÓN CORRECTA)
  let html="";
 
  for(let z in zonas){
 
    const p = Math.round((zonas[z].used/zonas[z].total)*100);
+   const colorZona = getColorAforo(p);
 
    html+=`
-   <div style="margin:15px;">
-     <div style="background:#022c22;color:white;padding:8px;">
+   <div style="margin-bottom:15px;">
+
+     <div style="
+       background:${colorZona};
+       color:white;
+       padding:10px;
+       text-align:center;
+       border-radius:8px;
+       font-weight:bold;
+     ">
        ${zonas[z].used}/${zonas[z].total}
      </div>
 
-     <div>${z} ${p}%</div>
-
-     <div style="background:#ddd;height:10px;">
-       <div style="width:${p}%;background:red;height:100%;"></div>
+     <div style="text-align:center;margin:5px 0;">
+       ${z} ${p}%
      </div>
+
+     <div style="
+       background:#e5e7eb;
+       height:10px;
+       border-radius:10px;
+       overflow:hidden;
+     ">
+       <div style="
+         width:${p}%;
+         background:${colorZona};
+         height:100%;
+       "></div>
+     </div>
+
    </div>`;
  }
 
- let html="";
-
-for(let z in zonas){
-
-  const p = Math.round((zonas[z].used/zonas[z].total)*100);
-  const colorZona = getColorAforo(p);
-
-  html+=`
-<div style="margin-bottom:15px;">
-
-  <div style="
-    background:${colorZona};
-    color:white;
-    padding:10px;
-    text-align:center;
-    border-radius:8px;
-    font-weight:bold;
-  ">
-    ${zonas[z].used}/${zonas[z].total}
-  </div>
-
-  <div style="text-align:center;margin:5px 0;">
-    ${z} ${p}%
-  </div>
-
-  <div style="
-    background:#e5e7eb;
-    height:10px;
-    border-radius:10px;
-    overflow:hidden;
-  ">
-    <div style="
-      width:${p}%;
-      background:${colorZona};
-      height:100%;
-    "></div>
-  </div>
-
-</div>`;
+ document.getElementById("zonas").innerHTML = html;
 }
-
-document.getElementById("zonas").innerHTML = html;
-    
-</script>
-
-</body>
-</html>
