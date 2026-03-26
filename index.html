@@ -864,17 +864,16 @@ if(modoPublico){
  });
 
  const porcentaje = Math.round((usados/total)*100);
- const color = getColorAforo(porcentaje);
+const color = getColorAforo(porcentaje);
 
- <div style="color:#111;">
-  <b>${evento.venue}</b><br>
-  ${evento.name}<br>
-  ${evento.event_date}
-</div>
-   <b>${evento.venue}</b><br>
-   ${evento.name}<br>
-   ${evento.event_date}
- `;
+// ✅ CORRECTO
+document.getElementById("tituloEvento").innerHTML = `
+  <div style="color:#111;text-align:center;">
+    <b>${evento.venue}</b><br>
+    ${evento.name}<br>
+    ${evento.event_date}
+  </div>
+`;
 
  document.getElementById("datos").innerHTML = `
   <div style="
@@ -931,16 +930,6 @@ if(modoPublico){
 
    html+=`
    <div style="margin-bottom:15px;">
-
-     <div style="
-  text-align:center;
-  margin:6px 0;
-  color:#111;
-  font-weight:600;
-  font-size:14px;
-">
-  ${z} ${p}%
-</div>
 
      <div style="
   text-align:center;
