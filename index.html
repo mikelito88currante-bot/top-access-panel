@@ -792,9 +792,9 @@ async function generarPDF(){
 }
 if(modoPublico){
 
-  currentEvent = modoPublico; // 🔥 CLAVE
+  currentEvent = modoPublico;
 
-  document.body.innerHTML = `
+  const htmlPublico = `
   <div style="
     min-height:100vh;
     width:100%;
@@ -810,12 +810,7 @@ if(modoPublico){
 
     <img src="logo.png" style="width:120px;margin-bottom:10px;">
 
-    <div id="tituloEvento" style="
-      color:#111;
-      text-align:center;
-      font-weight:600;
-      margin-bottom:10px;
-    "></div>
+    <div id="tituloEvento" style="color:#111;text-align:center;"></div>
 
     <div id="datos" style="width:100%;max-width:400px;"></div>
 
@@ -829,11 +824,13 @@ if(modoPublico){
       padding-top:20px;
     ">
       Datos facilitados con localizadores emitidos por los operadores en la venta de tickets.<br>
-      © 2026 TOP ACCESS.S.L - Todos los derechos reservados
+      © 2026 TOP ACCESS.S.L
     </div>
 
   </div>
   `;
+
+  document.body.innerHTML = htmlPublico;
 
   cargarPublico();
   setInterval(cargarPublico,20000);
