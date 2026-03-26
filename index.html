@@ -792,6 +792,8 @@ async function generarPDF(){
 }
 if(modoPublico){
 
+ currentEvent = modoPublico; // 🔥 CLAVE
+
  document.body.innerHTML = `
  <div style="
    min-height:100vh;
