@@ -859,7 +859,11 @@ if(modoPublico){
  const porcentaje = Math.round((usados/total)*100);
  const color = getColorAforo(porcentaje);
 
- document.getElementById("tituloEvento").innerHTML = `
+ <div style="color:#111;">
+  <b>${evento.venue}</b><br>
+  ${evento.name}<br>
+  ${evento.event_date}
+</div>
    <b>${evento.venue}</b><br>
    ${evento.name}<br>
    ${evento.event_date}
