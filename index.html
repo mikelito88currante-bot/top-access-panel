@@ -788,21 +788,50 @@ async function generarPDF(){
   if(modoPublico){
 
  document.body.innerHTML = `
- <div style="
-   text-align:center;
-   padding:20px;
-   background:#f1f5f9;
-   color:#111;
-   font-family:sans-serif;
- ">
-   <img src="logo.png" style="width:120px;margin-bottom:10px;">
-   <h2 id="tituloEvento"></h2>
+<div style="
+  min-height:100vh;
+  width:100%;
+  background:#f8fafc;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  font-family:'Segoe UI',sans-serif;
+  padding:20px;
+  box-sizing:border-box;
+">
 
-   <div id="datos"></div>
+  <!-- LOGO -->
+  <img src="logo.png" style="width:120px;margin-bottom:10px;">
 
-   <div id="zonas"></div>
- </div>
- `;
+  <!-- EVENTO -->
+  <div id="tituloEvento" style="
+    text-align:center;
+    font-weight:600;
+    font-size:18px;
+    margin-bottom:15px;
+  "></div>
+
+  <!-- BLOQUES PRINCIPALES -->
+  <div id="datos" style="width:100%;max-width:400px;"></div>
+
+  <!-- ZONAS -->
+  <div id="zonas" style="width:100%;max-width:400px;"></div>
+
+  <!-- FOOTER -->
+  <div style="
+    margin-top:auto;
+    font-size:11px;
+    color:#666;
+    text-align:center;
+    padding-top:20px;
+  ">
+    Datos facilitados con localizadores emitidos por los operadores en la venta de tickets.<br>
+    © 2026 TOP ACCESS.S.L - Todos los derechos reservados
+  </div>
+
+</div>
+`;
 
  cargarPublico();
  setInterval(cargarPublico,20000);
@@ -844,20 +873,49 @@ async function generarPDF(){
  `;
 
  document.getElementById("datos").innerHTML = `
-   <div style="background:#022c22;color:white;padding:12px;margin:10px;font-size:20px;">
-     ${usados} afluencia
-   </div>
+  <div style="
+    background:#022c22;
+    color:white;
+    padding:15px;
+    margin-bottom:10px;
+    font-size:22px;
+    font-weight:bold;
+    text-align:center;
+    border-radius:10px;
+  ">
+    ${usados} afluencia
+  </div>
 
-   <div style="background:#022c22;color:white;padding:12px;margin:10px;font-size:18px;">
-     ${total} códigos recibidos
-   </div>
+  <div style="
+    background:#022c22;
+    color:white;
+    padding:15px;
+    margin-bottom:10px;
+    font-size:18px;
+    text-align:center;
+    border-radius:10px;
+  ">
+    ${total} códigos recibidos
+  </div>
 
-   <h2>AFLUENCIA TOTAL ${porcentaje}%</h2>
+  <div style="text-align:center;font-size:20px;margin-top:10px;">
+    AFLUENCIA TOTAL <b>${porcentaje}%</b>
+  </div>
 
-   <div style="background:#ddd;height:20px;margin:10px;">
-     <div style="width:${porcentaje}%;background:red;height:100%;"></div>
-   </div>
- `;
+  <div style="
+    background:#e5e7eb;
+    height:14px;
+    border-radius:10px;
+    margin:10px 0;
+    overflow:hidden;
+  ">
+    <div style="
+      width:${porcentaje}%;
+      background:#ef4444;
+      height:100%;
+    "></div>
+  </div>
+`;
 
  let html="";
 
@@ -879,8 +937,47 @@ async function generarPDF(){
    </div>`;
  }
 
- document.getElementById("zonas").innerHTML = html;
+ let html="";
+
+for(let z in zonas){
+
+  const p = Math.round((zonas[z].used/zonas[z].total)*100);
+
+  html+=`
+  <div style="margin-bottom:15px;">
+
+    <div style="
+      background:#022c22;
+      color:white;
+      padding:10px;
+      text-align:center;
+      border-radius:8px;
+      font-weight:bold;
+    ">
+      ${zonas[z].used}/${zonas[z].total}
+    </div>
+
+    <div style="text-align:center;margin:5px 0;">
+      ${z} ${p}%
+    </div>
+
+    <div style="
+      background:#e5e7eb;
+      height:10px;
+      border-radius:10px;
+      overflow:hidden;
+    ">
+      <div style="
+        width:${p}%;
+        background:#ef4444;
+        height:100%;
+      "></div>
+    </div>
+
+  </div>`;
 }
+
+document.getElementById("zonas").innerHTML = html;
 </script>
 
 </body>
