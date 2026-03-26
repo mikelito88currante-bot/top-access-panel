@@ -790,7 +790,7 @@ async function generarPDF(){
  if(p <= 89) return "#f59e0b";
  return "#ef4444";
 }
-  if(modoPublico){
+if(modoPublico){
 
  document.body.innerHTML = `
  <div style="
@@ -826,7 +826,7 @@ async function generarPDF(){
  cargarPublico();
  setInterval(cargarPublico,20000);
 
- return; // 🔥 CLAVE
+ // 🔥 IMPORTANTE: NO return, NO throw
 }
   async function cargarPublico(){
 
