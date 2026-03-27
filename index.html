@@ -920,7 +920,7 @@ if(modoPublico){
   cargarPublico();
   setInterval(cargarPublico,20000);
 }
-  async function cargarPublico(){
+async function cargarPublico(){
 
  const {data:evento} = await client
    .from("events")
@@ -933,133 +933,131 @@ if(modoPublico){
    .select("*,zones(name)")
    .eq("event_id",modoPublico);
 
- let total=0, usados=0;
- const zonas={};
+ let total = 0;
+ let usados = 0;
+ const zonas = {};
 
  codes.forEach(c=>{
    total++;
-   if(c.usage_count>0) usados++;
+   if(c.usage_count > 0) usados++;
 
-   const z=c.zones?.name || "General";
+   const z = c.zones?.name || "General";
 
-   if(!zonas[z]) zonas[z]={used:0,total:0};
+   if(!zonas[z]) zonas[z] = {used:0,total:0};
 
    zonas[z].total++;
-   if(c.usage_count>0) zonas[z].used++;
+   if(c.usage_count > 0) zonas[z].used++;
  });
 
- const porcentaje = Math.round((usados/total)*100);
-const color = getColorAforo(porcentaje);
+ const porcentaje = total ? Math.round((usados/total)*100) : 0;
+ const color = getColorAforo(porcentaje);
 
-// ✅ CORRECTO
-document.getElementById("tituloEvento").innerHTML = `
-  <div style="color:#111;text-align:center;">
-    <b>${evento.venue}</b><br>
-    ${evento.name}<br>
-    ${evento.event_date}
-  </div>
-`;
-document.getElementById("datos").innerHTML = `
+ // 🔥 CABECERA
+ document.getElementById("tituloEvento").innerHTML = `
+   <div style="color:#111;text-align:center;">
+     <b>${evento.venue}</b><br>
+     ${evento.name}<br>
+     ${evento.event_date}
+   </div>
+ `;
 
-  <div id="contadorAfluencia" style="
-    background:${color};
-    color:white;
-    padding:15px;
-    margin-bottom:10px;
-    font-size:22px;
-    font-weight:bold;
-    text-align:center;
-    border-radius:10px;
-  ">
-    0 afluencia
-  </div>
+ // 🔥 BLOQUE PRINCIPAL
+ document.getElementById("datos").innerHTML = `
+   <div id="contadorAfluencia" style="
+     background:${color};
+     color:white;
+     padding:15px;
+     margin-bottom:10px;
+     font-size:22px;
+     font-weight:bold;
+     text-align:center;
+     border-radius:10px;
+   ">
+     0 afluencia
+   </div>
 
-  <div id="contadorTotal" style="
-    background:#022c22;
-    color:white;
-    padding:15px;
-    margin-bottom:10px;
-    font-size:18px;
-    text-align:center;
-    border-radius:10px;
-  ">
-    0 códigos recibidos
-  </div>
+   <div id="contadorTotal" style="
+     background:#022c22;
+     color:white;
+     padding:15px;
+     margin-bottom:10px;
+     font-size:18px;
+     text-align:center;
+     border-radius:10px;
+   ">
+     0 códigos recibidos
+   </div>
 
-  <div style="
-    text-align:center;
-    font-size:20px;
-    margin-top:10px;
-    color:#111;
-    font-weight:600;
-  ">
-    AFLUENCIA TOTAL <b>${porcentaje}%</b>
-  </div>
+   <div style="
+     text-align:center;
+     font-size:20px;
+     margin-top:10px;
+     color:#111;
+     font-weight:600;
+   ">
+     AFLUENCIA TOTAL <b>${porcentaje}%</b>
+   </div>
 
-  <div style="
-    background:#e5e7eb;
-    height:14px;
-    border-radius:10px;
-    margin:10px 0;
-    overflow:hidden;
-  ">
-    <div class="progress-bar smooth" style="
-      width:${porcentaje}%;
-      background:${color};
-      height:100%;
-    "></div>
-  </div>
+   <div style="
+     background:#e5e7eb;
+     height:14px;
+     border-radius:10px;
+     margin:10px 0;
+     overflow:hidden;
+   ">
+     <div class="progress-bar smooth" style="
+       width:${porcentaje}%;
+       background:${color};
+       height:100%;
+     "></div>
+   </div>
+ `;
 
-`;
-    
- // 🔥 ZONAS (VERSIÓN CORRECTA)
- let html="";
+ // 🔥 ANIMACIONES (DESPUÉS del HTML)
+ animarNumero("contadorAfluencia", usados, " afluencia");
+ animarNumero("contadorTotal", total, " códigos recibidos");
+
+ // 🔥 ZONAS
+ let html = "";
 
  for(let z in zonas){
 
    const p = Math.round((zonas[z].used/zonas[z].total)*100);
    const colorZona = getColorAforo(p);
 
-let html = "";
+   html += `
+     <div style="margin-bottom:15px;">
 
-for(let z in zonas){
+       <div style="
+         text-align:center;
+         margin:6px 0;
+         color:#111;
+         font-weight:600;
+         font-size:14px;
+       ">
+         ${z} ${p}%
+       </div>
 
-  const p = Math.round((zonas[z].used/zonas[z].total)*100);
-  const colorZona = getColorAforo(p);
+       <div style="
+         background:#e5e7eb;
+         height:10px;
+         border-radius:10px;
+         overflow:hidden;
+       ">
 
-  html += `
-    <div style="margin-bottom:15px;">
+         <div class="progress-bar smooth" style="
+           width:${p}%;
+           background:${colorZona};
+           height:100%;
+         "></div>
 
-      <div style="
-        text-align:center;
-        margin:6px 0;
-        color:#111;
-        font-weight:600;
-        font-size:14px;
-      ">
-        ${z} ${p}%
-      </div>
+       </div>
 
-      <div style="
-        background:#e5e7eb;
-        height:10px;
-        border-radius:10px;
-        overflow:hidden;
-      ">
+     </div>
+   `;
+ }
 
-        <div class="progress-bar smooth" style="
-          width:${p}%;
-          background:${colorZona};
-          height:100%;
-        "></div>
-
-      </div>
-
-    </div>
-  `;
-} // ✅ ESTE ES EL CIERRE DEL FOR
-
-document.getElementById("zonas").innerHTML = html;
+ document.getElementById("zonas").innerHTML = html;
 }
   </script>
 
