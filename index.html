@@ -526,12 +526,17 @@ async function cargarStats(){
 
 async function cargarInc(){
 
- const {data} = await client
+ const {data,error} = await client
    .from("codes")
    .select("*,zones(name),ticket_providers(name)")
    .eq("event_id",currentEvent);
 
- // 🔥 ORDENAR DESPUÉS DE CARGAR
+ if(error || !data){
+   console.log("Error incidencias", error);
+   return;
+ }
+
+ // 🔥 ORDENAR SEGURO
  data.sort((a,b)=>{
 
    function getPrioridad(c){
@@ -542,11 +547,11 @@ async function cargarInc(){
        c.first_entry_device_id &&
        c.last_exit_device_id &&
        c.first_entry_device_id !== c.last_exit_device_id
-     ) return 3; // 🔴 fraude
+     ) return 3;
 
-     if(c.usage_count > 1) return 2; // 🟠 sospechoso
+     if(c.usage_count > 1) return 2;
 
-     if(c.usage_count > 0) return 1; // 🟢 usado
+     if(c.usage_count > 0) return 1;
 
      return 0;
    }
