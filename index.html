@@ -959,10 +959,7 @@ document.getElementById("tituloEvento").innerHTML = `
     ${evento.event_date}
   </div>
 `;
-document.getElementById("datos").innerHTML = `...`;
-
-animarNumero("contadorAfluencia", usados, " afluencia");
-animarNumero("contadorTotal", total, " códigos recibidos");
+document.getElementById("datos").innerHTML = `
 
   <div id="contadorAfluencia" style="
     background:${color};
@@ -1007,12 +1004,14 @@ animarNumero("contadorTotal", total, " códigos recibidos");
     overflow:hidden;
   ">
     <div class="progress-bar smooth" style="
-  width:${p}%;
-  background:${colorZona};
-  height:100%;
-"></div>
+      width:${porcentaje}%;
+      background:${color};
+      height:100%;
+    "></div>
   </div>
+
 `;
+    
  // 🔥 ZONAS (VERSIÓN CORRECTA)
  let html="";
 
@@ -1021,37 +1020,46 @@ animarNumero("contadorTotal", total, " códigos recibidos");
    const p = Math.round((zonas[z].used/zonas[z].total)*100);
    const colorZona = getColorAforo(p);
 
-   html+=`
-   <div style="margin-bottom:15px;">
+let html = "";
 
-     <div style="
-  text-align:center;
-  margin:6px 0;
-  color:#111;
-  font-weight:600;
-  font-size:14px;
-">
-  ${z} ${p}%
-</div>
+for(let z in zonas){
 
-     <div style="
-       background:#e5e7eb;
-       height:10px;
-       border-radius:10px;
-       overflow:hidden;
-     ">
-       <div class="progress-bar smooth" style="
-  width:${p}%;
-  background:${colorZona};
-  height:100%;
-">
-       "></div>
-     </div>
+  const p = Math.round((zonas[z].used/zonas[z].total)*100);
+  const colorZona = getColorAforo(p);
 
-   </div>`;
- }
+  html += `
+    <div style="margin-bottom:15px;">
 
- document.getElementById("zonas").innerHTML = html;
+      <div style="
+        text-align:center;
+        margin:6px 0;
+        color:#111;
+        font-weight:600;
+        font-size:14px;
+      ">
+        ${z} ${p}%
+      </div>
+
+      <div style="
+        background:#e5e7eb;
+        height:10px;
+        border-radius:10px;
+        overflow:hidden;
+      ">
+
+        <div class="progress-bar smooth" style="
+          width:${p}%;
+          background:${colorZona};
+          height:100%;
+        "></div>
+
+      </div>
+
+    </div>
+  `;
+} // ✅ ESTE ES EL CIERRE DEL FOR
+
+document.getElementById("zonas").innerHTML = html;
 }
   </script>
 
