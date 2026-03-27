@@ -564,6 +564,7 @@ async function cargarInc(){
    </td>
  </tr>`;
 }).join("");
+} 
 
 async function usar(id){
  await client.from("codes").update({usage_count:1}).eq("id",id);
