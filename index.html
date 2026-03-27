@@ -151,6 +151,12 @@
 
 <div id="inc" class="screen">
   <h1>Incidencias</h1>
+  <input 
+  id="busquedaCodigo" 
+  placeholder="Buscar código..." 
+  oninput="filtrarIncidencias()" 
+  style="width:250px;margin-bottom:10px;"
+>
   <button onclick="ir('gestion')">⬅</button>
   <table>
  <thead>
@@ -163,7 +169,9 @@
     <th>Actividad</th>
     <th>Acciones</th>
   </tr>
-</thead>
+ </thead>
+ <tbody id="tablaInc"></tbody>
+</table>
 </div>
 
 <div id="upload" class="screen">
@@ -520,12 +528,6 @@ async function cargarInc(){
  .select("*,zones(name),ticket_providers(name)")
  .eq("event_id",currentEvent);
   
-<input 
-  id="busquedaCodigo" 
-  placeholder="Buscar código..." 
-  oninput="filtrarIncidencias()" 
-  style="width:250px;"
->
  document.getElementById("tablaInc").innerHTML=
  data.map(c=>{
 
@@ -955,9 +957,10 @@ document.getElementById("tituloEvento").innerHTML = `
     ${evento.event_date}
   </div>
 `;
+document.getElementById("datos").innerHTML = `...`;
+
 animarNumero("contadorAfluencia", usados, " afluencia");
 animarNumero("contadorTotal", total, " códigos recibidos");
- document.getElementById("datos").innerHTML = `
 
   <div id="contadorAfluencia" style="
     background:${color};
@@ -1002,10 +1005,10 @@ animarNumero("contadorTotal", total, " códigos recibidos");
     overflow:hidden;
   ">
     <div class="progress-bar smooth" style="
-      width:${porcentaje}%;
-      background:${color};
-      height:100%;
-    "></div>
+  width:${p}%;
+  background:${colorZona};
+  height:100%;
+"></div>
   </div>
 `;
  // 🔥 ZONAS (VERSIÓN CORRECTA)
