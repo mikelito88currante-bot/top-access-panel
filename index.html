@@ -223,6 +223,7 @@
 
 <script>
 // 🔥 1. CREAR CLIENT (SIEMPRE PRIMERO)
+  console.log("SCRIPT CARGADO");
 const client = supabase.createClient(
  "https://zuhssrhdezptsgemxofh.supabase.co",
  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
@@ -236,11 +237,14 @@ let currentVenue=null;
 let userRole = null;
 let eventosGlobal=[];
 
+  console.log("ANTES DE CHECKLOGIN");
+  
 // 🔥 CHECK LOGIN (DESPUÉS DE CLIENT)
 checkLogin();
 
   function aplicarPermisos(){
-
+    
+ console.log("ENTRO EN CHECKLOGIN");
  console.log("APLICANDO PERMISOS:", userRole);
 
  if(userRole === "admin") return;
@@ -1048,7 +1052,9 @@ async function generarPDF(){
    return;
  }
 
- document.getElementById("loginScreen").style.display = "none";
+ // 🔥 RECARGA LA APP YA LOGUEADO
+ location.reload();
+
 }
   function getColorAforo(p){
  if(p <= 75) return "#22c55e";
