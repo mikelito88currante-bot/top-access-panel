@@ -152,7 +152,7 @@
   <button onclick="ir('eventos')">⬅</button>
   <button onclick="ir('stats')" class="primary">📊 ESTADISTICAS</button>
   <button onclick="ir('inc')">⚠️ Incidencias</button>
-<button id="btnUpload" onclick="ir('upload')">📂 CSV</button>
+<button id="btnCSV" onclick="ir('upload')">📂 CSV</button>
 <button id="btnAccesos" onclick="ir('accesos')">🚪 Accesos</button>
 <button id="btnAsociacion" onclick="ir('asociacion')">🔗 Asociación</button>
   <button onclick="abrirPublico()">🌐 URL SIN LOGIN</button>
@@ -236,6 +236,7 @@
     <select id="nuevoRol">
       <option value="usuario">Usuario</option>
       <option value="promotor">Promotor</option>
+      <option value="revision">Revisión incidencias</option> <!-- 🔥 NUEVO -->
       <option value="admin">Admin</option>
     </select>
 
@@ -268,23 +269,31 @@ const modoPublico = params.get("public") || null;
 let currentVenue=null;
 let userRole = null;
 let eventosGlobal=[];
-
+let bloquearAccionesIncidencias = false;
+  
   console.log("ANTES DE CHECKLOGIN");
   
 // 🔥 CHECK LOGIN (DESPUÉS DE CLIENT)
 checkLogin();
 
 function aplicarPermisos(){
-    
+
  console.log("APLICANDO PERMISOS:", userRole);
 
- // 🔐 SOLO ADMIN VE USUARIOS
- if(userRole !== "admin"){
-   ocultar("btnUsuariosHome");
- }
-
- // 👑 ADMIN → TODO
+ // 👑 ADMIN
  if(userRole === "admin") return;
+
+ // 👁 REVISION (SOLO LECTURA)
+ if(userRole === "revision"){
+   ocultar("btnUpload");
+   ocultar("btnAccesos");
+   ocultar("btnAsociacion");
+
+   // 🔥 BLOQUEAR ACCIONES
+   bloquearAccionesIncidencias = true;
+
+   return;
+ }
 
  // 👤 USUARIO
  if(userRole === "usuario"){
@@ -781,11 +790,17 @@ async function cargarInc(){
      </td>
 
      <td>
-       <button onclick="usar('${c.id}')">✔</button>
-       <button onclick="reset('${c.id}')">↺</button>
-       <button onclick="cancelar('${c.id}')">✖</button>
-       <button onclick="multi('${c.id}')">M</button>
-     </td>
+  ${
+    bloquearAccionesIncidencias
+    ? `<span style="color:#888;font-size:12px;">Solo lectura</span>`
+    : `
+      <button onclick="usar('${c.id}')">✔</button>
+      <button onclick="reset('${c.id}')">↺</button>
+      <button onclick="cancelar('${c.id}')">✖</button>
+      <button onclick="multi('${c.id}')">M</button>
+    `
+  }
+</td>
    </tr>`;
  }).join("");
 }
