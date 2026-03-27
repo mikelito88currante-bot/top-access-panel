@@ -117,7 +117,7 @@
   <button onclick="ir('crearEvento')">Crear evento</button>
   <button onclick="ir('eventos')">Eventos</button>
   <button id="btnUsuariosHome" onclick="ir('usuarios')">👥 Crear usuario</button>
-</div>
+</div> <!-- 🔥 ESTE CIERRE ES CLAVE -->
 
 <div id="crearEvento" class="screen">
   <h1>Crear evento</h1>
@@ -189,12 +189,15 @@
 
 <div id="inc" class="screen">
   <h1>Incidencias</h1>
+
   <input 
-  id="busquedaCodigo" 
-  placeholder="Buscar código..." 
-  oninput="filtrarIncidencias()" 
-  style="width:250px;margin-bottom:10px;"
->
+    id="busquedaCodigo" 
+    placeholder="Buscar código..." 
+    oninput="filtrarIncidencias()" 
+    style="width:250px;margin-bottom:10px;"
+  >
+
+</div> <!-- 🔥 ESTE FALTABA -->
   
   <button onclick="ir('gestion')">⬅</button>
   <table>
@@ -248,13 +251,6 @@
     </thead>
     <tbody id="tablaUsuarios"></tbody>
   </table>
-</div>
-  <h1>CSV</h1>
-  <button onclick="ir('gestion')">⬅</button>
-  <input type="file" id="fileInput">
-  <button onclick="subir()">Subir</button>
-</div>
-
 </div>
 
 <script>
