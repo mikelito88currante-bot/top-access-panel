@@ -55,6 +55,11 @@
     margin:5px 0;
     border-radius:8px;
   }
+  th{
+  background:#020617;
+  color:#e2e8f0;
+  font-weight:700;
+}  
 </style>
 </head>
 
@@ -148,18 +153,17 @@
   <h1>Incidencias</h1>
   <button onclick="ir('gestion')">⬅</button>
   <table>
-  <thead>
-    <tr>
-      <th>Código</th>
-      <th>Zona</th>
-      <th>Ticketera</th>
-      <th>Usos</th>
-      <th>Estado</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-  <tbody id="tablaInc"></tbody>
-</table>
+ <thead>
+  <tr>
+    <th>Código</th>
+    <th>Zona</th>
+    <th>Ticketera</th>
+    <th>Usos</th>
+    <th>Estado</th>
+    <th>Actividad</th>
+    <th>Acciones</th>
+  </tr>
+</thead>
 </div>
 
 <div id="upload" class="screen">
@@ -515,23 +519,49 @@ async function cargarInc(){
  const {data}=await client.from("codes")
  .select("*,zones(name),ticket_providers(name)")
  .eq("event_id",currentEvent);
-
+  
+<input 
+  id="busquedaCodigo" 
+  placeholder="Buscar código..." 
+  oninput="filtrarIncidencias()" 
+  style="width:250px;"
+>
  document.getElementById("tablaInc").innerHTML=
- data.map(c=>`
+ data.map(c=>{
+
+ let estado="Pendiente";
+
+ if(c.status==="cancelled") estado="Cancelado";
+ else if(c.is_top_code) estado="Multiread";
+ else if(c.usage_count>0) estado="Usado";
+
+ return `
  <tr>
- <td>${c.code_value}</td>
- <td>${c.zones?.name}</td>
- <td>${c.ticket_providers?.name}</td>
- <td>${c.usage_count}</td>
- <td>${c.status}</td>
- <td>
- <button onclick="usar('${c.id}')">✔</button>
- <button onclick="reset('${c.id}')">↺</button>
- <button onclick="cancelar('${c.id}')">✖</button>
- <button onclick="multi('${c.id}')">M</button>
- </td>
- </tr>`).join("");
-}
+   <td>${c.code_value}</td>
+
+   <td>${c.zones?.name || ""}</td>
+
+   <td>${c.ticket_providers?.name || ""}</td>
+
+   <td>${c.usage_count}</td>
+
+   <td>${estado}</td>
+
+   <td style="font-size:12px;">
+     ⏱ ${c.first_entry_at ? new Date(c.first_entry_at).toLocaleTimeString() : "-"}<br>
+     📱 ${c.first_entry_device_id || "-"}<br>
+     🔁 ${c.usage_count > 1 ? "Intentos múltiples" : "OK"}<br>
+     🚪 ${c.last_exit_device_id || "-"}
+   </td>
+
+   <td>
+     <button onclick="usar('${c.id}')">✔</button>
+     <button onclick="reset('${c.id}')">↺</button>
+     <button onclick="cancelar('${c.id}')">✖</button>
+     <button onclick="multi('${c.id}')">M</button>
+   </td>
+ </tr>`;
+}).join("");
 
 async function usar(id){
  await client.from("codes").update({usage_count:1}).eq("id",id);
@@ -644,6 +674,23 @@ async function subir(){
 
  alert("CSV inteligente cargado correctamente");
 }
+function filtrarIncidencias(){
+
+ const texto = document.getElementById("busquedaCodigo").value.toLowerCase();
+
+ const filas = document.querySelectorAll("#tablaInc tr");
+
+ filas.forEach(f=>{
+   const codigo = f.children[0]?.innerText.toLowerCase();
+
+   if(!codigo.includes(texto)){
+     f.style.display = "none";
+   }else{
+     f.style.display = "";
+   }
+ });
+
+}  
 
 //////////////////////////////////////////////////
 // REFRESH
