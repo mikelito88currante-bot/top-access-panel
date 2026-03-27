@@ -116,6 +116,7 @@
   <h1>Inicio</h1>
   <button onclick="ir('crearEvento')">Crear evento</button>
   <button onclick="ir('eventos')">Eventos</button>
+  <button id="btnUsuariosHome" onclick="ir('usuarios')">👥 Crear usuario</button>
 </div>
 
 <div id="crearEvento" class="screen">
@@ -219,6 +220,41 @@
   <button onclick="subir()">Subir</button>
 </div>
 
+<div id="usuarios" class="screen">
+  <h1>Usuarios</h1>
+  <button onclick="ir('home')">⬅</button>
+
+  <div class="card">
+    <h3>Crear nuevo usuario</h3>
+
+    <input id="nuevoEmail" placeholder="Email">
+    <input id="nuevoPass" placeholder="Contraseña">
+
+    <select id="nuevoRol">
+      <option value="usuario">Usuario</option>
+      <option value="promotor">Promotor</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <button onclick="crearUsuario()">Crear usuario</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Rol</th>
+      </tr>
+    </thead>
+    <tbody id="tablaUsuarios"></tbody>
+  </table>
+</div>
+  <h1>CSV</h1>
+  <button onclick="ir('gestion')">⬅</button>
+  <input type="file" id="fileInput">
+  <button onclick="subir()">Subir</button>
+</div>
+
 </div>
 
 <script>
@@ -244,24 +280,31 @@ checkLogin();
 
 function aplicarPermisos(){
     
- console.log("ENTRO EN CHECKLOGIN");
  console.log("APLICANDO PERMISOS:", userRole);
 
+ // 🔐 SOLO ADMIN VE USUARIOS
+ if(userRole !== "admin"){
+   ocultar("btnUsuariosHome");
+ }
+
+ // 👑 ADMIN → TODO
  if(userRole === "admin") return;
 
+ // 👤 USUARIO
  if(userRole === "usuario"){
    ocultar("btnUpload");
    ocultar("btnAccesos");
    return;
  }
 
+ // 🎟 PROMOTOR
  if(userRole === "promotor"){
    ocultar("btnUpload");
    ocultar("btnAccesos");
    ocultar("btnAsociacion");
    return;
  }
-} // 🔥 ← ESTA LLAVE FALTABA
+}
 
 function ocultar(id){
  const el = document.getElementById(id);
@@ -310,6 +353,7 @@ function ir(p){
  if(p==="asociacion") cargarMatriz();
  if(p==="stats") cargarStats();
  if(p==="inc") cargarInc();
+ if(p==="usuarios") cargarUsuarios();
 }
 
 async function crearEvento(){
