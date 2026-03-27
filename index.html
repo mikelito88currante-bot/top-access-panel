@@ -525,7 +525,34 @@ async function cargarStats(){
 //////////////////////////////////////////////////
 
 async function cargarInc(){
- const {data}=await client.from("codes")
+
+ const {data} = await client
+   .from("codes")
+   .select("*,zones(name),ticket_providers(name)")
+   .eq("event_id",currentEvent);
+
+ // 🔥 ORDENAR DESPUÉS DE CARGAR
+ data.sort((a,b)=>{
+
+   function getPrioridad(c){
+
+     if(c.status==="cancelled") return 0;
+
+     if(
+       c.first_entry_device_id &&
+       c.last_exit_device_id &&
+       c.first_entry_device_id !== c.last_exit_device_id
+     ) return 3; // 🔴 fraude
+
+     if(c.usage_count > 1) return 2; // 🟠 sospechoso
+
+     if(c.usage_count > 0) return 1; // 🟢 usado
+
+     return 0;
+   }
+
+   return getPrioridad(b) - getPrioridad(a);
+ });
  .select("*,zones(name),ticket_providers(name)")
  .eq("event_id",currentEvent);
   
