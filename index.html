@@ -532,11 +532,32 @@ async function cargarInc(){
  document.getElementById("tablaInc").innerHTML=
  data.map(c=>{
 
- let estado="Pendiente";
+let estado="Pendiente";
+let color="#22c55e"; // verde por defecto
 
- if(c.status==="cancelled") estado="Cancelado";
- else if(c.is_top_code) estado="Multiread";
- else if(c.usage_count>0) estado="Usado";
+if(c.status==="cancelled"){
+  estado="Cancelado";
+  color="#6b7280"; // gris
+}
+else if(
+  c.first_entry_device_id &&
+  c.last_exit_device_id &&
+  c.first_entry_device_id !== c.last_exit_device_id
+){
+  estado="Fraude";
+  color="#ef4444"; // rojo
+}
+else if(c.usage_count > 1){
+  estado="Sospechoso";
+  color="#f59e0b"; // naranja
+}
+else if(c.is_top_code){
+  estado="Multiread";
+  color="#8b5cf6"; // morado
+}
+else if(c.usage_count > 0){
+  estado="Usado";
+}
 
  return `
  <tr>
@@ -548,7 +569,18 @@ async function cargarInc(){
 
    <td>${c.usage_count}</td>
 
-   <td>${estado}</td>
+<td>
+  <div style="
+    background:${color};
+    color:white;
+    padding:5px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:bold;
+  ">
+    ${estado}
+  </div>
+</td>
 
 <td style="font-size:12px;text-align:left;">
 
