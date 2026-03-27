@@ -64,7 +64,44 @@
 </head>
 
 <body>
+<div id="loginScreen" style="
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#0f172a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+">
 
+  <div style="
+    background:#1e293b;
+    padding:30px;
+    border-radius:12px;
+    width:300px;
+    text-align:center;
+  ">
+
+    <img src="logo.png" style="width:100px;margin-bottom:10px;">
+
+    <h2>Login</h2>
+
+    <input id="emailLogin" placeholder="Email" style="width:100%;margin-bottom:10px;">
+
+    <input id="passLogin" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:15px;">
+
+    <button onclick="login()" class="primary" style="width:100%;">
+      Entrar
+    </button>
+
+    <div id="errorLogin" style="color:#ef4444;margin-top:10px;"></div>
+
+  </div>
+
+</div>
 <div id="headerEvento" style="position:sticky;top:0;background:#020617;padding:15px;display:flex;justify-content:space-between;">
   <div style="display:flex;gap:10px;align-items:center;">
     <img src="logo.png" style="height:40px;">
@@ -185,16 +222,36 @@
 </div>
 
 <script>
+// 🔥 1. CREAR CLIENT (SIEMPRE PRIMERO)
 const client = supabase.createClient(
  "https://zuhssrhdezptsgemxofh.supabase.co",
  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
 );
 
+// 🔥 VARIABLES (DEBEN IR AQUÍ)
 let currentEvent=null;
 const params = new URLSearchParams(window.location.search);
 const modoPublico = params.get("public") || null;
 let currentVenue=null;
 let eventosGlobal=[];
+
+// 🔥 CHECK LOGIN (DESPUÉS DE CLIENT)
+checkLogin();
+
+async function checkLogin(){
+
+ const { data } = await client.auth.getSession();
+
+ const loginDiv = document.getElementById("loginScreen");
+
+ if(!loginDiv) return; // 🔥 evita errores
+
+ if(!data.session){
+   loginDiv.style.display = "flex";
+ }else{
+   loginDiv.style.display = "none";
+ }
+}
 
 function ir(p){
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
@@ -931,6 +988,23 @@ async function generarPDF(){
   function abrirPublico(){
   const url = `${window.location.origin}${window.location.pathname}?public=${currentEvent}`;
   window.open(url, "_blank");
+}
+  async function login(){
+
+ const email = document.getElementById("emailLogin").value;
+ const password = document.getElementById("passLogin").value;
+
+ const { data, error } = await client.auth.signInWithPassword({
+   email: email,
+   password: password
+ });
+
+ if(error){
+   document.getElementById("errorLogin").innerText = "Credenciales incorrectas";
+   return;
+ }
+
+ document.getElementById("loginScreen").style.display = "none";
 }
   function getColorAforo(p){
  if(p <= 75) return "#22c55e";
