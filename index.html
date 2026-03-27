@@ -151,9 +151,9 @@
   <button onclick="ir('eventos')">⬅</button>
   <button onclick="ir('stats')" class="primary">📊 ESTADISTICAS</button>
   <button onclick="ir('inc')">⚠️ Incidencias</button>
-<button onclick="ir('upload')">📂 CSV</button>
-<button onclick="ir('accesos')">🚪 Accesos</button>
-<button onclick="ir('asociacion')">🔗 Asociación</button>
+<button id="btnUpload" onclick="ir('upload')">📂 CSV</button>
+<button id="btnAccesos" onclick="ir('accesos')">🚪 Accesos</button>
+<button id="btnAsociacion" onclick="ir('asociacion')">🔗 Asociación</button>
   <button onclick="abrirPublico()">🌐 URL SIN LOGIN</button>
 </div>
 
@@ -242,7 +242,7 @@ let eventosGlobal=[];
 // 🔥 CHECK LOGIN (DESPUÉS DE CLIENT)
 checkLogin();
 
-  function aplicarPermisos(){
+function aplicarPermisos(){
     
  console.log("ENTRO EN CHECKLOGIN");
  console.log("APLICANDO PERMISOS:", userRole);
@@ -250,18 +250,18 @@ checkLogin();
  if(userRole === "admin") return;
 
  if(userRole === "usuario"){
-   ocultar("upload");
-   ocultar("accesos");
+   ocultar("btnUpload");
+   ocultar("btnAccesos");
    return;
  }
 
  if(userRole === "promotor"){
-   ocultar("upload");
-   ocultar("accesos");
-   ocultar("asociacion");
+   ocultar("btnUpload");
+   ocultar("btnAccesos");
+   ocultar("btnAsociacion");
    return;
  }
-}
+} // 🔥 ← ESTA LLAVE FALTABA
 
 function ocultar(id){
  const el = document.getElementById(id);
