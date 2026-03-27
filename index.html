@@ -239,6 +239,30 @@ let eventosGlobal=[];
 // 🔥 CHECK LOGIN (DESPUÉS DE CLIENT)
 checkLogin();
 
+  function aplicarPermisos(){
+
+ console.log("APLICANDO PERMISOS:", userRole);
+
+ if(userRole === "admin") return;
+
+ if(userRole === "usuario"){
+   ocultar("upload");
+   ocultar("accesos");
+   return;
+ }
+
+ if(userRole === "promotor"){
+   ocultar("upload");
+   ocultar("accesos");
+   ocultar("asociacion");
+   return;
+ }
+}
+
+function ocultar(id){
+ const el = document.getElementById(id);
+ if(el) el.style.display = "none";
+}
 async function checkLogin(){
 
  const { data, error } = await client.auth.getSession();
