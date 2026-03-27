@@ -233,6 +233,7 @@ let currentEvent=null;
 const params = new URLSearchParams(window.location.search);
 const modoPublico = params.get("public") || null;
 let currentVenue=null;
+let userRole = null;
 let eventosGlobal=[];
 
 // 🔥 CHECK LOGIN (DESPUÉS DE CLIENT)
@@ -240,28 +241,34 @@ checkLogin();
 
 async function checkLogin(){
 
- const { data } = await client.auth.getSession();
+ const { data, error } = await client.auth.getSession();
+
+ console.log("CHECK LOGIN EJECUTADO");
 
  const loginDiv = document.getElementById("loginScreen");
 
- if(!data.session){
-   loginDiv.style.display = "flex";
+ if(!data || !data.session){
+   if(loginDiv) loginDiv.style.display = "flex";
    return;
  }
 
- loginDiv.style.display = "none";
+ if(loginDiv) loginDiv.style.display = "none";
 
  const user = data.session.user;
 
- const { data:profile } = await client
+ // 🔥 CARGAR PERFIL
+ const { data:profile, error:errProfile } = await client
    .from("profiles")
    .select("*")
    .eq("id", user.id)
    .single();
 
+ console.log("PROFILE:", profile);
+ console.log("ERROR PROFILE:", errProfile);
+
  userRole = profile?.role || "usuario";
 
- console.log("ROL USUARIO:", userRole); // 🔥 AÑADE ESTO
+ console.log("ROL USUARIO:", userRole);
 
  aplicarPermisos();
 }
