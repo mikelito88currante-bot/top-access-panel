@@ -189,6 +189,7 @@
 
 <div id="inc" class="screen">
   <h1>Incidencias</h1>
+  <button onclick="ir('gestion')">⬅</button>
 
   <input 
     id="busquedaCodigo" 
@@ -197,24 +198,23 @@
     style="width:250px;margin-bottom:10px;"
   >
 
-</div> <!-- 🔥 ESTE FALTABA -->
-  
-  <button onclick="ir('gestion')">⬅</button>
   <table>
- <thead>
-  <tr>
-    <th>Código</th>
-    <th>Zona</th>
-    <th>Ticketera</th>
-    <th>Usos</th>
-    <th>Estado</th>
-    <th>Actividad</th>
-    <th>Acciones</th>
-  </tr>
- </thead>
- <tbody id="tablaInc"></tbody>
-</table>
-</div>
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Zona</th>
+        <th>Ticketera</th>
+        <th>Usos</th>
+        <th>Estado</th>
+        <th>Actividad</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody id="tablaInc"></tbody>
+  </table>
+
+</div> <!-- 🔥 ESTE CIERRE ES OBLIGATORIO -->
 
 <div id="upload" class="screen">
   <h1>CSV</h1>
