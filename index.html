@@ -550,12 +550,27 @@ async function cargarInc(){
 
    <td>${estado}</td>
 
-   <td style="font-size:12px;">
-     ⏱ ${c.first_entry_at ? new Date(c.first_entry_at).toLocaleTimeString() : "-"}<br>
-     📱 ${c.first_entry_device_id || "-"}<br>
-     🔁 ${c.usage_count > 1 ? "Intentos múltiples" : "OK"}<br>
-     🚪 ${c.last_exit_device_id || "-"}
-   </td>
+<td style="font-size:12px;text-align:left;">
+
+  <div>
+    <b>Entrada</b><br>
+    ⏱ ${c.first_entry_at ? new Date(c.first_entry_at).toLocaleTimeString() : "-"}<br>
+    📱 ${c.first_entry_device_id || "-"}
+  </div>
+
+  <div style="margin-top:6px;">
+    <b>Última salida</b><br>
+    ⏱ ${c.last_exit_at ? new Date(c.last_exit_at).toLocaleTimeString() : "-"}<br>
+    📱 ${c.last_exit_device_id || "-"}
+  </div>
+
+  <div style="margin-top:6px;">
+    <b>Intentos</b><br>
+    ${c.usage_count} uso(s)<br>
+    ${c.usage_count > 1 ? "⚠️ múltiples accesos" : "✅ acceso normal"}
+  </div>
+
+</td>
 
    <td>
      <button onclick="usar('${c.id}')">✔</button>
