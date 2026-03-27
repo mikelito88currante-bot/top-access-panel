@@ -152,7 +152,7 @@
   <button onclick="ir('eventos')">⬅</button>
   <button onclick="ir('stats')" class="primary">📊 ESTADISTICAS</button>
   <button onclick="ir('inc')">⚠️ Incidencias</button>
-<button id="btnCSV" onclick="ir('upload')">📂 CSV</button>
+<button id="btnUpload" onclick="ir('upload')">📂 CSV</button>
 <button id="btnAccesos" onclick="ir('accesos')">🚪 Accesos</button>
 <button id="btnAsociacion" onclick="ir('asociacion')">🔗 Asociación</button>
   <button onclick="abrirPublico()">🌐 URL SIN LOGIN</button>
@@ -280,31 +280,28 @@ function aplicarPermisos(){
 
  console.log("APLICANDO PERMISOS:", userRole);
 
- // 👑 ADMIN
+ // 👑 ADMIN → TODO
  if(userRole === "admin") return;
 
- // 👁 REVISION (SOLO LECTURA)
+ // 👁 REVISION
  if(userRole === "revision"){
-   ocultar("btnUpload");
+   ocultar("btnUpload");     // ❌ CSV
    ocultar("btnAccesos");
    ocultar("btnAsociacion");
-
-   // 🔥 BLOQUEAR ACCIONES
    bloquearAccionesIncidencias = true;
-
    return;
  }
 
  // 👤 USUARIO
  if(userRole === "usuario"){
-   ocultar("btnUpload");
+   ocultar("btnUpload");     // ❌ CSV
    ocultar("btnAccesos");
    return;
  }
 
  // 🎟 PROMOTOR
  if(userRole === "promotor"){
-   ocultar("btnUpload");
+   ocultar("btnUpload");     // ❌ CSV
    ocultar("btnAccesos");
    ocultar("btnAsociacion");
    return;
