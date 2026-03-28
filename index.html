@@ -1122,9 +1122,6 @@ async function login(){
  const email = document.getElementById("emailLogin").value;
  const password = document.getElementById("passLogin").value;
 
- // limpiar error previo
- document.getElementById("errorLogin").innerText = "";
-
  const { data, error } = await client.auth.signInWithPassword({
    email,
    password
@@ -1137,11 +1134,12 @@ async function login(){
 
  console.log("LOGIN OK", data);
 
- // 🔥 ocultar login
- document.getElementById("loginScreen").style.display = "none";
+ // 🔥 OCULTAR LOGIN
+ const loginDiv = document.getElementById("loginScreen");
+ loginDiv.style.display = "none";
 
- // 🔥 cargar sesión y permisos
- await checkLogin();
+ // 🔥 FORZAR ENTRADA AL HOME
+ ir("home");
 }
 
 
@@ -1178,6 +1176,9 @@ async function logout(){
    loginDiv.style.display = "flex";
    return;
  }
+
+ // 🔥 NO HACER NADA MÁS
+}
 
  // 🔥 NO entrar automático
  loginDiv.style.display = "flex";
