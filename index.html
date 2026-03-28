@@ -1152,6 +1152,53 @@ async function login(){
  }, 30);
 }
 if(modoPublico){
+  
+  //////////////////////////////////////////////////
+// USUARIOS
+//////////////////////////////////////////////////
+
+async function crearUsuario(){
+
+ const email = document.getElementById("nuevoEmail").value;
+ const password = document.getElementById("nuevoPass").value;
+ const role = document.getElementById("nuevoRol").value;
+
+ if(!email || !password){
+   alert("Faltan datos");
+   return;
+ }
+
+ // 🔥 1. CREAR USUARIO EN AUTH
+ const { data, error } = await client.auth.signUp({
+   email,
+   password
+ });
+
+ if(error){
+   alert("Error creando usuario: " + error.message);
+   return;
+ }
+
+ const user = data.user;
+
+ // 🔥 2. CREAR PERFIL CON ROL
+ const { error: errorProfile } = await client
+   .from("profiles")
+   .insert({
+     id: user.id,
+     email: email,
+     role: role
+   });
+
+ if(errorProfile){
+   alert("Usuario creado pero error en perfil");
+   console.log(errorProfile);
+   return;
+ }
+
+ alert("Usuario creado correctamente");
+
+}
 
   currentEvent = modoPublico;
 
