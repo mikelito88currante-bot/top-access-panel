@@ -341,35 +341,41 @@ function ocultar(id){
 
 async function checkLogin(){
 
- const { data } = await client.auth.getSession();
+ const { data, error } = await client.auth.getSession();
+
+ console.log("SESSION:", data);
 
  const loginDiv = document.getElementById("loginScreen");
 
- // 🔴 SIN SESIÓN
  if(!data || !data.session){
    loginDiv.style.display = "flex";
    return;
  }
 
- // 🟢 CON SESIÓN → ocultar login
  loginDiv.style.display = "none";
 
  const user = data.session.user;
 
- // 🔥 CARGAR PERFIL
- const { data: profile, error } = await client
+ console.log("USER ID:", user.id);
+
+ // 🔥 CARGAR PERFIL CORRECTAMENTE
+ const { data: profile, error: errProfile } = await client
    .from("profiles")
    .select("*")
    .eq("id", user.id)
-   .single();
+   .maybeSingle();
 
- if(error){
-   console.log("ERROR PROFILE:", error);
+ console.log("PROFILE:", profile);
+ console.log("ERROR PROFILE:", errProfile);
+
+ if(!profile){
+   console.warn("⚠️ PERFIL NO ENCONTRADO");
+   userRole = "usuario";
+ }else{
+   userRole = profile.role;
  }
 
- userRole = profile?.role || "usuario";
-
- console.log("ROL USUARIO:", userRole);
+ console.log("ROL FINAL:", userRole);
 
  aplicarPermisos();
 }
