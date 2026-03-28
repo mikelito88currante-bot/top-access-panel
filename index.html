@@ -1114,8 +1114,8 @@ async function login(){
  const password = document.getElementById("passLogin").value;
 
  const { data, error } = await client.auth.signInWithPassword({
-   email: email,
-   password: password
+   email,
+   password
  });
 
  if(error){
@@ -1125,31 +1125,11 @@ async function login(){
 
  console.log("LOGIN OK", data);
 
- // 🔥 ENTRAR DIRECTAMENTE
+ // 🔥 ENTRAR DIRECTO
  document.getElementById("loginScreen").style.display = "none";
  checkLogin();
 }
 
- let actual = 0;
- const incremento = Math.ceil(valorFinal / 30);
-
- const intervalo = setInterval(()=>{
-   actual += incremento;
-
-   if(actual >= valorFinal){
-     actual = valorFinal;
-     clearInterval(intervalo);
-   }
-
-   document.getElementById(id).innerText = actual + texto;
-
- }, 30);
-}
-
- // 🔥 Mostrar botón continuar
- document.getElementById("loginOk").style.display = "block";
-
-}
   function getColorAforo(p){
  if(p <= 75) return "#22c55e";
  if(p <= 89) return "#f59e0b";
