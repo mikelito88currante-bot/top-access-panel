@@ -9,7 +9,9 @@
   <style>
   body { font-family: Arial; background:#0f172a; color:white; margin:0;}
 
-  .container{padding:20px;}
+  .container{
+  padding:60px 20px 20px 20px;
+}
   .screen{display:none;} 
   .active{display:block;}
 
@@ -64,6 +66,16 @@
 </head>
 
 <body>
+  <div id="topBar" style="
+  position:fixed;
+  top:0;
+  right:0;
+  padding:10px;
+  z-index:999;
+">
+  <button onclick="logout()" class="danger">Cerrar sesión</button>
+</div>
+  
 <div id="loginScreen" style="
   position:fixed;
   top:0;
@@ -1122,12 +1134,38 @@ async function login(){
    document.getElementById("errorLogin").innerText = "Credenciales incorrectas";
    return;
  }
+  async function logout(){
+
+ await client.auth.signOut();
+
+ currentEvent = null;
+ userRole = null;
+
+ document.getElementById("loginScreen").style.display = "flex";
+
+ // opcional: limpiar UI
+ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+ document.getElementById("home").classList.add("active");
+
+}
 
  console.log("LOGIN OK", data);
 
  // 🔥 ENTRAR DIRECTO
- document.getElementById("loginScreen").style.display = "none";
- checkLogin();
+ async function checkLogin(){
+
+ const { data } = await client.auth.getSession();
+
+ const loginDiv = document.getElementById("loginScreen");
+
+ // 🔥 SI NO HAY SESION
+ if(!data || !data.session){
+   loginDiv.style.display = "flex";
+   return;
+ }
+
+ // 🔥 SI HAY SESION → NO ENTRAR AUTOMATICO
+ loginDiv.style.display = "flex";
 }
 
   function getColorAforo(p){
