@@ -10,8 +10,9 @@
   body { font-family: Arial; background:#0f172a; color:white; margin:0;}
 
   .container{
-  padding:60px 20px 20px 20px;
-}
+    padding:60px 20px 20px 20px;
+  }
+
   .screen{display:none;} 
   .active{display:block;}
 
@@ -26,13 +27,7 @@
     cursor:pointer;
     transition:0.2s;
   }
-.progress-bar{
-  transition: width 1s ease-in-out;
-}
 
-.smooth{
-  transition: all 0.5s ease;
-}
   button:hover{
     transform:scale(1.05);
     background:linear-gradient(135deg,#334155,#475569);
@@ -46,10 +41,32 @@
     background:linear-gradient(135deg,#ef4444,#dc2626);
   }
 
-  input{padding:6px;margin:4px;border-radius:6px;border:none;}
+  input{
+    padding:6px;
+    margin:4px;
+    border-radius:6px;
+    border:none;
+  }
 
-  table{width:100%;border-collapse:collapse;margin-top:10px;}
-  th,td{padding:6px;border:1px solid #333;text-align:center;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:10px;
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  th,td{
+    padding:6px;
+    border:1px solid #333;
+    text-align:center;
+  }
+
+  th{
+    background:#020617;
+    color:#e2e8f0;
+    font-weight:700;
+  }
 
   .card{
     background:#1e293b;
@@ -57,11 +74,20 @@
     margin:5px 0;
     border-radius:8px;
   }
-  th{
-  background:#020617;
-  color:#e2e8f0;
-  font-weight:700;
-}  
+
+  /* 🔥 BONUS UI (PRO) */
+  tr:hover{
+    background:#1e293b;
+    transition:0.2s;
+  }
+
+  .progress-bar{
+    transition: width 1s ease-in-out;
+  }
+
+  .smooth{
+    transition: all 0.5s ease;
+  }
 </style>
 </head>
 
@@ -1296,23 +1322,35 @@ async function cargarUsuarios(){
    return;
  }
 
- document.getElementById("tablaUsuarios").innerHTML =
- data.map(u=>`
+ document.getElementById("tablaUsuarios").innerHTML = `
+   <tr>
+     <th>Email</th>
+     <th>Rol</th>
+     <th>Acciones</th>
+   </tr>
+ ` + data.map(u=>`
    <tr>
      <td>${u.email}</td>
 
      <td>
        <select onchange="cambiarRol('${u.id}', this.value)">
-         <option value="usuario" ${u.role==="usuario"?"selected":""}>usuario</option>
-         <option value="promotor" ${u.role==="promotor"?"selected":""}>promotor</option>
-         <option value="revision" ${u.role==="revision"?"selected":""}>revision</option>
-         <option value="admin" ${u.role==="admin"?"selected":""}>admin</option>
+         <option value="usuario" ${u.role==="usuario"?"selected":""}>Usuario</option>
+         <option value="promotor" ${u.role==="promotor"?"selected":""}>Promotor</option>
+         <option value="revision" ${u.role==="revision"?"selected":""}>Revisión</option>
+         <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
        </select>
      </td>
 
-     <td>
-       <button onclick="resetPassword('${u.email}')">🔑</button>
-       <button onclick="eliminarUsuario('${u.id}')">🗑</button>
+     <td style="display:flex; gap:6px; justify-content:center;">
+
+       <button onclick="cambiarPasswordDirecto('${u.id}')">
+         Cambiar contraseña
+       </button>
+
+       <button onclick="eliminarUsuario('${u.id}')" class="danger">
+         🗑
+       </button>
+
      </td>
    </tr>
  `).join("");
@@ -1354,31 +1392,62 @@ async function resetPassword(email){
 // 🗑 ELIMINAR PERFIL
 async function eliminarUsuario(id){
 
- // ❌ NO permitir borrarse a sí mismo
- const { data } = await client.auth.getUser();
-
- if(data?.user?.id === id){
-   alert("No puedes eliminar tu propio usuario");
-   return;
- }
-
- const confirmacion = confirm("¿Eliminar usuario?");
+ const confirmacion = confirm("¿Eliminar usuario COMPLETAMENTE?");
 
  if(!confirmacion) return;
 
- const { error } = await client
-   .from("profiles")
-   .delete()
-   .eq("id", id);
+ const res = await fetch("https://zuhssrhdezptsgemxofh.supabase.co/functions/v1/admin-update-user", {
+   method: "POST",
+   headers: {
+     "Content-Type": "application/json"
+   },
+   body: JSON.stringify({
+     userId: id,
+     deleteUser: true
+   })
+ });
 
- if(error){
-   alert("Error eliminando perfil");
+ const data = await res.json();
+
+ if(data.error){
+   alert("Error: " + data.error);
    return;
  }
 
- alert("Perfil eliminado");
+ alert("✅ Usuario eliminado completamente");
 
  cargarUsuarios();
+}
+  // 🔑 CAMBIAR CONTRASEÑA (via email)
+async function cambiarPasswordDirecto(userId){
+
+ const nuevaPass = prompt("Introduce nueva contraseña:");
+
+ if(!nuevaPass){
+   alert("Contraseña vacía");
+   return;
+ }
+
+ const res = await fetch("https://zuhssrhdezptsgemxofh.supabase.co/functions/v1/admin-update-user", {
+   method: "POST",
+   headers: {
+     "Content-Type": "application/json"
+   },
+   body: JSON.stringify({
+     userId: userId,
+     password: nuevaPass
+   })
+ });
+
+ const data = await res.json();
+
+ if(data.error){
+   alert("Error: " + data.error);
+   console.log(data);
+   return;
+ }
+
+ alert("✅ Contraseña actualizada correctamente");
 }
 
 //////////////////////////////////////////////////
