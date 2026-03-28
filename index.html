@@ -1151,9 +1151,8 @@ async function login(){
    document.getElementById(id).innerText = actual + texto;
  }, 30);
 }
-if(modoPublico){
   
-  //////////////////////////////////////////////////
+//////////////////////////////////////////////////
 // USUARIOS
 //////////////////////////////////////////////////
 
@@ -1168,20 +1167,25 @@ async function crearUsuario(){
    return;
  }
 
- // 🔥 1. CREAR USUARIO EN AUTH
  const { data, error } = await client.auth.signUp({
    email,
    password
  });
+
+ console.log("AUTH RESPONSE:", data, error);
 
  if(error){
    alert("Error creando usuario: " + error.message);
    return;
  }
 
- const user = data.user;
+ const user = data?.user || data?.session?.user;
 
- // 🔥 2. CREAR PERFIL CON ROL
+ if(!user){
+   alert("Usuario no devuelto por Supabase (revisa confirm email)");
+   return;
+ }
+
  const { error: errorProfile } = await client
    .from("profiles")
    .insert({
@@ -1190,15 +1194,43 @@ async function crearUsuario(){
      role: role
    });
 
+ console.log("PROFILE ERROR:", errorProfile);
+
  if(errorProfile){
-   alert("Usuario creado pero error en perfil");
-   console.log(errorProfile);
+   alert("Error creando perfil");
    return;
  }
 
  alert("Usuario creado correctamente");
-
+ cargarUsuarios();
 }
+
+async function cargarUsuarios(){
+
+ const { data, error } = await client
+   .from("profiles")
+   .select("*");
+
+ if(error){
+   console.log(error);
+   return;
+ }
+
+ document.getElementById("tablaUsuarios").innerHTML =
+ data.map(u=>`
+   <tr>
+     <td>${u.email}</td>
+     <td>${u.role}</td>
+   </tr>
+ `).join("");
+}
+
+
+//////////////////////////////////////////////////
+// MODO PUBLICO
+//////////////////////////////////////////////////
+
+if(modoPublico){
 
   currentEvent = modoPublico;
 
