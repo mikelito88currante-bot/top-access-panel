@@ -1254,7 +1254,12 @@ async function crearUsuario(){
    return;
  }
 
- const user = data?.user || data?.session?.user;
+ const user = data?.user;
+
+if(!user){
+ alert("Usuario creado, pero necesita confirmar email");
+ return;
+}
 
  if(!user){
    alert("Usuario no devuelto por Supabase (revisa confirm email)");
@@ -1295,11 +1300,86 @@ async function cargarUsuarios(){
  data.map(u=>`
    <tr>
      <td>${u.email}</td>
-     <td>${u.role}</td>
+
+     <td>
+       <select onchange="cambiarRol('${u.id}', this.value)">
+         <option value="usuario" ${u.role==="usuario"?"selected":""}>usuario</option>
+         <option value="promotor" ${u.role==="promotor"?"selected":""}>promotor</option>
+         <option value="revision" ${u.role==="revision"?"selected":""}>revision</option>
+         <option value="admin" ${u.role==="admin"?"selected":""}>admin</option>
+       </select>
+     </td>
+
+     <td>
+       <button onclick="resetPassword('${u.email}')">🔑</button>
+       <button onclick="eliminarUsuario('${u.id}')">🗑</button>
+     </td>
    </tr>
  `).join("");
 }
+  
+//////////////////////////////////////////////////
+// ACCIONES USUARIOS
+//////////////////////////////////////////////////
 
+// 🔄 CAMBIAR ROL
+async function cambiarRol(id, nuevoRol){
+
+ const { error } = await client
+   .from("profiles")
+   .update({ role: nuevoRol })
+   .eq("id", id);
+
+ if(error){
+   alert("Error actualizando rol");
+   return;
+ }
+
+ console.log("Rol actualizado");
+}
+
+// 🔑 RESET PASSWORD
+async function resetPassword(email){
+
+ const { error } = await client.auth.resetPasswordForEmail(email);
+
+ if(error){
+   alert("Error enviando email");
+   return;
+ }
+
+ alert("Email de recuperación enviado");
+}
+
+// 🗑 ELIMINAR PERFIL
+async function eliminarUsuario(id){
+
+ // ❌ NO permitir borrarse a sí mismo
+ const { data } = await client.auth.getUser();
+
+ if(data?.user?.id === id){
+   alert("No puedes eliminar tu propio usuario");
+   return;
+ }
+
+ const confirmacion = confirm("¿Eliminar usuario?");
+
+ if(!confirmacion) return;
+
+ const { error } = await client
+   .from("profiles")
+   .delete()
+   .eq("id", id);
+
+ if(error){
+   alert("Error eliminando perfil");
+   return;
+ }
+
+ alert("Perfil eliminado");
+
+ cargarUsuarios();
+}
 
 //////////////////////////////////////////////////
 // MODO PUBLICO
