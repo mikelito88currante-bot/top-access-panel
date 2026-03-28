@@ -1121,6 +1121,10 @@ async function generarPDF(){
    return;
  }
 
+ console.log("LOGIN OK", data); // 🔥 AQUÍ
+
+ document.getElementById("loginOk").style.display = "block";
+}
  // 🔥 mostrar botón continuar
  document.getElementById("loginOk").style.display = "block";
 }
