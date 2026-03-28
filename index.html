@@ -338,12 +338,15 @@ async function checkLogin(){
 
  const { data } = await client.auth.getSession();
 
- const loginDiv = document.getElementById("loginScreen");
+ const loginDiv = document.getElementById("loginScreen"); // 🔥 necesario
 
  if(!data || !data.session){
    loginDiv.style.display = "flex";
    return;
  }
+
+ loginDiv.style.display = "none";
+}
 
  // 🔥 AQUÍ ESTÁ LA CLAVE
  loginDiv.style.display = "none";
