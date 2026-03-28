@@ -1121,15 +1121,12 @@ async function generarPDF(){
    return;
  }
 
- console.log("LOGIN OK", data); // 🔥 AQUÍ
+ console.log("LOGIN OK", data);
 
  document.getElementById("loginOk").style.display = "block";
 }
- // 🔥 mostrar botón continuar
- document.getElementById("loginOk").style.display = "block";
-}
 
-// 🔥 JUSTO AQUÍ
+// ✅ CONTINUAR
 function continuarApp(){
 
  setTimeout(()=>{
@@ -1137,13 +1134,6 @@ function continuarApp(){
    checkLogin();
  }, 300);
 }
-
- // 🔥 IMPORTANTE
- checkLogin();
-}
-
- // 🔥 RECARGA LA APP YA LOGUEADO
- async function login(){
 
  const email = document.getElementById("emailLogin").value;
  const password = document.getElementById("passLogin").value;
