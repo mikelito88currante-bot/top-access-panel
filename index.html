@@ -1106,6 +1106,7 @@ async function generarPDF(){
   const url = `${window.location.origin}${window.location.pathname}?public=${currentEvent}`;
   window.open(url, "_blank");
 }
+  
   // 🔐 LOGIN
 async function login(){
 
@@ -1124,29 +1125,10 @@ async function login(){
 
  console.log("LOGIN OK", data);
 
- // 🔥 Mostrar botón continuar
- document.getElementById("loginOk").style.display = "block";
+ // 🔥 ENTRAR DIRECTAMENTE
+ document.getElementById("loginScreen").style.display = "none";
+ checkLogin();
 }
-
-
-// 👉 CONTINUAR DESPUÉS DEL LOGIN
-function continuarApp(){
-
- setTimeout(()=>{
-   document.getElementById("loginScreen").style.display = "none";
-   checkLogin();
- }, 300);
-}
-
-
-// 🎨 UTILIDADES
-function getColorAforo(p){
- if(p <= 75) return "#22c55e";
- if(p <= 89) return "#f59e0b";
- return "#ef4444";
-}
-
-function animarNumero(id, valorFinal, texto=""){
 
  let actual = 0;
  const incremento = Math.ceil(valorFinal / 30);
