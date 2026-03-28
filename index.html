@@ -94,10 +94,15 @@
     <input id="passLogin" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:15px;">
 
     <button onclick="login()" class="primary" style="width:100%;">
-      Entrar
-    </button>
+  Entrar
+</button>
 
-    <div id="errorLogin" style="color:#ef4444;margin-top:10px;"></div>
+<div id="errorLogin" style="color:#ef4444;margin-top:10px;"></div>
+
+<!-- 🔥 NUEVO -->
+<button id="loginOk" style="display:none;margin-top:10px;width:100%;" onclick="continuarApp()">
+  Continuar
+</button>
 
   </div>
 
@@ -280,12 +285,17 @@ function aplicarPermisos(){
 
  console.log("APLICANDO PERMISOS:", userRole);
 
+ // 🔐 SOLO ADMIN VE CREAR USUARIO
+ if(userRole !== "admin"){
+   ocultar("btnUsuariosHome");
+ }
+
  // 👑 ADMIN → TODO
  if(userRole === "admin") return;
 
  // 👁 REVISION
  if(userRole === "revision"){
-   ocultar("btnUpload");     // ❌ CSV
+   ocultar("btnUpload");
    ocultar("btnAccesos");
    ocultar("btnAsociacion");
    bloquearAccionesIncidencias = true;
@@ -294,14 +304,14 @@ function aplicarPermisos(){
 
  // 👤 USUARIO
  if(userRole === "usuario"){
-   ocultar("btnUpload");     // ❌ CSV
+   ocultar("btnUpload");
    ocultar("btnAccesos");
    return;
  }
 
  // 🎟 PROMOTOR
  if(userRole === "promotor"){
-   ocultar("btnUpload");     // ❌ CSV
+   ocultar("btnUpload");
    ocultar("btnAccesos");
    ocultar("btnAsociacion");
    return;
@@ -347,6 +357,13 @@ async function checkLogin(){
 }
 
 function ir(p){
+
+ // 🔐 BLOQUEO ACCESO USUARIOS
+ if(p === "usuarios" && userRole !== "admin"){
+   alert("No tienes permisos");
+   return;
+ }
+
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
  document.getElementById(p).classList.add("active");
 
@@ -1104,8 +1121,34 @@ async function generarPDF(){
    return;
  }
 
- // 🔥 RECARGA LA APP YA LOGUEADO
+ // 🔥 mostrar botón continuar
+ document.getElementById("loginOk").style.display = "block";
+}
+
+// 🔥 JUSTO AQUÍ
+function continuarApp(){
  location.reload();
+}
+
+ // 🔥 RECARGA LA APP YA LOGUEADO
+ async function login(){
+
+ const email = document.getElementById("emailLogin").value;
+ const password = document.getElementById("passLogin").value;
+
+ const { data, error } = await client.auth.signInWithPassword({
+   email: email,
+   password: password
+ });
+
+ if(error){
+   document.getElementById("errorLogin").innerText = "Credenciales incorrectas";
+   return;
+ }
+
+ // 🔥 Mostrar botón continuar
+ document.getElementById("loginOk").style.display = "block";
+}
 
 }
   function getColorAforo(p){
