@@ -1127,7 +1127,15 @@ async function generarPDF(){
 
 // 🔥 JUSTO AQUÍ
 function continuarApp(){
- location.reload();
+
+ setTimeout(()=>{
+   document.getElementById("loginScreen").style.display = "none";
+   checkLogin();
+ }, 300);
+}
+
+ // 🔥 IMPORTANTE
+ checkLogin();
 }
 
  // 🔥 RECARGA LA APP YA LOGUEADO
