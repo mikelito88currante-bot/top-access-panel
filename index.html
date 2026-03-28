@@ -1119,11 +1119,17 @@ async function generarPDF(){
   window.open(url, "_blank");
 }
   
-  // 🔐 LOGIN
+//////////////////////////////////////////////////
+// LOGIN
+//////////////////////////////////////////////////
+
 async function login(){
 
  const email = document.getElementById("emailLogin").value;
  const password = document.getElementById("passLogin").value;
+
+ // limpiar error previo
+ document.getElementById("errorLogin").innerText = "";
 
  const { data, error } = await client.auth.signInWithPassword({
    email,
@@ -1134,22 +1140,38 @@ async function login(){
    document.getElementById("errorLogin").innerText = "Credenciales incorrectas";
    return;
  }
-  async function logout(){
+
+ console.log("LOGIN OK", data);
+
+ // 🔥 ocultar login
+ document.getElementById("loginScreen").style.display = "none";
+
+ // 🔥 cargar sesión y permisos
+ await checkLogin();
+}
+
+
+//////////////////////////////////////////////////
+// LOGOUT
+//////////////////////////////////////////////////
+
+async function logout(){
 
  await client.auth.signOut();
 
+ // 🔥 reset estado
  currentEvent = null;
  userRole = null;
 
+ // 🔥 mostrar login
  document.getElementById("loginScreen").style.display = "flex";
 
- // opcional: limpiar UI
+ // 🔥 limpiar pantallas
  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
  document.getElementById("home").classList.add("active");
 
+ console.log("LOGOUT OK");
 }
-
- console.log("LOGIN OK", data);
 
  // 🔥 ENTRAR DIRECTO
  async function checkLogin(){
@@ -1158,13 +1180,12 @@ async function login(){
 
  const loginDiv = document.getElementById("loginScreen");
 
- // 🔥 SI NO HAY SESION
  if(!data || !data.session){
    loginDiv.style.display = "flex";
    return;
  }
 
- // 🔥 SI HAY SESION → NO ENTRAR AUTOMATICO
+ // 🔥 NO entrar automático
  loginDiv.style.display = "flex";
 }
 
