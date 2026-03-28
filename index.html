@@ -1106,7 +1106,8 @@ async function generarPDF(){
   const url = `${window.location.origin}${window.location.pathname}?public=${currentEvent}`;
   window.open(url, "_blank");
 }
-  async function login(){
+  // 🔐 LOGIN
+async function login(){
 
  const email = document.getElementById("emailLogin").value;
  const password = document.getElementById("passLogin").value;
@@ -1123,10 +1124,12 @@ async function generarPDF(){
 
  console.log("LOGIN OK", data);
 
+ // 🔥 Mostrar botón continuar
  document.getElementById("loginOk").style.display = "block";
 }
 
-// ✅ CONTINUAR
+
+// 👉 CONTINUAR DESPUÉS DEL LOGIN
 function continuarApp(){
 
  setTimeout(()=>{
@@ -1135,18 +1138,31 @@ function continuarApp(){
  }, 300);
 }
 
- const email = document.getElementById("emailLogin").value;
- const password = document.getElementById("passLogin").value;
 
- const { data, error } = await client.auth.signInWithPassword({
-   email: email,
-   password: password
- });
+// 🎨 UTILIDADES
+function getColorAforo(p){
+ if(p <= 75) return "#22c55e";
+ if(p <= 89) return "#f59e0b";
+ return "#ef4444";
+}
 
- if(error){
-   document.getElementById("errorLogin").innerText = "Credenciales incorrectas";
-   return;
- }
+function animarNumero(id, valorFinal, texto=""){
+
+ let actual = 0;
+ const incremento = Math.ceil(valorFinal / 30);
+
+ const intervalo = setInterval(()=>{
+   actual += incremento;
+
+   if(actual >= valorFinal){
+     actual = valorFinal;
+     clearInterval(intervalo);
+   }
+
+   document.getElementById(id).innerText = actual + texto;
+
+ }, 30);
+}
 
  // 🔥 Mostrar botón continuar
  document.getElementById("loginOk").style.display = "block";
