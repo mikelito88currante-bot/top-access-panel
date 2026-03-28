@@ -1205,24 +1205,6 @@ async function logout(){
  console.log("LOGOUT OK");
 }
 
- // 🔥 ENTRAR DIRECTO
- async function checkLogin(){
-
- const { data } = await client.auth.getSession();
-
- const loginDiv = document.getElementById("loginScreen");
-
- if(!data || !data.session){
-   loginDiv.style.display = "flex";
-   return;
- }
-
- // 🔥 NO HACER NADA MÁS
-}
-
- // 🔥 NO entrar automático
- loginDiv.style.display = "flex";
-
   function getColorAforo(p){
  if(p <= 75) return "#22c55e";
  if(p <= 89) return "#f59e0b";
