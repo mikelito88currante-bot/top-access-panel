@@ -1005,7 +1005,7 @@ async function subir(){
 
  alert("CSV inteligente cargado correctamente");
 }
-  async function exportarCSV(){
+async function exportarCSV(){
 
  if(!currentEvent){
    alert("Selecciona un evento");
@@ -1019,8 +1019,11 @@ async function subir(){
      usage_count,
      first_entry_at,
      last_exit_at,
+     first_entry_device_id,
+     last_exit_device_id,
      zones(name),
-     ticket_providers(name)
+     ticket_providers(name),
+     status
    `)
    .eq("event_id", currentEvent);
 
@@ -1030,8 +1033,8 @@ async function subir(){
    return;
  }
 
- // 🔥 CABECERAS
- let csv = "Codigo;Ticketera;Zona;Usos;Entrada;Salida\n";
+ // 🔥 CABECERA PRO
+ let csv = "Codigo;Ticketera;Zona;Usos;Estado;Fecha Entrada;Hora Entrada;Fecha Salida;Hora Salida;Dispositivo Entrada;Dispositivo Salida\n";
 
  data.forEach(c => {
 
@@ -1040,15 +1043,46 @@ async function subir(){
    const zona = c.zones?.name || "";
    const usos = c.usage_count || 0;
 
-   const entrada = c.first_entry_at
-     ? new Date(c.first_entry_at).toLocaleString()
-     : "";
+   // 🔥 ESTADO INTELIGENTE
+   let estado = "Pendiente";
 
-   const salida = c.last_exit_at
-     ? new Date(c.last_exit_at).toLocaleString()
-     : "";
+   if(c.status === "cancelled"){
+     estado = "Cancelado";
+   }
+   else if(
+     c.first_entry_device_id &&
+     c.last_exit_device_id &&
+     c.first_entry_device_id !== c.last_exit_device_id
+   ){
+     estado = "Fraude";
+   }
+   else if(c.usage_count > 1){
+     estado = "Sospechoso";
+   }
+   else if(c.usage_count > 0){
+     estado = "Usado";
+   }
 
-   csv += `${codigo};${ticket};${zona};${usos};${entrada};${salida}\n`;
+   // 🔥 FECHAS FORMATEADAS
+   let fechaEntrada = "", horaEntrada = "";
+   let fechaSalida = "", horaSalida = "";
+
+   if(c.first_entry_at){
+     const d = new Date(c.first_entry_at);
+     fechaEntrada = d.toLocaleDateString();
+     horaEntrada = d.toLocaleTimeString();
+   }
+
+   if(c.last_exit_at){
+     const d = new Date(c.last_exit_at);
+     fechaSalida = d.toLocaleDateString();
+     horaSalida = d.toLocaleTimeString();
+   }
+
+   const dispEntrada = c.first_entry_device_id || "";
+   const dispSalida = c.last_exit_device_id || "";
+
+   csv += `${codigo};${ticket};${zona};${usos};${estado};${fechaEntrada};${horaEntrada};${fechaSalida};${horaSalida};${dispEntrada};${dispSalida}\n`;
  });
 
  // 🔥 DESCARGA
@@ -1058,7 +1092,7 @@ async function subir(){
  const link = document.createElement("a");
  link.href = url;
 
- const nombreArchivo = `export_${currentEvent}.csv`;
+ const nombreArchivo = `export_pro_${currentEvent}.csv`;
 
  link.setAttribute("download", nombreArchivo);
  document.body.appendChild(link);
