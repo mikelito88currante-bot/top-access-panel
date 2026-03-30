@@ -63,10 +63,16 @@
   }
 
   th{
-    background:#020617;
-    color:#e2e8f0;
-    font-weight:700;
-  }
+  background:#020617;
+  color:#e2e8f0;
+  font-weight:700;
+}
+
+/* 🔥 HOVER EVENTOS */
+#listaEventos > div:hover{
+  background:#334155;
+  transition:0.2s;
+}
 
   .card{
     background:#1e293b;
@@ -88,6 +94,7 @@
   .smooth{
     transition: all 0.5s ease;
   }
+    
 </style>
 </head>
 
@@ -185,7 +192,6 @@
   <input type="date" id="fechaFin">
 
   <button onclick="filtrarEventos()">🔍 Buscar</button>
-  <button onclick="cargarEventos()">♻ Reset</button>
 
   <div id="listaEventos"></div>
 </div>
@@ -488,14 +494,71 @@ function renderEventos(lista){
 
  document.getElementById("listaEventos").innerHTML =
  lista.map(e=>`
-   <div class="card">
-     <b>${e.name}</b><br>
-     📍 ${e.venue || ""}<br>
-     📅 ${e.event_date || "Sin fecha"}<br>
-     <br>
-     <button onclick="entrar('${e.id}','${e.venue}')">Entrar</button>
+
+   <div style="
+     display:flex;
+     align-items:center;
+     justify-content:space-between;
+     background:#1e293b;
+     padding:10px;
+     margin:6px 0;
+     border-radius:8px;
+     gap:10px;
+   ">
+
+     <!-- INFO -->
+     <div style="display:flex; gap:20px; flex:1; font-size:14px;">
+
+       <div style="min-width:180px;">
+         <b>${e.name}</b>
+       </div>
+
+       <div style="min-width:120px;">
+         ${e.event_date || "Sin fecha"}
+       </div>
+
+       <div style="min-width:150px;">
+         ${e.venue || ""}
+       </div>
+
+       <div style="min-width:120px;">
+         Aforo: <span id="aforo_${e.id}">...</span>
+       </div>
+
+     </div>
+
+     <!-- BOTÓN -->
+     <div>
+       <button onclick="entrar('${e.id}','${e.venue}')" class="primary">
+         Entrar
+       </button>
+     </div>
+
    </div>
+
  `).join("");
+
+ // 🔥 cargar aforo dinámico
+ lista.forEach(e => cargarAforoEvento(e.id));
+}
+  async function cargarAforoEvento(eventId){
+
+ const { data } = await client
+   .from("codes")
+   .select("usage_count")
+   .eq("event_id", eventId);
+
+ if(!data) return;
+
+ const total = data.length;
+ const usados = data.filter(c => c.usage_count > 0).length;
+
+ const porcentaje = total ? Math.round((usados / total) * 100) : 0;
+
+ const el = document.getElementById("aforo_" + eventId);
+ if(el){
+   el.innerText = porcentaje + "%";
+ }
 }
 
 function filtrarEventos(){
