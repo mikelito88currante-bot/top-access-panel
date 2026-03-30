@@ -368,10 +368,14 @@ function ocultar(id){
  if(el) el.style.display = "none";
 }
   
-  // 🔐 EXPORT CSV solo admin y usuario
-if(userRole !== "admin" && userRole !== "usuario"){
-  ocultar("btnExportCSV");
-}
+  // DEBUG
+console.log("CONTROL EXPORT:", userRole);
+
+// COMENTA TEMPORALMENTE
+// if(userRole !== "admin" && userRole !== "usuario"){
+//   ocultar("btnExportCSV");
+// }
+  
   
 //////////////////////////////////////////////////
 // LOGIN / SESIÓN
@@ -381,7 +385,6 @@ async function checkLogin(){
 
  const { data } = await client.auth.getSession();
 
- // 🔥 DEFINIR SIEMPRE
  const loginDiv = document.getElementById("loginScreen");
 
  if(!data || !data.session){
@@ -393,6 +396,7 @@ async function checkLogin(){
 
  const user = data.session.user;
 
+ // 🔥 CARGAR PERFIL BIEN
  const { data: profile, error } = await client
    .from("profiles")
    .select("*")
@@ -400,6 +404,10 @@ async function checkLogin(){
    .single();
 
  console.log("PROFILE:", profile);
+
+ if(!profile){
+   console.warn("⚠️ Usuario sin perfil");
+ }
 
  userRole = profile?.role || "usuario";
 
