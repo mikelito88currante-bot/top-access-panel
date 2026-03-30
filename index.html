@@ -196,6 +196,7 @@
   <button onclick="ir('stats')" class="primary">📊 ESTADISTICAS</button>
   <button onclick="ir('inc')">⚠️ Incidencias</button>
 <button id="btnUpload" onclick="ir('upload')">📂 CSV</button>
+<button id="btnExportCSV" onclick="exportarCSV()">📥 Export CSV</button>  
 <button id="btnAccesos" onclick="ir('accesos')">🚪 Accesos</button>
 <button id="btnAsociacion" onclick="ir('asociacion')">🔗 Asociación</button>
   <button onclick="abrirPublico()">🌐 URL SIN LOGIN</button>
@@ -359,6 +360,11 @@ function aplicarPermisos(){
 function ocultar(id){
  const el = document.getElementById(id);
  if(el) el.style.display = "none";
+}
+  
+  // 🔐 EXPORT CSV solo admin y usuario
+if(userRole !== "admin" && userRole !== "usuario"){
+  ocultar("btnExportCSV");
 }
   
 //////////////////////////////////////////////////
@@ -999,6 +1005,67 @@ async function subir(){
 
  alert("CSV inteligente cargado correctamente");
 }
+  async function exportarCSV(){
+
+ if(!currentEvent){
+   alert("Selecciona un evento");
+   return;
+ }
+
+ const { data, error } = await client
+   .from("codes")
+   .select(`
+     code_value,
+     usage_count,
+     first_entry_at,
+     last_exit_at,
+     zones(name),
+     ticket_providers(name)
+   `)
+   .eq("event_id", currentEvent);
+
+ if(error){
+   console.log(error);
+   alert("Error exportando datos");
+   return;
+ }
+
+ // 🔥 CABECERAS
+ let csv = "Codigo;Ticketera;Zona;Usos;Entrada;Salida\n";
+
+ data.forEach(c => {
+
+   const codigo = c.code_value || "";
+   const ticket = c.ticket_providers?.name || "";
+   const zona = c.zones?.name || "";
+   const usos = c.usage_count || 0;
+
+   const entrada = c.first_entry_at
+     ? new Date(c.first_entry_at).toLocaleString()
+     : "";
+
+   const salida = c.last_exit_at
+     ? new Date(c.last_exit_at).toLocaleString()
+     : "";
+
+   csv += `${codigo};${ticket};${zona};${usos};${entrada};${salida}\n`;
+ });
+
+ // 🔥 DESCARGA
+ const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+ const url = URL.createObjectURL(blob);
+
+ const link = document.createElement("a");
+ link.href = url;
+
+ const nombreArchivo = `export_${currentEvent}.csv`;
+
+ link.setAttribute("download", nombreArchivo);
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+}
+  
 function filtrarIncidencias(){
 
  const texto = document.getElementById("busquedaCodigo").value.toLowerCase();
