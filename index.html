@@ -1,1816 +1,2244 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Top Access PRO</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+ 
   <style>
-  body { font-family: Arial; background:#0f172a; color:white; margin:0;}
-
-  .container{
-    padding:60px 20px 20px 20px;
-  }
-
-  .screen{display:none;} 
-  .active{display:block;}
-
-  button{
-    padding:10px 14px;
-    margin:6px;
-    border:none;
-    border-radius:10px;
-    background:linear-gradient(135deg,#1e293b,#334155);
-    color:white;
-    font-weight:600;
-    cursor:pointer;
-    transition:0.2s;
-  }
-
-  button:hover{
-    transform:scale(1.05);
-    background:linear-gradient(135deg,#334155,#475569);
-  }
-
-  button.primary{
-    background:linear-gradient(135deg,#22c55e,#16a34a);
-  }
-
-  button.danger{
-    background:linear-gradient(135deg,#ef4444,#dc2626);
-  }
-
-  input{
-    padding:6px;
-    margin:4px;
-    border-radius:6px;
-    border:none;
-  }
-
-  table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:10px;
-    border-radius:10px;
-    overflow:hidden;
-  }
-
-  th,td{
-    padding:6px;
-    border:1px solid #333;
-    text-align:center;
-  }
-
-  th{
-  background:#020617;
-  color:#e2e8f0;
-  font-weight:700;
-}
-
-/* 🔥 HOVER EVENTOS */
-#listaEventos > div:hover{
-  background:#334155;
-  transition:0.2s;
-}
-
-  .card{
-    background:#1e293b;
-    padding:10px;
-    margin:5px 0;
-    border-radius:8px;
-  }
-
-  /* 🔥 BONUS UI (PRO) */
-  tr:hover{
-    background:#1e293b;
-    transition:0.2s;
-  }
-
-  .progress-bar{
-    transition: width 1s ease-in-out;
-  }
-
-  .smooth{
-    transition: all 0.5s ease;
-  }
-    
-</style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --surface2: #f8fafc;
+      --border: #e2e8f0;
+      --border2: #cbd5e1;
+      --text: #0f172a;
+      --text2: #475569;
+      --text3: #94a3b8;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --accent-hover: #1d4ed8;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --amber: #d97706;
+      --amber-light: #fffbeb;
+      --purple: #7c3aed;
+      --purple-light: #f5f3ff;
+      --sidebar-w: 240px;
+      --header-h: 60px;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+    }
+ 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+ 
+    /* ── TOAST ── */
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: var(--text);
+      color: white;
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s ease;
+      max-width: 320px;
+    }
+    .toast.success { background: var(--green); }
+    .toast.error   { background: var(--red); }
+    .toast.info    { background: var(--accent); }
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0);   opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+ 
+    /* ── LOGIN ── */
+    #loginScreen {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 360px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+    .login-box img { width: 80px; margin-bottom: 24px; }
+    .login-box h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .login-box p  { color: var(--text2); font-size: 13px; margin-bottom: 28px; }
+    .login-field {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .login-field:focus { border-color: var(--accent); }
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+    .btn-login:hover { background: var(--accent-hover); }
+    #errorLogin { color: var(--red); font-size: 13px; margin-top: 10px; min-height: 18px; }
+ 
+    /* ── APP SHELL ── */
+    #appShell { display: none; min-height: 100vh; }
+ 
+    /* ── SIDEBAR ── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      padding: 0;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo img { width: 36px; border-radius: 8px; }
+    .sidebar-logo span {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.3px;
+    }
+    .sidebar-logo small {
+      display: block;
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+ 
+    #eventoBadge {
+      margin: 12px 14px;
+      background: rgba(37,99,235,0.2);
+      border: 1px solid rgba(37,99,235,0.3);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: none;
+    }
+    #eventoBadge .badge-label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #eventoBadge .badge-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+ 
+    .sidebar-section {
+      padding: 8px 10px 4px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+ 
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      margin: 1px 8px;
+      border-radius: 8px;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+    .nav-item.active { background: var(--accent); color: white; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+ 
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 14px 10px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: white;
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-email {
+      font-size: 12px; color: rgba(255,255,255,0.7);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-role {
+      font-size: 10px; color: rgba(255,255,255,0.35);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .btn-logout {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.4); font-size: 16px;
+      padding: 4px; border-radius: 6px; transition: color 0.2s;
+    }
+    .btn-logout:hover { color: var(--red); }
+ 
+    /* ── MAIN ── */
+    #main {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+ 
+    /* ── TOP BAR ── */
+    #topBar {
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      gap: 16px;
+    }
+    #pageTitle { font-size: 17px; font-weight: 700; flex: 1; }
+    #notifBell {
+      position: relative;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    #notifBell:hover { background: var(--bg); }
+    #notifDot {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 8px; height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      display: none;
+    }
+    #notifPanel {
+      position: absolute;
+      top: 50px; right: 28px;
+      width: 320px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      display: none;
+      z-index: 200;
+      overflow: hidden;
+    }
+    .notif-header {
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item.unread { background: var(--accent-light); }
+    .notif-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+ 
+    /* ── CONTENT ── */
+    #content { padding: 28px; flex: 1; }
+ 
+    /* ── SCREENS ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+ 
+    /* ── PAGE HEADER ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .page-header p  { color: var(--text2); font-size: 13px; margin-top: 2px; }
+ 
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary   { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg); border-color: var(--border2); }
+    .btn-danger    { background: var(--red-light); color: var(--red); border: 1.5px solid #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-success   { background: var(--green-light); color: var(--green); border: 1.5px solid #bbf7d0; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-icon { padding: 7px; border-radius: 7px; }
+ 
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card-pad { padding: 20px; }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+ 
+    /* ── STAT CARDS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+    }
+    .stat-label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 28px; font-weight: 700; margin: 6px 0 4px; letter-spacing: -1px; }
+    .stat-sub   { font-size: 12px; color: var(--text3); }
+    .stat-icon  { font-size: 22px; float: right; }
+ 
+    /* ── INPUTS ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      color: var(--text);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    select.form-input { cursor: pointer; }
+ 
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--surface2);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13.5px;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+ 
+    /* ── BADGE ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .badge-green  { background: var(--green-light);  color: var(--green); }
+    .badge-red    { background: var(--red-light);    color: var(--red); }
+    .badge-amber  { background: var(--amber-light);  color: var(--amber); }
+    .badge-purple { background: var(--purple-light); color: var(--purple); }
+    .badge-gray   { background: #f1f5f9; color: var(--text2); }
+    .badge-blue   { background: var(--accent-light); color: var(--accent); }
+ 
+    /* ── PROGRESS ── */
+    .progress-wrap { background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .progress-bar  { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+ 
+    /* ── SEARCH ── */
+    .search-box {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .search-box input { padding-left: 34px; }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      color: var(--text3);
+      font-size: 14px;
+      pointer-events: none;
+    }
+ 
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 14px;
+      width: 480px;
+      max-width: 94vw;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.2s ease;
+    }
+    .modal-lg { width: 620px; }
+    @keyframes modalIn {
+      from { transform: scale(0.95) translateY(-10px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+    .btn-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 20px; color: var(--text3);
+      padding: 2px; border-radius: 6px; transition: color 0.2s;
+    }
+    .btn-close:hover { color: var(--text); }
+ 
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+ 
+    /* ── EVENTO CARD ── */
+    .event-card {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: var(--shadow);
+    }
+    .event-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.08), var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    .event-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .event-info { flex: 1; min-width: 0; }
+    .event-name { font-weight: 700; font-size: 15px; }
+    .event-meta { font-size: 12.5px; color: var(--text2); margin-top: 2px; }
+    .event-stats { display: flex; gap: 20px; align-items: center; }
+    .event-stat { text-align: center; }
+    .event-stat-v { font-size: 16px; font-weight: 700; }
+    .event-stat-l { font-size: 11px; color: var(--text3); }
+ 
+    /* ── CHART CONTAINER ── */
+    .chart-container { position: relative; }
+    .chart-container canvas { max-height: 260px; }
+ 
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text3);
+    }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+ 
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1; text-align: center;
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; color: var(--text2);
+      transition: all 0.15s;
+    }
+    .tab.active { background: white; color: var(--text); box-shadow: var(--shadow); }
+ 
+    /* ── GRID LAYOUTS ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+ 
+    /* ── NOTIF REALTIME DOT ── */
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+      margin-right: 6px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+ 
+    /* ── BACK BUTTON ── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--text2); font-size: 13px; font-weight: 600;
+      cursor: pointer; padding: 6px 0;
+      transition: color 0.15s;
+      background: none; border: none;
+      font-family: inherit;
+      margin-bottom: 16px;
+    }
+    .back-btn:hover { color: var(--accent); }
+ 
+    /* ── LOGO PREVIEW ── */
+    #logoPreview {
+      max-width: 80px; max-height: 60px;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: none;
+      margin-top: 8px;
+    }
+ 
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      #sidebar { width: 0; overflow: hidden; }
+      #main { margin-left: 0; }
+      .form-row, .form-row-3, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
-
 <body>
-  <div id="topBar" style="
-  position:fixed;
-  top:0;
-  right:0;
-  padding:10px;
-  z-index:999;
-">
-  <button onclick="logout()" class="danger">Cerrar sesión</button>
-</div>
-  
-<div id="loginScreen" style="
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#0f172a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
-">
-
-  <div style="
-    background:#1e293b;
-    padding:30px;
-    border-radius:12px;
-    width:300px;
-    text-align:center;
-  ">
-
-    <img src="logo.png" style="width:100px;margin-bottom:10px;">
-
-    <h2>Login</h2>
-
-    <input id="emailLogin" placeholder="Email" style="width:100%;margin-bottom:10px;">
-
-    <input id="passLogin" type="password" placeholder="Contraseña" style="width:100%;margin-bottom:15px;">
-
-    <button onclick="login()" class="primary" style="width:100%;">
-  Entrar
-</button>
-
-<div id="errorLogin" style="color:#ef4444;margin-top:10px;"></div>
-
-<!-- 🔥 NUEVO -->
-<button id="loginOk" style="display:none;margin-top:10px;width:100%;" onclick="continuarApp()">
-  Continuar
-</button>
-
+ 
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+ 
+<!-- NOTIF PANEL -->
+<div id="notifPanel">
+  <div class="notif-header">
+    <span>🔔 Notificaciones</span>
+    <button class="btn btn-sm btn-secondary" onclick="marcarTodasLeidas()">Marcar leídas</button>
   </div>
-
+  <div id="notifList"><div class="notif-item" style="color:var(--text3);text-align:center;padding:20px;">Sin notificaciones</div></div>
 </div>
-<div id="headerEvento" style="position:sticky;top:0;background:#020617;padding:15px;display:flex;justify-content:space-between;">
-  <div style="display:flex;gap:10px;align-items:center;">
-    <img src="logo.png" style="height:40px;">
-    <b>Top Access</b>
+ 
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+    <h2>Top Access PRO</h2>
+    <p>Panel de control de accesos</p>
+    <input class="login-field" id="emailLogin" type="email" placeholder="Email" onkeydown="if(event.key==='Enter')login()">
+    <input class="login-field" id="passLogin" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn-login" onclick="login()">Entrar</button>
+    <div id="errorLogin"></div>
   </div>
-  <div id="infoEvento"></div>
 </div>
-
-<div class="container">
-
-<div id="home" class="screen active">
-  <h1>Inicio</h1>
-  <button onclick="ir('crearEvento')">Crear evento</button>
-  <button onclick="ir('eventos')">Eventos</button>
-  <button id="btnUsuariosHome" onclick="ir('usuarios')">👥 Crear usuario</button>
-</div> <!-- 🔥 ESTE CIERRE ES CLAVE -->
-
-<div id="crearEvento" class="screen">
-  <h1>Crear evento</h1>
-  <button onclick="ir('home')">⬅</button>
-  <input id="nombreEvento" placeholder="Nombre">
-  <input id="venueEvento" placeholder="Venue">
-  <button onclick="crearEvento()">Guardar</button>
-</div>
-
-<div id="eventos" class="screen">
-  <h1>Eventos</h1>
-  <button onclick="ir('home')">⬅</button>
-
-  <input id="busquedaEvento" placeholder="Buscar evento...">
-
-  <br>
-
-  <label>Desde:</label>
-  <input type="date" id="fechaInicio">
-
-  <label>Hasta:</label>
-  <input type="date" id="fechaFin">
-
-  <button onclick="filtrarEventos()">🔍 Buscar</button>
-
-  <div id="listaEventos"></div>
-</div>
-
-<div id="gestion" class="screen">
-  <h1>Gestión</h1>
-  <button onclick="ir('eventos')">⬅</button>
-  <button onclick="ir('stats')" class="primary">📊 ESTADISTICAS</button>
-  <button onclick="ir('inc')">⚠️ Incidencias</button>
-<button id="btnUpload" onclick="ir('upload')">📂 CSV</button>
-<button id="btnExportCSV" onclick="exportarCSV()">📥 Export CSV</button>  
-<button id="btnAccesos" onclick="ir('accesos')">🚪 Accesos</button>
-<button id="btnAsociacion" onclick="ir('asociacion')">🔗 Asociación</button>
-  <button onclick="abrirPublico()">🌐 URL SIN LOGIN</button>
-</div>
-
-<div id="accesos" class="screen">
-  <h1>Accesos</h1>
-  <button onclick="ir('gestion')">⬅</button>
-  <input id="nombreAcceso">
-  <button onclick="crearAcceso()">Crear</button>
-  <div id="listaAccesos"></div>
-</div>
-
-<div id="asociacion" class="screen">
-  <h1>Asociación</h1>
-  <button onclick="ir('gestion')">⬅</button>
-  <div id="tabla"></div>
-</div>
-
-<div id="stats" class="screen">
-  <h1>📊 Dashboard</h1>
-  <button onclick="ir('gestion')">⬅</button>
-  <button onclick="generarPDF()">📄 Exportar PDF PRO</button>
-
-  <div id="tablaStats"></div>
-
-  <canvas id="graficoZonas" height="120"></canvas>
-  <canvas id="graficoTicket" height="120"></canvas>
-
-  <!-- 🔥 NUEVO -->
-  <canvas id="graficoFlujo" height="120"></canvas>
-
-</div>
-
-<div id="inc" class="screen">
-  <h1>Incidencias</h1>
-  <button onclick="ir('gestion')">⬅</button>
-
-  <input 
-    id="busquedaCodigo" 
-    placeholder="Buscar código..." 
-    oninput="filtrarIncidencias()" 
-    style="width:250px;margin-bottom:10px;"
-  >
-
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Zona</th>
-        <th>Ticketera</th>
-        <th>Usos</th>
-        <th>Estado</th>
-        <th>Actividad</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-
-    <tbody id="tablaInc"></tbody>
-  </table>
-
-</div> <!-- 🔥 ESTE CIERRE ES OBLIGATORIO -->
-
-<div id="upload" class="screen">
-  <h1>CSV</h1>
-  <button onclick="ir('gestion')">⬅</button>
-  <input type="file" id="fileInput">
-  <button onclick="subir()">Subir</button>
-</div>
-
-<div id="usuarios" class="screen">
-  <h1>Usuarios</h1>
-  <button onclick="ir('home')">⬅</button>
-
-  <div class="card">
-    <h3>Crear nuevo usuario</h3>
-
-    <input id="nuevoEmail" placeholder="Email">
-    <input id="nuevoPass" placeholder="Contraseña">
-
-    <select id="nuevoRol">
-      <option value="usuario">Usuario</option>
-      <option value="promotor">Promotor</option>
-      <option value="revision">Revisión incidencias</option> <!-- 🔥 NUEVO -->
-      <option value="admin">Admin</option>
-    </select>
-
-    <button onclick="crearUsuario()">Crear usuario</button>
+ 
+<!-- APP SHELL -->
+<div id="appShell">
+ 
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" onerror="this.style.display='none'">
+      <div>
+        <span>Top Access</span>
+        <small>PRO Panel</small>
+      </div>
+    </div>
+ 
+    <div id="eventoBadge">
+      <div class="badge-label">Evento activo</div>
+      <div class="badge-name" id="eventoBadgeName">—</div>
+    </div>
+ 
+    <div class="sidebar-section">General</div>
+    <div class="nav-item active" onclick="irNav('home')" id="nav-home">
+      <span class="icon">🏠</span> Inicio
+    </div>
+    <div class="nav-item" onclick="irNav('eventos')" id="nav-eventos">
+      <span class="icon">📅</span> Eventos
+    </div>
+ 
+    <div id="navEvento" style="display:none;">
+      <div class="sidebar-section">Evento</div>
+      <div class="nav-item" onclick="irNav('stats')" id="nav-stats">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="irNav('inc')" id="nav-inc">
+        <span class="icon">⚠️</span> Incidencias
+      </div>
+      <div class="nav-item" onclick="irNav('upload')" id="nav-upload">
+        <span class="icon">📂</span> Importar CSV
+      </div>
+      <div class="nav-item" onclick="irNav('zonas')" id="nav-zonas">
+        <span class="icon">🗂️</span> Zonas
+      </div>
+      <div class="nav-item" onclick="irNav('accesos')" id="nav-accesos">
+        <span class="icon">🚪</span> Accesos
+      </div>
+      <div class="nav-item" onclick="irNav('asociacion')" id="nav-asociacion">
+        <span class="icon">🔗</span> Asociación
+      </div>
+    </div>
+ 
+    <div id="navAdmin" style="display:none;">
+      <div class="sidebar-section">Administración</div>
+      <div class="nav-item" onclick="irNav('usuarios')" id="nav-usuarios">
+        <span class="icon">👥</span> Usuarios
+      </div>
+    </div>
+ 
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-info">
+          <div class="user-email" id="userEmail">—</div>
+          <div class="user-role" id="userRoleLabel">—</div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Cerrar sesión">⏻</button>
+      </div>
+    </div>
+  </nav>
+ 
+  <!-- MAIN -->
+  <div id="main">
+    <!-- TOP BAR -->
+    <div id="topBar">
+      <div id="pageTitle">Inicio</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="live-dot" id="liveDot" style="display:none;"></span>
+        <span id="liveLabel" style="font-size:12px;color:var(--text2);display:none;">En vivo</span>
+        <div id="notifBell" onclick="toggleNotif()">
+          🔔
+          <div id="notifDot"></div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="abrirPublico()" id="btnPublico" style="display:none;">🌐 URL Pública</button>
+        <button class="btn btn-danger btn-sm" onclick="salirEvento()" id="btnSalir" style="display:none;">✕ Salir evento</button>
+      </div>
+    </div>
+ 
+    <!-- CONTENT -->
+    <div id="content">
+ 
+      <!-- ████ HOME ████ -->
+      <div id="home" class="screen active">
+        <div class="page-header">
+          <div>
+            <h1>Bienvenido 👋</h1>
+            <p>Selecciona una opción para empezar</p>
+          </div>
+        </div>
+        <div class="grid-3" style="max-width:640px;">
+          <div class="card card-pad" style="cursor:pointer;transition:all 0.15s;" onclick="irNav('eventos')"
+            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:32px;margin-bottom:10px;">📅</div>
+            <div style="font-weight:700;margin-bottom:4px;">Eventos</div>
+            <div style="font-size:12px;color:var(--text2);">Ver y gestionar eventos</div>
+          </div>
+          <div class="card card-pad" style="cursor:pointer;transition:all 0.15s;" onclick="irNav('eventos');setTimeout(()=>abrirModalCrearEvento(),300)"
+            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:32px;margin-bottom:10px;">➕</div>
+            <div style="font-weight:700;margin-bottom:4px;">Crear evento</div>
+            <div style="font-size:12px;color:var(--text2);">Nuevo evento</div>
+          </div>
+          <div class="card card-pad" style="cursor:pointer;transition:all 0.15s;display:none;" id="homeUsuarios" onclick="irNav('usuarios')"
+            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:32px;margin-bottom:10px;">👥</div>
+            <div style="font-weight:700;margin-bottom:4px;">Usuarios</div>
+            <div style="font-size:12px;color:var(--text2);">Gestión de accesos</div>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- ████ EVENTOS ████ -->
+      <div id="eventos" class="screen">
+        <div class="page-header">
+          <div>
+            <h1>Eventos</h1>
+            <p id="eventosCount">Cargando...</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalCrearEvento()">+ Nuevo evento</button>
+        </div>
+ 
+        <!-- Filtros -->
+        <div class="card card-pad" style="margin-bottom:16px;">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="search-box" style="flex:1;min-width:200px;">
+              <span class="search-icon">🔍</span>
+              <input class="form-input" id="busquedaEvento" placeholder="Buscar evento..." oninput="filtrarEventos()" style="padding-left:34px;">
+            </div>
+            <div>
+              <label class="form-label">Desde</label>
+              <input class="form-input" type="date" id="fechaInicio" onchange="filtrarEventos()">
+            </div>
+            <div>
+              <label class="form-label">Hasta</label>
+              <input class="form-input" type="date" id="fechaFin" onchange="filtrarEventos()">
+            </div>
+            <button class="btn btn-secondary" onclick="limpiarFiltros()">✕ Limpiar</button>
+          </div>
+        </div>
+ 
+        <div id="listaEventos"></div>
+      </div>
+ 
+      <!-- ████ STATS ████ -->
+      <div id="stats" class="screen">
+        <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
+        <div class="page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p id="statsEventoNombre">—</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary" onclick="exportarCSV()">📥 Exportar CSV</button>
+            <button class="btn btn-secondary" onclick="generarPDF()">📄 PDF</button>
+          </div>
+        </div>
+ 
+        <div class="stats-grid" id="statsCards"></div>
+ 
+        <div class="grid-2" style="margin-bottom:20px;">
+          <div class="card">
+            <div class="card-header">Por zona <span style="font-size:12px;color:var(--text3);font-weight:400;">Uso de códigos</span></div>
+            <div class="card-pad chart-container"><canvas id="graficoZonas"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">Por ticketera <span style="font-size:12px;color:var(--text3);font-weight:400;">Distribución</span></div>
+            <div class="card-pad chart-container"><canvas id="graficoTicket"></canvas></div>
+          </div>
+        </div>
+ 
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header">Flujo de accesos <span style="font-size:12px;color:var(--text3);font-weight:400;">Entradas cada 20 min</span></div>
+          <div class="card-pad chart-container"><canvas id="graficoFlujo"></canvas></div>
+        </div>
+ 
+        <div class="card">
+          <div class="card-header">Detalle por ticketera / zona</div>
+          <div class="table-wrap" id="tablaStats"></div>
+        </div>
+      </div>
+ 
+      <!-- ████ INCIDENCIAS ████ -->
+      <div id="inc" class="screen">
+        <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
+        <div class="page-header">
+          <h1>Incidencias</h1>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input class="form-input" id="busquedaCodigo" placeholder="Buscar código..." oninput="filtrarIncidencias()" style="padding-left:34px;width:260px;">
+          </div>
+        </div>
+ 
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Zona</th>
+                  <th>Ticketera</th>
+                  <th>Usos</th>
+                  <th>Estado</th>
+                  <th>Actividad</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaInc"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- ████ UPLOAD CSV ████ -->
+      <div id="upload" class="screen">
+        <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
+        <div class="page-header">
+          <div>
+            <h1>Importar CSV</h1>
+            <p>Sube los códigos del evento desde un archivo CSV</p>
+          </div>
+        </div>
+        <div class="card card-pad" style="max-width:540px;">
+          <div style="border:2px dashed var(--border);border-radius:10px;padding:40px;text-align:center;cursor:pointer;"
+            onclick="document.getElementById('fileInput').click()">
+            <div style="font-size:40px;margin-bottom:12px;">📂</div>
+            <div style="font-weight:700;margin-bottom:6px;">Arrastra el CSV aquí o haz clic</div>
+            <div style="font-size:12px;color:var(--text2);">Columnas detectadas automáticamente: código, zona, ticketera</div>
+            <input type="file" id="fileInput" accept=".csv" style="display:none" onchange="previewCSV()">
+          </div>
+          <div id="csvPreview" style="display:none;margin-top:16px;">
+            <div style="background:var(--accent-light);border:1px solid var(--accent);border-radius:8px;padding:14px;">
+              <div id="csvInfo" style="font-size:13px;"></div>
+            </div>
+            <div style="margin-top:12px;text-align:right;">
+              <button class="btn btn-primary" onclick="subir()">⬆️ Subir CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- ████ ZONAS ████ -->
+      <div id="zonas" class="screen">
+        <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
+        <div class="page-header">
+          <div>
+            <h1>Zonas</h1>
+            <p>Gestiona las zonas del evento</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalZona()">+ Nueva zona</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th>Códigos</th><th>Usados</th><th>Acciones</th></tr></thead>
+              <tbody id="tablaZonas"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- ████ ACCESOS ████ -->
+      <div id="accesos" class="screen">
+        <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
+        <div class="page-header">
+          <div>
+            <h1>Puntos de acceso</h1>
+            <p>Accesos físicos del recinto</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalAcceso()">+ Nuevo acceso</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th>Venue</th><th>Acciones</th></tr></thead>
+              <tbody id="tablaAccesos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+ 
+      <!-- ████ ASOCIACION ████ -->
+      <div id="asociacion" class="screen">
+        <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
+        <div class="page-header">
+          <h1>Asociación</h1>
+          <p>Qué tickets tienen acceso a qué puertas</p>
+        </div>
+        <div class="card">
+          <div class="table-wrap" id="tabla"></div>
+        </div>
+      </div>
+ 
+      <!-- ████ USUARIOS ████ -->
+      <div id="usuarios" class="screen">
+        <div class="page-header">
+          <div>
+            <h1>Usuarios</h1>
+            <p>Gestión de acceso al panel</p>
+          </div>
+          <button class="btn btn-primary" onclick="abrirModalUsuario()">+ Nuevo usuario</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead>
+              <tbody id="tablaUsuarios"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+ 
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /appShell -->
+ 
+<!-- ████ MODALES ████ -->
+ 
+<!-- Modal Crear/Editar Evento -->
+<div class="modal-overlay" id="modalEvento">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="modalEventoTitulo">Nuevo evento</h3>
+      <button class="btn-close" onclick="cerrarModal('modalEvento')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre del evento *</label>
+          <input class="form-input" id="nombreEvento" placeholder="Ej: Festival Primavera 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Venue / Recinto *</label>
+          <input class="form-input" id="venueEvento" placeholder="Ej: Palacio de Deportes">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha del evento</label>
+          <input class="form-input" type="date" id="fechaEvento">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Aforo máximo</label>
+          <input class="form-input" type="number" id="aforoEvento" placeholder="Ej: 5000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-input" id="estadoEvento">
+            <option value="active">Activo</option>
+            <option value="inactive">Inactivo</option>
+            <option value="finished">Finalizado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intervalo sync (segundos)</label>
+          <input class="form-input" type="number" id="syncEvento" value="5" placeholder="5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL del logo</label>
+        <input class="form-input" id="logoEvento" placeholder="https://..." oninput="previewLogo()">
+        <img id="logoPreview" src="" alt="Preview logo">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalEvento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEvento()" id="btnGuardarEvento">Guardar evento</button>
+    </div>
   </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Rol</th>
-      </tr>
-    </thead>
-    <tbody id="tablaUsuarios"></tbody>
-  </table>
 </div>
-
+ 
+<!-- Modal Zona -->
+<div class="modal-overlay" id="modalZona">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalZonaTitulo">Nueva zona</h3>
+      <button class="btn-close" onclick="cerrarModal('modalZona')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre de la zona *</label>
+        <input class="form-input" id="nombreZona" placeholder="Ej: VIP, General, Pista...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalZona')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarZona()">Guardar zona</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Modal Acceso -->
+<div class="modal-overlay" id="modalAcceso">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nuevo punto de acceso</h3>
+      <button class="btn-close" onclick="cerrarModal('modalAcceso')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del acceso *</label>
+        <input class="form-input" id="nombreAcceso" placeholder="Ej: Puerta Principal, Acceso VIP...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalAcceso')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarAcceso()">Guardar acceso</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- Modal Usuario -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nuevo usuario</h3>
+      <button class="btn-close" onclick="cerrarModal('modalUsuario')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input class="form-input" id="nuevoEmail" type="email" placeholder="usuario@ejemplo.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña *</label>
+        <input class="form-input" id="nuevoPass" type="password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol</label>
+        <select class="form-input" id="nuevoRol">
+          <option value="usuario">Usuario</option>
+          <option value="promotor">Promotor</option>
+          <option value="revision">Revisión incidencias</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalUsuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="crearUsuario()">Crear usuario</button>
+    </div>
+  </div>
+</div>
+ 
 <script>
-// 🔥 1. CREAR CLIENT (SIEMPRE PRIMERO)
-  console.log("SCRIPT CARGADO");
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
 const client = supabase.createClient(
- "https://zuhssrhdezptsgemxofh.supabase.co",
- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
+  "https://zuhssrhdezptsgemxofh.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
 );
-
-// 🔥 VARIABLES (DEBEN IR AQUÍ)
-let currentEvent=null;
+ 
+let currentEvent = null;
+let currentVenue = null;
+let userRole = null;
+let userEmailGlobal = null;
+let eventosGlobal = [];
+let editandoEventoId = null;
+let editandoZonaId = null;
+let bloquearAccionesIncidencias = false;
+let notificaciones = [];
+let realtimeChannel = null;
+let chartZonas = null, chartTicket = null, chartFlujo = null;
+ 
 const params = new URLSearchParams(window.location.search);
 const modoPublico = params.get("public") || null;
-let currentVenue=null;
-let userRole = null;
-let eventosGlobal=[];
-let bloquearAccionesIncidencias = false;
-  
-  console.log("ANTES DE CHECKLOGIN");
-  
-// 🔥 CHECK LOGIN (DESPUÉS DE CLIENT)
-checkLogin();
-
-function aplicarPermisos(){
-
- console.log("APLICANDO PERMISOS:", userRole);
-
- // 🔐 SOLO ADMIN VE CREAR USUARIO
- if(userRole !== "admin"){
-   ocultar("btnUsuariosHome");
- }
-
- // 👑 ADMIN → TODO
- if(userRole === "admin") return;
-
- // 👁 REVISION
- if(userRole === "revision"){
-   ocultar("btnUpload");
-   ocultar("btnAccesos");
-   ocultar("btnAsociacion");
-   bloquearAccionesIncidencias = true;
-   return;
- }
-
- // 👤 USUARIO
- if(userRole === "usuario"){
-   ocultar("btnUpload");
-   ocultar("btnAccesos");
-   return;
- }
-
- // 🎟 PROMOTOR
- if(userRole === "promotor"){
-   ocultar("btnUpload");
-   ocultar("btnAccesos");
-   ocultar("btnAsociacion");
-   return;
- }
-}
-
-function ocultar(id){
- const el = document.getElementById(id);
- if(el) el.style.display = "none";
-}
-  
-  // DEBUG
-console.log("CONTROL EXPORT:", userRole);
-
-// COMENTA TEMPORALMENTE
-// if(userRole !== "admin" && userRole !== "usuario"){
-//   ocultar("btnExportCSV");
-// }
-  
-  
-//////////////////////////////////////////////////
-// LOGIN / SESIÓN
-//////////////////////////////////////////////////
-
-async function checkLogin(){
-
- const { data } = await client.auth.getSession();
-
- const loginDiv = document.getElementById("loginScreen");
-
- if(!data || !data.session){
-   loginDiv.style.display = "flex";
-   return;
- }
-
- loginDiv.style.display = "none";
-
- const user = data.session.user;
-
- // 🔥 CARGAR PERFIL BIEN
- const { data: profile, error } = await client
-   .from("profiles")
-   .select("*")
-   .eq("id", user.id)
-   .single();
-
- console.log("PROFILE:", profile);
-
- if(!profile){
-   console.warn("⚠️ Usuario sin perfil");
- }
-
- userRole = profile?.role || "usuario";
-
- console.log("ROL FINAL:", userRole);
-
- aplicarPermisos();
-}
-
-
-//////////////////////////////////////////////////
-// NAVEGACIÓN
-//////////////////////////////////////////////////
-
-function ir(p){
-
- // 🔐 BLOQUEO ACCESO USUARIOS
- if(p === "usuarios" && userRole !== "admin"){
-   alert("No tienes permisos");
-   return;
- }
-
- document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-
- const pantalla = document.getElementById(p);
- if(pantalla) pantalla.classList.add("active");
-
- // 🔄 CARGAS DINÁMICAS
- if(p==="eventos") cargarEventos();
- if(p==="accesos") cargarAccesos();
- if(p==="asociacion") cargarMatriz();
- if(p==="stats") cargarStats();
- if(p==="inc") cargarInc();
- if(p==="usuarios") cargarUsuarios();
-}
-
-
-//////////////////////////////////////////////////
-// EVENTOS
-//////////////////////////////////////////////////
-
-async function crearEvento(){
-
- const nombre = document.getElementById("nombreEvento").value;
- const venue = document.getElementById("venueEvento").value;
-
- if(!nombre){
-   alert("Introduce nombre del evento");
-   return;
- }
-
- const { error } = await client.from("events").insert({
-   name: nombre,
-   venue: venue
- });
-
- if(error){
-   console.log(error);
-   alert("Error creando evento");
-   return;
- }
-
- ir("eventos");
-}
-
-async function cargarEventos(){
-
- const {data,error}=await client.from("events").select("*");
-
- if(error){
-   console.log(error);
-   alert("Error cargando eventos");
-   return;
- }
-
- eventosGlobal = data || [];
-
- // 🔥 ORDENAR POR FECHA (más recientes primero)
- eventosGlobal.sort((a,b)=> 
-   new Date(b.event_date || 0) - new Date(a.event_date || 0)
- );
-
- // 🔥 SIEMPRE mostrar todos al entrar
- renderEventos(eventosGlobal);
-}
-
-function renderEventos(lista){
-
- if(!lista || lista.length === 0){
-   document.getElementById("listaEventos").innerHTML = "No hay eventos";
-   return;
- }
-
- document.getElementById("listaEventos").innerHTML =
- lista.map(e=>`
-
-   <div style="
-     display:flex;
-     align-items:center;
-     justify-content:space-between;
-     background:#1e293b;
-     padding:10px;
-     margin:6px 0;
-     border-radius:8px;
-     gap:10px;
-   ">
-
-     <!-- INFO -->
-     <div style="display:flex; gap:20px; flex:1; font-size:14px;">
-
-       <div style="min-width:180px;">
-         <b>${e.name}</b>
-       </div>
-
-       <div style="min-width:120px;">
-         ${e.event_date || "Sin fecha"}
-       </div>
-
-       <div style="min-width:150px;">
-         ${e.venue || ""}
-       </div>
-
-       <div style="min-width:120px;">
-         Aforo: <span id="aforo_${e.id}">...</span>
-       </div>
-
-     </div>
-
-     <!-- BOTÓN -->
-     <div>
-       <button onclick="entrar('${e.id}','${e.venue}')" class="primary">
-         Entrar
-       </button>
-     </div>
-
-   </div>
-
- `).join("");
-
- // 🔥 cargar aforo dinámico
- lista.forEach(e => cargarAforoEvento(e.id));
-}
-  async function cargarAforoEvento(eventId){
-
- const { data } = await client
-   .from("codes")
-   .select("usage_count")
-   .eq("event_id", eventId);
-
- if(!data) return;
-
- const total = data.length;
- const usados = data.filter(c => c.usage_count > 0).length;
-
- const porcentaje = total ? Math.round((usados / total) * 100) : 0;
-
- const el = document.getElementById("aforo_" + eventId);
- if(el){
-   el.innerText = porcentaje + "%";
- }
-}
-
-function filtrarEventos(){
-
- const texto = document.getElementById("busquedaEvento").value.toLowerCase();
- const inicio = document.getElementById("fechaInicio").value;
- const fin = document.getElementById("fechaFin").value;
-
- let filtrados = eventosGlobal;
-
- // 🔍 FILTRO TEXTO
- if(texto){
-   filtrados = filtrados.filter(e =>
-     (e.name || "").toLowerCase().includes(texto)
-   );
- }
-
- // 📅 FILTRO FECHA DESDE
- if(inicio){
-   filtrados = filtrados.filter(e =>
-     e.event_date && e.event_date >= inicio
-   );
- }
-
- // 📅 FILTRO FECHA HASTA
- if(fin){
-   filtrados = filtrados.filter(e =>
-     e.event_date && e.event_date <= fin
-   );
- }
-
- renderEventos(filtrados);
-}
-
-async function entrar(id,venue){
- currentEvent=id;
- currentVenue=venue;
- const {data}=await client.from("events").select("*").eq("id",id).single();
- document.getElementById("infoEvento").innerText=data.name;
- ir("gestion");
-}
-
-//////////////////////////////////////////////////
-// ACCESOS
-//////////////////////////////////////////////////
-
-async function crearAcceso(){
- await client.from("access_points").insert({
-   name:document.getElementById("nombreAcceso").value,
-   venue:currentVenue
- });
- cargarAccesos();
-}
-
-async function cargarAccesos(){
- const {data}=await client.from("access_points").select("*").eq("venue",currentVenue);
- document.getElementById("listaAccesos").innerHTML=
- data.map(a=>`<div>${a.name}</div>`).join("");
-}
-
-//////////////////////////////////////////////////
-// ASOCIACION
-//////////////////////////////////////////////////
-
-async function cargarMatriz(){
-
- const {data:codes}=await client.from("codes")
- .select("zone_id,ticket_provider_id,zones(name),ticket_providers(name)")
- .eq("event_id",currentEvent);
-
- const {data:acc}=await client.from("access_points").select("*").eq("venue",currentVenue);
- const {data:rel}=await client.from("ticket_zone_access").select("*");
-
- const combos={};
- codes.forEach(c=>{
-  const k=c.zone_id+"_"+c.ticket_provider_id;
-  combos[k]=c;
- });
-
- let html="<table><tr><th>Concepto</th>";
- acc.forEach(a=>html+=`<th>${a.name}</th>`);
- html+="</tr>";
-
- Object.values(combos).forEach(c=>{
-  html+=`<tr><td>${c.zones?.name} - ${c.ticket_providers?.name}</td>`;
-
-  acc.forEach(a=>{
-   const ok=rel.some(r=>r.zone_id===c.zone_id && r.ticket_provider_id===c.ticket_provider_id && r.access_id===a.id);
-   html+=`<td><input type="checkbox" ${ok?"checked":""}
-   onchange="toggleAcceso('${c.zone_id}','${c.ticket_provider_id}','${a.id}',this.checked)"></td>`;
-  });
-
-  html+="</tr>";
- });
-
- html+="</table>";
- document.getElementById("tabla").innerHTML=html;
-}
-
-async function toggleAcceso(z,t,a,e){
- if(e){
-   await client.from("ticket_zone_access").insert({
-     zone_id:z,ticket_provider_id:t,access_id:a
-   });
- }else{
-   await client.from("ticket_zone_access")
-   .delete()
-   .eq("zone_id",z)
-   .eq("ticket_provider_id",t)
-   .eq("access_id",a);
- }
-}
-
-//////////////////////////////////////////////////
-// STATS PRO
-//////////////////////////////////////////////////
-
-let chartZonas=null;
-let chartTicket=null;
-let chartFlujo=null; // 🔥 NUEVO
-
-async function cargarStats(){
-
- const {data,error}=await client.from("codes")
-   .select("*,zones(name),ticket_providers(name)")
-   .eq("event_id",currentEvent);
-
- if(error || !data){
-   document.getElementById("tablaStats").innerHTML = "Error cargando stats";
-   return;
- }
-
- let total=0, usados=0, pendientes=0;
-
- const combo={};       
- const porTicket={};   
- const porZona={};     
- const flujo={}; // 🔥 NUEVO
-
- data.forEach(c=>{
-
-   total++;
-
-   const zona=c.zones?.name || "Sin zona";
-   const ticket=c.ticket_providers?.name || "Sin ticketera";
-   const key = ticket + " " + zona;
-
-   const usado = c.usage_count>0;
-
-   if(usado) usados++;
-   else pendientes++;
-
-   // 🔹 COMBINADO
-   if(!combo[key]) combo[key]={used:0,pend:0,total:0};
-   combo[key].total++;
-   usado ? combo[key].used++ : combo[key].pend++;
-
-   // 🔹 POR TICKETERA
-   if(!porTicket[ticket]) porTicket[ticket]={used:0,pend:0,total:0};
-   porTicket[ticket].total++;
-   usado ? porTicket[ticket].used++ : porTicket[ticket].pend++;
-
-   // 🔹 POR ZONA
-   if(!porZona[zona]) porZona[zona]={used:0,pend:0,total:0};
-   porZona[zona].total++;
-   usado ? porZona[zona].used++ : porZona[zona].pend++;
-
-   // 🔥 FLUJO 20 MIN
-   if(c.first_entry_at){
-     const fecha = new Date(c.first_entry_at);
-
-     const minutos = Math.floor(fecha.getMinutes()/20)*20;
-     const keyTiempo = `${fecha.getHours()}:${minutos.toString().padStart(2,"0")}`;
-
-     if(!flujo[keyTiempo]) flujo[keyTiempo]=0;
-     flujo[keyTiempo]++;
-   }
-
- });
-
- let html="";
-
- // 🔥 1. COMPARATIVA TICKETERA/ZONA
- html+=`<h2>COMPARATIVA POR TICKETERA / ZONA</h2>
- <table>
- <tr><th>Origen</th><th>Pendientes</th><th>Usadas</th><th>Totales</th></tr>`;
-
- for(let k in combo){
-   html+=`
-   <tr>
-     <td>${k}</td>
-     <td>${combo[k].pend}</td>
-     <td>${combo[k].used}</td>
-     <td>${combo[k].total}</td>
-   </tr>`;
- }
-
- html+="</table><br>";
-
- // 🔥 2. POR TICKETERA
- html+=`<h2>COMPARATIVA POR TICKETERA</h2>
- <table>
- <tr><th>Ticketera</th><th>Pendientes</th><th>Usadas</th><th>Totales</th></tr>`;
-
- for(let t in porTicket){
-   html+=`
-   <tr>
-     <td>${t}</td>
-     <td>${porTicket[t].pend}</td>
-     <td>${porTicket[t].used}</td>
-     <td>${porTicket[t].total}</td>
-   </tr>`;
- }
-
- html+="</table><br>";
-
- // 🔥 3. POR ZONA
- html+=`<h2>COMPARATIVA POR ZONAS</h2>
- <table>
- <tr><th>Zona</th><th>Pendientes</th><th>Usadas</th><th>Totales</th></tr>`;
-
- for(let z in porZona){
-   html+=`
-   <tr>
-     <td>${z}</td>
-     <td>${porZona[z].pend}</td>
-     <td>${porZona[z].used}</td>
-     <td>${porZona[z].total}</td>
-   </tr>`;
- }
-
- html+="</table><br>";
-
- // 🔹 RESUMEN GLOBAL
- html+=`
- <h2>RESUMEN GLOBAL</h2>
- <div class="card">
-   Total: ${total}<br>
-   Usadas: ${usados}<br>
-   Pendientes: ${pendientes}
- </div>
- `;
-
- document.getElementById("tablaStats").innerHTML = html;
-
- // 🔥 GRAFICO FLUJO 20 MIN
- const labels = Object.keys(flujo).sort((a,b)=>
-   a.localeCompare(b, undefined, {numeric:true})
- );
-
- const valores = labels.map(l=>flujo[l]);
-
- if(chartFlujo) chartFlujo.destroy();
-
- chartFlujo = new Chart(document.getElementById("graficoFlujo"),{
-   type:"line",
-   data:{
-     labels:labels,
-     datasets:[{
-       label:"Accesos cada 20 min",
-       data:valores,
-       fill:true
-     }]
-   }
- });
-}
-
-//////////////////////////////////////////////////
-// INCIDENCIAS
-//////////////////////////////////////////////////
-
-async function cargarInc(){
-
- const {data,error} = await client
-   .from("codes")
-   .select("*,zones(name),ticket_providers(name)")
-   .eq("event_id",currentEvent);
-
- if(error || !data){
-   console.log("Error incidencias", error);
-   return;
- }
-
- // 🔥 ORDEN POR RIESGO
- data.sort((a,b)=>{
-
-   function getPrioridad(c){
-
-     if(c.status==="cancelled") return 0;
-
-     if(
-       c.first_entry_device_id &&
-       c.last_exit_device_id &&
-       c.first_entry_device_id !== c.last_exit_device_id
-     ) return 3; // fraude
-
-     if(c.usage_count > 1) return 2; // sospechoso
-
-     if(c.usage_count > 0) return 1; // usado
-
-     return 0;
-   }
-
-   return getPrioridad(b) - getPrioridad(a);
- });
-
- // 🔥 RENDER
- document.getElementById("tablaInc").innerHTML =
- data.map(c=>{
-
-   let estado="Pendiente";
-   let color="#22c55e";
-
-   if(c.status==="cancelled"){
-     estado="Cancelado";
-     color="#6b7280";
-   }
-   else if(
-     c.first_entry_device_id &&
-     c.last_exit_device_id &&
-     c.first_entry_device_id !== c.last_exit_device_id
-   ){
-     estado="Fraude";
-     color="#ef4444";
-   }
-   else if(c.usage_count > 1){
-     estado="Sospechoso";
-     color="#f59e0b";
-   }
-   else if(c.is_top_code){
-     estado="Multiread";
-     color="#8b5cf6";
-   }
-   else if(c.usage_count > 0){
-     estado="Usado";
-   }
-
-   return `
-   <tr>
-     <td>${c.code_value}</td>
-
-     <td>${c.zones?.name || ""}</td>
-
-     <td>${c.ticket_providers?.name || ""}</td>
-
-     <td>${c.usage_count}</td>
-
-     <td>
-       <div style="
-         background:${color};
-         color:white;
-         padding:5px;
-         border-radius:6px;
-         font-size:12px;
-         font-weight:bold;
-       ">
-         ${estado}
-       </div>
-     </td>
-
-     <td style="font-size:12px;text-align:left;">
-
-       <div>
-         <b>Entrada</b><br>
-         ⏱ ${c.first_entry_at ? new Date(c.first_entry_at).toLocaleTimeString() : "-"}<br>
-         📱 ${c.first_entry_device_id || "-"}
-       </div>
-
-       <div style="margin-top:6px;">
-         <b>Última salida</b><br>
-         ⏱ ${c.last_exit_at ? new Date(c.last_exit_at).toLocaleTimeString() : "-"}<br>
-         📱 ${c.last_exit_device_id || "-"}
-       </div>
-
-       <div style="margin-top:6px;">
-         <b>Intentos</b><br>
-         ${c.usage_count} uso(s)<br>
-         ${c.usage_count > 1 ? "⚠️ múltiples accesos" : "✅ acceso normal"}
-       </div>
-
-     </td>
-
-     <td>
-  ${
-    bloquearAccionesIncidencias
-    ? `<span style="color:#888;font-size:12px;">Solo lectura</span>`
-    : `
-      <button onclick="usar('${c.id}')">✔</button>
-      <button onclick="reset('${c.id}')">↺</button>
-      <button onclick="cancelar('${c.id}')">✖</button>
-      <button onclick="multi('${c.id}')">M</button>
-    `
-  }
-</td>
-   </tr>`;
- }).join("");
-}
-
-async function usar(id){
- await client.from("codes").update({usage_count:1}).eq("id",id);
-}
-
-async function reset(id){
- await client.from("codes").update({usage_count:0}).eq("id",id);
-}
-
-async function cancelar(id){
- await client.from("codes").update({status:"cancelled"}).eq("id",id);
-}
-
-async function multi(id){
- await client.from("codes").update({is_top_code:true}).eq("id",id);
-}
-
-//////////////////////////////////////////////////
-// CSV
-//////////////////////////////////////////////////
-
-async function subir(){
-
- const file=document.getElementById("fileInput").files[0];
- if(!file) return alert("Selecciona archivo");
-
- const text=await file.text();
- const lines=text.split("\n");
-
- if(lines.length<2) return alert("Archivo vacío");
-
- // 🔹 DETECTAR CABECERAS
- const headers = lines[0].toLowerCase().split(";");
-
- const idxCodigo = headers.findIndex(h => h.includes("code") || h.includes("codigo"));
- const idxZona = headers.findIndex(h => h.includes("zone") || h.includes("zona"));
- const idxTicket = headers.findIndex(h => h.includes("ticket") || h.includes("provider"));
-
- if(idxCodigo === -1) return alert("No se detecta columna código");
-
- // 🔹 CARGAR DATOS EXISTENTES
- const {data:exist} = await client
-   .from("codes")
-   .select("code_value")
-   .eq("event_id",currentEvent);
-
- const existentes = new Set((exist || []).map(e=>e.code_value));
-
- const {data:zonas} = await client.from("zones").select("*");
- const {data:ticket} = await client.from("ticket_providers").select("*");
-
- const zonasMap = {};
- zonas.forEach(z=>zonasMap[z.name.toLowerCase()] = z);
-
- const ticketMap = {};
- ticket.forEach(t=>ticketMap[t.name.toLowerCase()] = t);
-
- const insertar=[];
-
- // 🔹 PROCESAR FILAS
- for(let i=1;i<lines.length;i++){
-
-   const cols = lines[i].split(";");
-
-   const codigo = cols[idxCodigo]?.trim();
-   if(!codigo || existentes.has(codigo)) continue;
-
-   let zonaId=null;
-   let ticketId=null;
-
-   // 🔹 ZONA
-   if(idxZona !== -1){
-     const nombreZona = cols[idxZona]?.trim().toLowerCase();
-
-     if(nombreZona){
-       if(!zonasMap[nombreZona]){
-         const {data:newZona} = await client.from("zones").insert({name:nombreZona}).select().single();
-         zonasMap[nombreZona] = newZona;
-       }
-       zonaId = zonasMap[nombreZona].id;
-     }
-   }
-
-   // 🔹 TICKETERA
-   if(idxTicket !== -1){
-     const nombreTicket = cols[idxTicket]?.trim().toLowerCase();
-
-     if(nombreTicket){
-       if(!ticketMap[nombreTicket]){
-         const {data:newTicket} = await client.from("ticket_providers").insert({name:nombreTicket}).select().single();
-         ticketMap[nombreTicket] = newTicket;
-       }
-       ticketId = ticketMap[nombreTicket].id;
-     }
-   }
-
-   insertar.push({
-     event_id:currentEvent,
-     code_value:codigo,
-     zone_id:zonaId,
-     ticket_provider_id:ticketId,
-     status:"valid",
-     usage_count:0
-   });
- }
-
- if(insertar.length===0) return alert("No hay nuevos códigos");
-
- await client.from("codes").insert(insertar);
-
- alert("CSV inteligente cargado correctamente");
-}
-async function exportarCSV(){
-
- if(!currentEvent){
-   alert("Selecciona un evento");
-   return;
- }
-
- const { data, error } = await client
-   .from("codes")
-   .select(`
-     code_value,
-     usage_count,
-     first_entry_at,
-     last_exit_at,
-     first_entry_device_id,
-     last_exit_device_id,
-     zones(name),
-     ticket_providers(name),
-     status
-   `)
-   .eq("event_id", currentEvent);
-
- if(error){
-   console.log(error);
-   alert("Error exportando datos");
-   return;
- }
-
- // 🔥 CABECERA PRO
- let csv = "Codigo;Ticketera;Zona;Usos;Estado;Fecha Entrada;Hora Entrada;Fecha Salida;Hora Salida;Dispositivo Entrada;Dispositivo Salida\n";
-
- data.forEach(c => {
-
-   const codigo = c.code_value || "";
-   const ticket = c.ticket_providers?.name || "";
-   const zona = c.zones?.name || "";
-   const usos = c.usage_count || 0;
-
-   // 🔥 ESTADO INTELIGENTE
-   let estado = "Pendiente";
-
-   if(c.status === "cancelled"){
-     estado = "Cancelado";
-   }
-   else if(
-     c.first_entry_device_id &&
-     c.last_exit_device_id &&
-     c.first_entry_device_id !== c.last_exit_device_id
-   ){
-     estado = "Fraude";
-   }
-   else if(c.usage_count > 1){
-     estado = "Sospechoso";
-   }
-   else if(c.usage_count > 0){
-     estado = "Usado";
-   }
-
-   // 🔥 FECHAS FORMATEADAS
-   let fechaEntrada = "", horaEntrada = "";
-   let fechaSalida = "", horaSalida = "";
-
-   if(c.first_entry_at){
-     const d = new Date(c.first_entry_at);
-     fechaEntrada = d.toLocaleDateString();
-     horaEntrada = d.toLocaleTimeString();
-   }
-
-   if(c.last_exit_at){
-     const d = new Date(c.last_exit_at);
-     fechaSalida = d.toLocaleDateString();
-     horaSalida = d.toLocaleTimeString();
-   }
-
-   const dispEntrada = c.first_entry_device_id || "";
-   const dispSalida = c.last_exit_device_id || "";
-
-   csv += `${codigo};${ticket};${zona};${usos};${estado};${fechaEntrada};${horaEntrada};${fechaSalida};${horaSalida};${dispEntrada};${dispSalida}\n`;
- });
-
- // 🔥 DESCARGA
- const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
- const url = URL.createObjectURL(blob);
-
- const link = document.createElement("a");
- link.href = url;
-
- const nombreArchivo = `export_pro_${currentEvent}.csv`;
-
- link.setAttribute("download", nombreArchivo);
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
-}
-  
-function filtrarIncidencias(){
-
- const texto = document.getElementById("busquedaCodigo").value.toLowerCase();
-
- const filas = document.querySelectorAll("#tablaInc tr");
-
- filas.forEach(f=>{
-   const codigo = f.children[0]?.innerText.toLowerCase();
-
-   if(!codigo.includes(texto)){
-     f.style.display = "none";
-   }else{
-     f.style.display = "";
-   }
- });
-
-}  
-
-//////////////////////////////////////////////////
-// REFRESH
-//////////////////////////////////////////////////
-
-setInterval(()=>{
- if(currentEvent){
-  cargarStats();
-  cargarInc();
- }
-},5000);
-async function generarPDF(){
-
- const { jsPDF } = window.jspdf;
- const doc = new jsPDF();
-
- // 🔹 EVENTO
- const {data:evento} = await client
-   .from("events")
-   .select("*")
-   .eq("id",currentEvent)
-   .single();
-
- const nombre = evento?.name || "";
- const recinto = evento?.venue || "";
- const fecha = evento?.event_date || "";
-
- let y = 15;
-
- // 🔥 LOGO CENTRADO (SIN DEFORMAR)
- try{
-   const img = new Image();
-   img.src = "logo.png";
-
-   await new Promise(res=>img.onload=res);
-
-   const width = 50;
-   const height = (img.height / img.width) * width;
-
-   const x = (210 - width) / 2;
-
-   doc.addImage(img, "PNG", x, y, width, height);
-   y += height + 10;
-
- }catch(e){}
-
- // 🔹 CABECERA
- doc.setFont("helvetica","bold");
- doc.setFontSize(16);
- doc.text("INFORME EVENTO", 105, y, {align:"center"});
-
- y += 10;
-
- doc.setFont("helvetica","normal");
- doc.setFontSize(11);
-
- doc.text(`Evento: ${nombre}`, 10, y);
- y+=6;
- doc.text(`Recinto: ${recinto}`, 10, y);
- y+=6;
- doc.text(`Fecha: ${fecha}`, 10, y);
-
- y+=10;
-
- // 🔥 FUNCION PARA TABLAS
- function dibujarTabla(titulo, dataObj){
-
-   doc.setFont("helvetica","bold");
-   doc.text(titulo, 10, y);
-   y+=6;
-
-   doc.setFontSize(10);
-
-   // cabecera
-   doc.setFont("helvetica","bold");
-   doc.text("Origen", 10, y);
-   doc.text("Pend.", 100, y);
-   doc.text("Usadas", 130, y);
-   doc.text("Total", 170, y);
-
-   y+=5;
-
-   doc.setFont("helvetica","normal");
-
-   for(let k in dataObj){
-
-     doc.text(String(k), 10, y);
-     doc.text(String(dataObj[k].pend), 100, y);
-     doc.text(String(dataObj[k].used), 130, y);
-     doc.text(String(dataObj[k].total), 170, y);
-
-     y+=5;
-
-     if(y>270){
-       doc.addPage();
-       y=15;
-     }
-   }
-
-   y+=8;
- }
-
- // 🔹 REUTILIZAMOS DATOS DEL FRONT
- const {data}=await client.from("codes")
-   .select("*,zones(name),ticket_providers(name)")
-   .eq("event_id",currentEvent);
-
- const combo={}, porTicket={}, porZona={};
-
- data.forEach(c=>{
-   const zona=c.zones?.name || "Sin zona";
-   const ticket=c.ticket_providers?.name || "Sin ticketera";
-   const key = ticket+" "+zona;
-
-   const usado = c.usage_count>0;
-
-   if(!combo[key]) combo[key]={used:0,pend:0,total:0};
-   combo[key].total++;
-   usado ? combo[key].used++ : combo[key].pend++;
-
-   if(!porTicket[ticket]) porTicket[ticket]={used:0,pend:0,total:0};
-   porTicket[ticket].total++;
-   usado ? porTicket[ticket].used++ : porTicket[ticket].pend++;
-
-   if(!porZona[zona]) porZona[zona]={used:0,pend:0,total:0};
-   porZona[zona].total++;
-   usado ? porZona[zona].used++ : porZona[zona].pend++;
- });
-
- // 🔥 TABLAS BIEN FORMATEADAS
- dibujarTabla("COMPARATIVA TICKETERA / ZONA", combo);
- dibujarTabla("COMPARATIVA POR TICKETERA", porTicket);
- dibujarTabla("COMPARATIVA POR ZONAS", porZona);
-
- // 🔥 GRAFICO FLUJO (PAGINA NUEVA)
- const canvas = document.getElementById("graficoFlujo");
-
- if(canvas){
-   const imgData = canvas.toDataURL("image/png");
-
-   doc.addPage();
-
-   doc.setFont("helvetica","bold");
-   doc.setFontSize(14);
-   doc.text("FLUJO DE ACCESOS CADA 20 MIN", 105, 15, {align:"center"});
-
-   doc.addImage(imgData, "PNG", 10, 25, 190, 100);
- }
-
- // 🔥 NOMBRE ARCHIVO
- const nombreArchivo = `${nombre}_${fecha}.pdf`.replace(/\s+/g,"_");
-
- doc.save(nombreArchivo);
+ 
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+function toast(msg, type = "info", duration = 3500) {
+  const icons = { success: "✅", error: "❌", info: "ℹ️" };
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]||"ℹ️"}</span> ${msg}`;
+  document.getElementById("toast-container").appendChild(el);
+  setTimeout(() => {
+    el.style.animation = "slideOut 0.3s ease forwards";
+    setTimeout(() => el.remove(), 300);
+  }, duration);
 }
  
-  function abrirPublico(){
+// ══════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════
+function abrirModal(id) { document.getElementById(id).classList.add("open"); }
+function cerrarModal(id) { document.getElementById(id).classList.remove("open"); }
+document.addEventListener("click", e => {
+  document.querySelectorAll(".modal-overlay.open").forEach(m => {
+    if (e.target === m) m.classList.remove("open");
+  });
+  if (!document.getElementById("notifPanel").contains(e.target) &&
+      !document.getElementById("notifBell").contains(e.target)) {
+    document.getElementById("notifPanel").style.display = "none";
+  }
+});
+ 
+// ══════════════════════════════════════════════════════
+// LOGIN / SESIÓN
+// ══════════════════════════════════════════════════════
+async function checkLogin() {
+  if (modoPublico) { iniciarModoPublico(); return; }
+ 
+  const { data } = await client.auth.getSession();
+  if (!data?.session) { document.getElementById("loginScreen").style.display = "flex"; return; }
+ 
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appShell").style.display = "flex";
+ 
+  const user = data.session.user;
+  userEmailGlobal = user.email;
+ 
+  const { data: profile } = await client.from("profiles").select("*").eq("id", user.id).single();
+  userRole = profile?.role || "usuario";
+ 
+  // UI usuario
+  document.getElementById("userEmail").textContent = user.email;
+  document.getElementById("userRoleLabel").textContent = userRole;
+  document.getElementById("userAvatar").textContent = user.email[0].toUpperCase();
+ 
+  aplicarPermisos();
+  irNav("home");
+}
+ 
+async function login() {
+  const email = document.getElementById("emailLogin").value.trim();
+  const pass = document.getElementById("passLogin").value;
+  document.getElementById("errorLogin").textContent = "";
+ 
+  const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
+  if (error) { document.getElementById("errorLogin").textContent = "Credenciales incorrectas"; return; }
+ 
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appShell").style.display = "flex";
+ 
+  userEmailGlobal = email;
+  const { data: profile } = await client.from("profiles").select("*").eq("id", data.user.id).single();
+  userRole = profile?.role || "usuario";
+ 
+  document.getElementById("userEmail").textContent = email;
+  document.getElementById("userRoleLabel").textContent = userRole;
+  document.getElementById("userAvatar").textContent = email[0].toUpperCase();
+ 
+  aplicarPermisos();
+  irNav("home");
+}
+ 
+async function logout() {
+  await client.auth.signOut();
+  if (realtimeChannel) client.removeChannel(realtimeChannel);
+  currentEvent = null; userRole = null;
+  document.getElementById("appShell").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("emailLogin").value = "";
+  document.getElementById("passLogin").value = "";
+}
+ 
+// ══════════════════════════════════════════════════════
+// PERMISOS
+// ══════════════════════════════════════════════════════
+function aplicarPermisos() {
+  if (userRole === "admin") {
+    document.getElementById("navAdmin").style.display = "block";
+    document.getElementById("homeUsuarios").style.display = "block";
+  }
+  if (userRole === "revision") {
+    bloquearAccionesIncidencias = true;
+    ocultarNav("nav-upload");
+    ocultarNav("nav-accesos");
+    ocultarNav("nav-asociacion");
+  }
+  if (userRole === "usuario") {
+    ocultarNav("nav-upload");
+    ocultarNav("nav-accesos");
+  }
+  if (userRole === "promotor") {
+    ocultarNav("nav-upload");
+    ocultarNav("nav-accesos");
+    ocultarNav("nav-asociacion");
+  }
+}
+ 
+function ocultarNav(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = "none";
+}
+ 
+// ══════════════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════════════
+const pageTitles = {
+  home: "Inicio", eventos: "Eventos", stats: "Dashboard",
+  inc: "Incidencias", upload: "Importar CSV", zonas: "Zonas",
+  accesos: "Accesos", asociacion: "Asociación", usuarios: "Usuarios"
+};
+ 
+function irNav(p) {
+  if (p === "usuarios" && userRole !== "admin") { toast("No tienes permisos", "error"); return; }
+ 
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+ 
+  const screen = document.getElementById(p);
+  if (screen) screen.classList.add("active");
+ 
+  const navEl = document.getElementById("nav-" + p);
+  if (navEl) navEl.classList.add("active");
+ 
+  document.getElementById("pageTitle").textContent = pageTitles[p] || p;
+ 
+  if (p === "eventos") cargarEventos();
+  if (p === "stats") cargarStats();
+  if (p === "inc") cargarInc();
+  if (p === "zonas") cargarZonas();
+  if (p === "accesos") cargarAccesos();
+  if (p === "asociacion") cargarMatriz();
+  if (p === "usuarios") cargarUsuarios();
+}
+ 
+function salirEvento() {
+  currentEvent = null; currentVenue = null;
+  document.getElementById("navEvento").style.display = "none";
+  document.getElementById("eventoBadge").style.display = "none";
+  document.getElementById("btnPublico").style.display = "none";
+  document.getElementById("btnSalir").style.display = "none";
+  document.getElementById("liveDot").style.display = "none";
+  document.getElementById("liveLabel").style.display = "none";
+  if (realtimeChannel) { client.removeChannel(realtimeChannel); realtimeChannel = null; }
+  irNav("eventos");
+}
+ 
+// ══════════════════════════════════════════════════════
+// NOTIFICACIONES REALTIME
+// ══════════════════════════════════════════════════════
+function toggleNotif() {
+  const p = document.getElementById("notifPanel");
+  p.style.display = p.style.display === "block" ? "none" : "block";
+}
+ 
+function agregarNotif(msg, tipo = "info") {
+  const hora = new Date().toLocaleTimeString();
+  notificaciones.unshift({ msg, tipo, hora, leida: false });
+  renderNotifs();
+  document.getElementById("notifDot").style.display = "block";
+  toast(msg, tipo === "fraude" ? "error" : tipo === "warning" ? "info" : "info");
+}
+ 
+function renderNotifs() {
+  if (!notificaciones.length) return;
+  document.getElementById("notifList").innerHTML = notificaciones.slice(0, 15).map(n => `
+    <div class="notif-item ${n.leida ? "" : "unread"}">
+      <div>${n.tipo === "fraude" ? "🚨" : "🔔"} ${n.msg}</div>
+      <div class="notif-time">${n.hora}</div>
+    </div>
+  `).join("");
+}
+ 
+function marcarTodasLeidas() {
+  notificaciones.forEach(n => n.leida = true);
+  document.getElementById("notifDot").style.display = "none";
+  renderNotifs();
+}
+ 
+function iniciarRealtime() {
+  if (realtimeChannel) client.removeChannel(realtimeChannel);
+ 
+  realtimeChannel = client
+    .channel("realtime-codes-" + currentEvent)
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "codes",
+      filter: `event_id=eq.${currentEvent}`
+    }, payload => {
+      const c = payload.new;
+      if (!c) return;
+ 
+      if (payload.eventType === "UPDATE") {
+        if (c.usage_count > 1) agregarNotif(`⚠️ Código sospechoso: ${c.code_value} (${c.usage_count} usos)`, "warning");
+        if (c.first_entry_device_id && c.last_exit_device_id &&
+            c.first_entry_device_id !== c.last_exit_device_id) {
+          agregarNotif(`🚨 POSIBLE FRAUDE: ${c.code_value}`, "fraude");
+        }
+      }
+ 
+      // Refrescar si estamos en stats o inc
+      const activeScreen = document.querySelector(".screen.active");
+      if (activeScreen?.id === "stats") cargarStats();
+      if (activeScreen?.id === "inc") cargarInc();
+    })
+    .subscribe();
+ 
+  document.getElementById("liveDot").style.display = "inline-block";
+  document.getElementById("liveLabel").style.display = "inline";
+}
+ 
+// ══════════════════════════════════════════════════════
+// EVENTOS
+// ══════════════════════════════════════════════════════
+function abrirModalCrearEvento() {
+  editandoEventoId = null;
+  document.getElementById("modalEventoTitulo").textContent = "Nuevo evento";
+  document.getElementById("btnGuardarEvento").textContent = "Guardar evento";
+  ["nombreEvento","venueEvento","fechaEvento","logoEvento"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("aforoEvento").value = "";
+  document.getElementById("estadoEvento").value = "active";
+  document.getElementById("syncEvento").value = "5";
+  document.getElementById("logoPreview").style.display = "none";
+  abrirModal("modalEvento");
+}
+ 
+function abrirModalEditarEvento(e) {
+  editandoEventoId = e.id;
+  document.getElementById("modalEventoTitulo").textContent = "Editar evento";
+  document.getElementById("btnGuardarEvento").textContent = "Guardar cambios";
+  document.getElementById("nombreEvento").value = e.name || "";
+  document.getElementById("venueEvento").value = e.venue || "";
+  document.getElementById("fechaEvento").value = e.event_date || "";
+  document.getElementById("aforoEvento").value = e.capacity_max || "";
+  document.getElementById("estadoEvento").value = e.status || "active";
+  document.getElementById("syncEvento").value = e.sync_interval_seconds || 5;
+  document.getElementById("logoEvento").value = e.logo_url || "";
+  if (e.logo_url) {
+    document.getElementById("logoPreview").src = e.logo_url;
+    document.getElementById("logoPreview").style.display = "block";
+  } else {
+    document.getElementById("logoPreview").style.display = "none";
+  }
+  abrirModal("modalEvento");
+}
+ 
+function previewLogo() {
+  const url = document.getElementById("logoEvento").value.trim();
+  const img = document.getElementById("logoPreview");
+  if (url) { img.src = url; img.style.display = "block"; }
+  else img.style.display = "none";
+}
+ 
+async function guardarEvento() {
+  const nombre = document.getElementById("nombreEvento").value.trim();
+  const venue = document.getElementById("venueEvento").value.trim();
+  if (!nombre || !venue) { toast("Nombre y venue son obligatorios", "error"); return; }
+ 
+  const payload = {
+    name: nombre,
+    venue,
+    event_date: document.getElementById("fechaEvento").value || null,
+    capacity_max: parseInt(document.getElementById("aforoEvento").value) || null,
+    status: document.getElementById("estadoEvento").value,
+    sync_interval_seconds: parseInt(document.getElementById("syncEvento").value) || 5,
+    logo_url: document.getElementById("logoEvento").value.trim() || null,
+  };
+ 
+  let error;
+  if (editandoEventoId) {
+    ({ error } = await client.from("events").update(payload).eq("id", editandoEventoId));
+  } else {
+    ({ error } = await client.from("events").insert(payload));
+  }
+ 
+  if (error) { toast("Error guardando evento", "error"); return; }
+ 
+  toast(editandoEventoId ? "Evento actualizado" : "Evento creado", "success");
+  cerrarModal("modalEvento");
+  cargarEventos();
+}
+ 
+async function cargarEventos() {
+  const { data, error } = await client.from("events").select("*");
+  if (error) { toast("Error cargando eventos", "error"); return; }
+ 
+  eventosGlobal = (data || []).sort((a, b) =>
+    new Date(b.event_date || 0) - new Date(a.event_date || 0)
+  );
+  document.getElementById("eventosCount").textContent = `${eventosGlobal.length} evento(s)`;
+  renderEventos(eventosGlobal);
+}
+ 
+function renderEventos(lista) {
+  const el = document.getElementById("listaEventos");
+  if (!lista?.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No hay eventos. Crea el primero.</p></div>`;
+    return;
+  }
+ 
+  el.innerHTML = lista.map(e => {
+    const statusColor = e.status === "active" ? "var(--green)" : e.status === "finished" ? "var(--text3)" : "var(--amber)";
+    return `
+    <div class="event-card" onclick="entrar('${e.id}','${e.venue}','${(e.name||'').replace(/'/g,"\\'")}')">
+      <div class="event-dot" style="background:${statusColor}"></div>
+      <div class="event-info">
+        <div class="event-name">${e.name}</div>
+        <div class="event-meta">
+          ${e.venue || ""}
+          ${e.event_date ? " · " + e.event_date : ""}
+          ${e.capacity_max ? " · Aforo: " + e.capacity_max : ""}
+        </div>
+      </div>
+      <div class="event-stats">
+        <div class="event-stat">
+          <div class="event-stat-v" id="aforo_${e.id}">...</div>
+          <div class="event-stat-l">Afluencia</div>
+        </div>
+        <span class="badge ${e.status === 'active' ? 'badge-green' : e.status === 'finished' ? 'badge-gray' : 'badge-amber'}">
+          ${e.status === 'active' ? 'Activo' : e.status === 'finished' ? 'Finalizado' : 'Inactivo'}
+        </span>
+      </div>
+      <div style="display:flex;gap:6px;" onclick="event.stopPropagation()">
+        <button class="btn btn-secondary btn-sm btn-icon" onclick="abrirModalEditarEvento(${JSON.stringify(e).replace(/"/g,'&quot;')})" title="Editar">✏️</button>
+      </div>
+    </div>`;
+  }).join("");
+ 
+  lista.forEach(e => cargarAforoEvento(e.id));
+}
+ 
+async function cargarAforoEvento(eventId) {
+  const { data } = await client.from("codes").select("usage_count").eq("event_id", eventId);
+  if (!data) return;
+  const total = data.length;
+  const usados = data.filter(c => c.usage_count > 0).length;
+  const porcentaje = total ? Math.round((usados / total) * 100) : 0;
+  const el = document.getElementById("aforo_" + eventId);
+  if (el) el.textContent = porcentaje + "%";
+}
+ 
+function filtrarEventos() {
+  const texto = document.getElementById("busquedaEvento").value.toLowerCase();
+  const inicio = document.getElementById("fechaInicio").value;
+  const fin = document.getElementById("fechaFin").value;
+  let f = eventosGlobal;
+  if (texto) f = f.filter(e => (e.name || "").toLowerCase().includes(texto) || (e.venue || "").toLowerCase().includes(texto));
+  if (inicio) f = f.filter(e => e.event_date && e.event_date >= inicio);
+  if (fin)    f = f.filter(e => e.event_date && e.event_date <= fin);
+  renderEventos(f);
+}
+ 
+function limpiarFiltros() {
+  document.getElementById("busquedaEvento").value = "";
+  document.getElementById("fechaInicio").value = "";
+  document.getElementById("fechaFin").value = "";
+  renderEventos(eventosGlobal);
+}
+ 
+async function entrar(id, venue, nombre) {
+  currentEvent = id; currentVenue = venue;
+  document.getElementById("navEvento").style.display = "block";
+  document.getElementById("eventoBadge").style.display = "block";
+  document.getElementById("eventoBadgeName").textContent = nombre;
+  document.getElementById("btnPublico").style.display = "inline-flex";
+  document.getElementById("btnSalir").style.display = "inline-flex";
+  iniciarRealtime();
+  irNav("stats");
+}
+ 
+// ══════════════════════════════════════════════════════
+// ZONAS
+// ══════════════════════════════════════════════════════
+function abrirModalZona(zona = null) {
+  editandoZonaId = zona?.id || null;
+  document.getElementById("modalZonaTitulo").textContent = zona ? "Editar zona" : "Nueva zona";
+  document.getElementById("nombreZona").value = zona?.name || "";
+  abrirModal("modalZona");
+}
+ 
+async function guardarZona() {
+  const nombre = document.getElementById("nombreZona").value.trim();
+  if (!nombre) { toast("Nombre obligatorio", "error"); return; }
+ 
+  let error;
+  if (editandoZonaId) {
+    ({ error } = await client.from("zones").update({ name: nombre }).eq("id", editandoZonaId));
+  } else {
+    ({ error } = await client.from("zones").insert({ name: nombre }));
+  }
+ 
+  if (error) { toast("Error guardando zona", "error"); return; }
+  toast(editandoZonaId ? "Zona actualizada" : "Zona creada", "success");
+  cerrarModal("modalZona");
+  cargarZonas();
+}
+ 
+async function cargarZonas() {
+  const { data: zonas } = await client.from("zones").select("*");
+  const { data: codes } = await client.from("codes").select("zone_id, usage_count").eq("event_id", currentEvent);
+ 
+  const stats = {};
+  (codes || []).forEach(c => {
+    if (!stats[c.zone_id]) stats[c.zone_id] = { total: 0, usados: 0 };
+    stats[c.zone_id].total++;
+    if (c.usage_count > 0) stats[c.zone_id].usados++;
+  });
+ 
+  document.getElementById("tablaZonas").innerHTML = (zonas || []).length === 0
+    ? `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text3);">No hay zonas creadas</td></tr>`
+    : (zonas || []).map(z => `
+      <tr>
+        <td><b>${z.name}</b></td>
+        <td>${stats[z.id]?.total || 0}</td>
+        <td>${stats[z.id]?.usados || 0}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-secondary btn-sm" onclick='abrirModalZona(${JSON.stringify(z)})'>✏️ Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarZona('${z.id}')">🗑</button>
+          </div>
+        </td>
+      </tr>`).join("");
+}
+ 
+async function eliminarZona(id) {
+  if (!confirm("¿Eliminar esta zona?")) return;
+  const { error } = await client.from("zones").delete().eq("id", id);
+  if (error) { toast("No se puede eliminar (tiene códigos asociados)", "error"); return; }
+  toast("Zona eliminada", "success");
+  cargarZonas();
+}
+ 
+// ══════════════════════════════════════════════════════
+// ACCESOS
+// ══════════════════════════════════════════════════════
+function abrirModalAcceso() { document.getElementById("nombreAcceso").value = ""; abrirModal("modalAcceso"); }
+ 
+async function guardarAcceso() {
+  const nombre = document.getElementById("nombreAcceso").value.trim();
+  if (!nombre) { toast("Nombre obligatorio", "error"); return; }
+  const { error } = await client.from("access_points").insert({ name: nombre, venue: currentVenue });
+  if (error) { toast("Error creando acceso", "error"); return; }
+  toast("Acceso creado", "success");
+  cerrarModal("modalAcceso");
+  cargarAccesos();
+}
+ 
+async function cargarAccesos() {
+  const { data } = await client.from("access_points").select("*").eq("venue", currentVenue);
+  document.getElementById("tablaAccesos").innerHTML = (data || []).length === 0
+    ? `<tr><td colspan="3" style="text-align:center;padding:40px;color:var(--text3);">No hay accesos</td></tr>`
+    : (data || []).map(a => `
+      <tr>
+        <td><b>${a.name}</b></td>
+        <td>${a.venue || "—"}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="eliminarAcceso('${a.id}')">🗑</button>
+        </td>
+      </tr>`).join("");
+}
+ 
+async function eliminarAcceso(id) {
+  if (!confirm("¿Eliminar este acceso?")) return;
+  await client.from("access_points").delete().eq("id", id);
+  toast("Acceso eliminado", "success");
+  cargarAccesos();
+}
+ 
+// ══════════════════════════════════════════════════════
+// ASOCIACIÓN
+// ══════════════════════════════════════════════════════
+async function cargarMatriz() {
+  const { data: codes } = await client.from("codes")
+    .select("zone_id,ticket_provider_id,zones(name),ticket_providers(name)")
+    .eq("event_id", currentEvent);
+ 
+  const { data: acc } = await client.from("access_points").select("*").eq("venue", currentVenue);
+  const { data: rel } = await client.from("ticket_zone_access").select("*");
+ 
+  const combos = {};
+  (codes || []).forEach(c => {
+    const k = c.zone_id + "_" + c.ticket_provider_id;
+    combos[k] = c;
+  });
+ 
+  if (!Object.keys(combos).length) {
+    document.getElementById("tabla").innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);">No hay combinaciones zona/ticketera para este evento</div>`;
+    return;
+  }
+ 
+  let html = `<table><thead><tr><th>Concepto</th>`;
+  (acc || []).forEach(a => html += `<th>${a.name}</th>`);
+  html += `</tr></thead><tbody>`;
+ 
+  Object.values(combos).forEach(c => {
+    html += `<tr><td><b>${c.zones?.name}</b> · ${c.ticket_providers?.name}</td>`;
+    (acc || []).forEach(a => {
+      const ok = (rel || []).some(r => r.zone_id === c.zone_id && r.ticket_provider_id === c.ticket_provider_id && r.access_id === a.id);
+      html += `<td style="text-align:center;"><input type="checkbox" ${ok ? "checked" : ""}
+        onchange="toggleAcceso('${c.zone_id}','${c.ticket_provider_id}','${a.id}',this.checked)"></td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  document.getElementById("tabla").innerHTML = html;
+}
+ 
+async function toggleAcceso(z, t, a, e) {
+  if (e) {
+    await client.from("ticket_zone_access").insert({ zone_id: z, ticket_provider_id: t, access_id: a });
+  } else {
+    await client.from("ticket_zone_access").delete().eq("zone_id", z).eq("ticket_provider_id", t).eq("access_id", a);
+  }
+  toast(e ? "Acceso habilitado" : "Acceso deshabilitado", "success");
+}
+ 
+// ══════════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════════
+async function cargarStats() {
+  const { data: evento } = await client.from("events").select("*").eq("id", currentEvent).single();
+  document.getElementById("statsEventoNombre").textContent = evento?.name || "";
+ 
+  const { data, error } = await client.from("codes")
+    .select("*,zones(name),ticket_providers(name)")
+    .eq("event_id", currentEvent);
+ 
+  if (error || !data) return;
+ 
+  let total = 0, usados = 0, pendientes = 0, fraudes = 0, sospechosos = 0;
+  const combo = {}, porTicket = {}, porZona = {}, flujo = {};
+ 
+  data.forEach(c => {
+    total++;
+    const zona = c.zones?.name || "Sin zona";
+    const ticket = c.ticket_providers?.name || "Sin ticketera";
+    const key = ticket + " · " + zona;
+    const usado = c.usage_count > 0;
+    if (usado) usados++; else pendientes++;
+ 
+    const esFraude = c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id;
+    if (esFraude) fraudes++;
+    if (c.usage_count > 1 && !esFraude) sospechosos++;
+ 
+    [combo, porTicket, porZona].forEach((obj, i) => {
+      const k = [key, ticket, zona][i];
+      if (!obj[k]) obj[k] = { used: 0, pend: 0, total: 0 };
+      obj[k].total++;
+      usado ? obj[k].used++ : obj[k].pend++;
+    });
+ 
+    if (c.first_entry_at) {
+      const fecha = new Date(c.first_entry_at);
+      const min = Math.floor(fecha.getMinutes() / 20) * 20;
+      const kT = `${fecha.getHours()}:${min.toString().padStart(2, "0")}`;
+      if (!flujo[kT]) flujo[kT] = 0;
+      flujo[kT]++;
+    }
+  });
+ 
+  const pct = total ? Math.round((usados / total) * 100) : 0;
+  const colorPct = pct <= 75 ? "var(--green)" : pct <= 89 ? "var(--amber)" : "var(--red)";
+ 
+  // STAT CARDS
+  document.getElementById("statsCards").innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total códigos</div>
+      <div class="stat-value">${total.toLocaleString()}</div>
+      <div class="stat-sub">Importados al evento</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Usados</div>
+      <div class="stat-value" style="color:var(--green)">${usados.toLocaleString()}</div>
+      <div class="stat-sub">${pct}% de afluencia</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pendientes</div>
+      <div class="stat-value" style="color:var(--text2)">${pendientes.toLocaleString()}</div>
+      <div class="stat-sub">Sin usar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Sospechosos</div>
+      <div class="stat-value" style="color:var(--amber)">${sospechosos}</div>
+      <div class="stat-sub">Múltiples usos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Posibles fraudes</div>
+      <div class="stat-value" style="color:var(--red)">${fraudes}</div>
+      <div class="stat-sub">Dispositivos distintos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Afluencia</div>
+      <div class="stat-value" style="color:${colorPct}">${pct}%</div>
+      <div style="margin-top:8px;">
+        <div class="progress-wrap" style="height:6px;">
+          <div class="progress-bar" style="width:${pct}%;background:${colorPct};"></div>
+        </div>
+      </div>
+    </div>
+  `;
+ 
+  // TABLA DETALLE
+  let html = `<table><thead><tr><th>Concepto</th><th>Pendientes</th><th>Usadas</th><th>Total</th><th>% Uso</th></tr></thead><tbody>`;
+  for (let k in combo) {
+    const p = combo[k].total ? Math.round((combo[k].used / combo[k].total) * 100) : 0;
+    html += `<tr>
+      <td>${k}</td>
+      <td>${combo[k].pend}</td>
+      <td>${combo[k].used}</td>
+      <td>${combo[k].total}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="progress-wrap" style="height:6px;flex:1;min-width:60px;">
+            <div class="progress-bar" style="width:${p}%;background:${p<=75?"var(--green)":p<=89?"var(--amber)":"var(--red)"};"></div>
+          </div>
+          <span style="font-size:12px;color:var(--text2);min-width:30px;">${p}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }
+  html += `</tbody></table>`;
+  document.getElementById("tablaStats").innerHTML = html;
+ 
+  // GRÁFICOS
+  renderGrafico("graficoZonas", "bar", Object.keys(porZona), [
+    { label: "Usadas", data: Object.values(porZona).map(v => v.used), backgroundColor: "#16a34a" },
+    { label: "Pendientes", data: Object.values(porZona).map(v => v.pend), backgroundColor: "#e2e8f0" }
+  ], "chartZonas");
+ 
+  renderGrafico("graficoTicket", "doughnut", Object.keys(porTicket),
+    [{ data: Object.values(porTicket).map(v => v.used), backgroundColor: ["#2563eb","#16a34a","#d97706","#7c3aed","#dc2626","#0891b2"] }],
+    "chartTicket");
+ 
+  const flujoLabels = Object.keys(flujo).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  renderGrafico("graficoFlujo", "line", flujoLabels,
+    [{ label: "Accesos", data: flujoLabels.map(l => flujo[l]), borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,0.1)", fill: true, tension: 0.4 }],
+    "chartFlujo");
+}
+ 
+function renderGrafico(canvasId, type, labels, datasets, varName) {
+  if (window[varName]) window[varName].destroy();
+  window[varName] = new Chart(document.getElementById(canvasId), {
+    type, data: { labels, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: "bottom" } },
+      scales: type === "bar" ? { x: { stacked: false }, y: { beginAtZero: true } } : undefined
+    }
+  });
+}
+ 
+// ══════════════════════════════════════════════════════
+// INCIDENCIAS
+// ══════════════════════════════════════════════════════
+async function cargarInc() {
+  const { data, error } = await client.from("codes")
+    .select("*,zones(name),ticket_providers(name)")
+    .eq("event_id", currentEvent);
+ 
+  if (error || !data) return;
+ 
+  data.sort((a, b) => {
+    function pri(c) {
+      if (c.status === "cancelled") return 0;
+      if (c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id) return 4;
+      if (c.usage_count > 1) return 3;
+      if (c.is_top_code) return 2;
+      if (c.usage_count > 0) return 1;
+      return 0;
+    }
+    return pri(b) - pri(a);
+  });
+ 
+  document.getElementById("tablaInc").innerHTML = data.map(c => {
+    let badge = `<span class="badge badge-green">Pendiente</span>`;
+    if (c.status === "cancelled") badge = `<span class="badge badge-gray">Cancelado</span>`;
+    else if (c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id)
+      badge = `<span class="badge badge-red">🚨 Fraude</span>`;
+    else if (c.usage_count > 1) badge = `<span class="badge badge-amber">⚠️ Sospechoso</span>`;
+    else if (c.is_top_code) badge = `<span class="badge badge-purple">Multiread</span>`;
+    else if (c.usage_count > 0) badge = `<span class="badge badge-blue">Usado</span>`;
+ 
+    const acciones = bloquearAccionesIncidencias
+      ? `<span style="color:var(--text3);font-size:12px;">Solo lectura</span>`
+      : `<div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-success btn-sm" onclick="usar('${c.id}')">✔ Usar</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetCode('${c.id}')">↺ Reset</button>
+          <button class="btn btn-danger btn-sm" onclick="cancelar('${c.id}')">✖ Cancelar</button>
+        </div>`;
+ 
+    return `<tr>
+      <td><span style="font-family:'DM Mono',monospace;font-size:13px;">${c.code_value}</span></td>
+      <td>${c.zones?.name || "—"}</td>
+      <td>${c.ticket_providers?.name || "—"}</td>
+      <td><b>${c.usage_count}</b></td>
+      <td>${badge}</td>
+      <td style="font-size:12px;color:var(--text2);">
+        ${c.first_entry_at ? "⏱ " + new Date(c.first_entry_at).toLocaleTimeString() : "—"}
+      </td>
+      <td>${acciones}</td>
+    </tr>`;
+  }).join("");
+}
+ 
+function filtrarIncidencias() {
+  const texto = document.getElementById("busquedaCodigo").value.toLowerCase();
+  document.querySelectorAll("#tablaInc tr").forEach(f => {
+    const codigo = f.children[0]?.textContent.toLowerCase();
+    f.style.display = codigo?.includes(texto) ? "" : "none";
+  });
+}
+ 
+async function usar(id) {
+  await client.from("codes").update({ usage_count: 1 }).eq("id", id);
+  toast("Código marcado como usado", "success");
+  cargarInc();
+}
+async function resetCode(id) {
+  await client.from("codes").update({ usage_count: 0, status: "valid" }).eq("id", id);
+  toast("Código reseteado", "success");
+  cargarInc();
+}
+async function cancelar(id) {
+  await client.from("codes").update({ status: "cancelled" }).eq("id", id);
+  toast("Código cancelado", "success");
+  cargarInc();
+}
+ 
+// ══════════════════════════════════════════════════════
+// CSV
+// ══════════════════════════════════════════════════════
+async function previewCSV() {
+  const file = document.getElementById("fileInput").files[0];
+  if (!file) return;
+  const text = await file.text();
+  const lines = text.split("\n").filter(l => l.trim());
+  const headers = lines[0].toLowerCase().split(";");
+  const idxCodigo = headers.findIndex(h => h.includes("code") || h.includes("codigo"));
+  document.getElementById("csvPreview").style.display = "block";
+  document.getElementById("csvInfo").innerHTML = `
+    <b>📄 ${file.name}</b><br>
+    <span style="color:var(--text2);">${lines.length - 1} líneas detectadas · 
+    Columna código: <b>${idxCodigo >= 0 ? headers[idxCodigo] : "⚠️ no detectada"}</b></span>
+  `;
+}
+ 
+async function subir() {
+  const file = document.getElementById("fileInput").files[0];
+  if (!file) return toast("Selecciona un archivo", "error");
+  const text = await file.text();
+  const lines = text.split("\n").filter(l => l.trim());
+  if (lines.length < 2) return toast("Archivo vacío", "error");
+ 
+  const headers = lines[0].toLowerCase().split(";");
+  const idxCodigo = headers.findIndex(h => h.includes("code") || h.includes("codigo"));
+  const idxZona   = headers.findIndex(h => h.includes("zone") || h.includes("zona"));
+  const idxTicket = headers.findIndex(h => h.includes("ticket") || h.includes("provider"));
+  if (idxCodigo === -1) return toast("No se detecta columna código", "error");
+ 
+  const { data: exist } = await client.from("codes").select("code_value").eq("event_id", currentEvent);
+  const existentes = new Set((exist || []).map(e => e.code_value));
+ 
+  const { data: zonas } = await client.from("zones").select("*");
+  const { data: tickets } = await client.from("ticket_providers").select("*");
+  const zonasMap = {}; zonas?.forEach(z => zonasMap[z.name.toLowerCase()] = z);
+  const ticketMap = {}; tickets?.forEach(t => ticketMap[t.name.toLowerCase()] = t);
+ 
+  const insertar = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(";");
+    const codigo = cols[idxCodigo]?.trim();
+    if (!codigo || existentes.has(codigo)) continue;
+ 
+    let zonaId = null, ticketId = null;
+    if (idxZona !== -1) {
+      const nz = cols[idxZona]?.trim().toLowerCase();
+      if (nz) {
+        if (!zonasMap[nz]) {
+          const { data: nz2 } = await client.from("zones").insert({ name: nz }).select().single();
+          zonasMap[nz] = nz2;
+        }
+        zonaId = zonasMap[nz]?.id;
+      }
+    }
+    if (idxTicket !== -1) {
+      const nt = cols[idxTicket]?.trim().toLowerCase();
+      if (nt) {
+        if (!ticketMap[nt]) {
+          const { data: nt2 } = await client.from("ticket_providers").insert({ name: nt, event_id: currentEvent }).select().single();
+          ticketMap[nt] = nt2;
+        }
+        ticketId = ticketMap[nt]?.id;
+      }
+    }
+    insertar.push({ event_id: currentEvent, code_value: codigo, zone_id: zonaId, ticket_provider_id: ticketId, status: "valid", usage_count: 0 });
+  }
+ 
+  if (!insertar.length) return toast("No hay códigos nuevos", "info");
+  await client.from("codes").insert(insertar);
+  toast(`✅ ${insertar.length} códigos importados correctamente`, "success");
+  document.getElementById("csvPreview").style.display = "none";
+  document.getElementById("fileInput").value = "";
+}
+ 
+// ══════════════════════════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════════════════════════
+async function exportarCSV() {
+  if (!currentEvent) return toast("Sin evento activo", "error");
+  const { data } = await client.from("codes")
+    .select("code_value,usage_count,first_entry_at,last_exit_at,first_entry_device_id,last_exit_device_id,zones(name),ticket_providers(name),status")
+    .eq("event_id", currentEvent);
+ 
+  let csv = "Codigo;Ticketera;Zona;Usos;Estado;Fecha Entrada;Hora Entrada;Fecha Salida;Hora Salida;Dispositivo Entrada;Dispositivo Salida\n";
+  data.forEach(c => {
+    let estado = "Pendiente";
+    if (c.status === "cancelled") estado = "Cancelado";
+    else if (c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id) estado = "Fraude";
+    else if (c.usage_count > 1) estado = "Sospechoso";
+    else if (c.usage_count > 0) estado = "Usado";
+ 
+    const fe = c.first_entry_at ? new Date(c.first_entry_at) : null;
+    const fs = c.last_exit_at ? new Date(c.last_exit_at) : null;
+    csv += `${c.code_value};${c.ticket_providers?.name||""};${c.zones?.name||""};${c.usage_count};${estado};${fe?fe.toLocaleDateString():""};${fe?fe.toLocaleTimeString():""};${fs?fs.toLocaleDateString():""};${fs?fs.toLocaleTimeString():""};${c.first_entry_device_id||""};${c.last_exit_device_id||""}\n`;
+  });
+ 
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute("download", `export_${currentEvent}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast("CSV exportado", "success");
+}
+ 
+// ══════════════════════════════════════════════════════
+// PDF
+// ══════════════════════════════════════════════════════
+async function generarPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const { data: evento } = await client.from("events").select("*").eq("id", currentEvent).single();
+  const { data } = await client.from("codes").select("*,zones(name),ticket_providers(name)").eq("event_id", currentEvent);
+ 
+  let y = 15;
+  try {
+    const img = new Image(); img.src = "logo.png";
+    await new Promise(res => { img.onload = res; img.onerror = res; });
+    const w = 40, h = (img.height / img.width) * w;
+    doc.addImage(img, "PNG", (210 - w) / 2, y, w, h);
+    y += h + 8;
+  } catch (e) {}
+ 
+  doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+  doc.text("INFORME EVENTO", 105, y, { align: "center" }); y += 10;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+  doc.text(`Evento: ${evento?.name || ""}`, 10, y); y += 6;
+  doc.text(`Recinto: ${evento?.venue || ""}`, 10, y); y += 6;
+  doc.text(`Fecha: ${evento?.event_date || ""}`, 10, y); y += 12;
+ 
+  const porZona = {}, porTicket = {};
+  data.forEach(c => {
+    const z = c.zones?.name || "Sin zona", t = c.ticket_providers?.name || "Sin ticketera";
+    const u = c.usage_count > 0;
+    [porZona, porTicket].forEach((obj, i) => {
+      const k = [z, t][i];
+      if (!obj[k]) obj[k] = { used: 0, pend: 0, total: 0 };
+      obj[k].total++; u ? obj[k].used++ : obj[k].pend++;
+    });
+  });
+ 
+  function tabla(titulo, obj) {
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+    doc.text(titulo, 10, y); y += 7;
+    doc.setFontSize(10);
+    ["Origen","Pend.","Usadas","Total"].forEach((h, i) => doc.text(h, [10,100,130,170][i], y));
+    y += 5; doc.setFont("helvetica", "normal");
+    for (let k in obj) {
+      doc.text(String(k).substring(0, 40), 10, y);
+      doc.text(String(obj[k].pend), 100, y);
+      doc.text(String(obj[k].used), 130, y);
+      doc.text(String(obj[k].total), 170, y);
+      y += 5; if (y > 270) { doc.addPage(); y = 15; }
+    }
+    y += 8;
+  }
+  tabla("POR ZONA", porZona);
+  tabla("POR TICKETERA", porTicket);
+ 
+  const canvas = document.getElementById("graficoFlujo");
+  if (canvas) {
+    doc.addPage();
+    doc.setFont("helvetica", "bold"); doc.setFontSize(14);
+    doc.text("FLUJO DE ACCESOS", 105, 15, { align: "center" });
+    doc.addImage(canvas.toDataURL("image/png"), "PNG", 10, 25, 190, 100);
+  }
+  doc.save(`${(evento?.name || "evento").replace(/\s+/g, "_")}_informe.pdf`);
+  toast("PDF generado", "success");
+}
+ 
+// ══════════════════════════════════════════════════════
+// USUARIOS
+// ══════════════════════════════════════════════════════
+function abrirModalUsuario() {
+  ["nuevoEmail","nuevoPass"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("nuevoRol").value = "usuario";
+  abrirModal("modalUsuario");
+}
+ 
+async function crearUsuario() {
+  const email = document.getElementById("nuevoEmail").value.trim();
+  const pass = document.getElementById("nuevoPass").value;
+  const role = document.getElementById("nuevoRol").value;
+  if (!email || !pass) { toast("Email y contraseña obligatorios", "error"); return; }
+ 
+  const { data, error } = await client.auth.signUp({ email, password: pass });
+  if (error) { toast("Error: " + error.message, "error"); return; }
+ 
+  const user = data?.user;
+  if (!user) { toast("Usuario creado, pendiente de confirmación de email", "info"); cerrarModal("modalUsuario"); return; }
+ 
+  const { error: ep } = await client.from("profiles").insert({ id: user.id, email, role });
+  if (ep) { toast("Error creando perfil", "error"); return; }
+ 
+  toast("Usuario creado correctamente", "success");
+  cerrarModal("modalUsuario");
+  cargarUsuarios();
+}
+ 
+async function cargarUsuarios() {
+  const { data } = await client.from("profiles").select("*");
+  document.getElementById("tablaUsuarios").innerHTML = (data || []).map(u => `
+    <tr>
+      <td>${u.email}</td>
+      <td>
+        <select class="form-input" style="width:auto;padding:5px 8px;font-size:13px;" onchange="cambiarRol('${u.id}', this.value)">
+          ${["usuario","promotor","revision","admin"].map(r =>
+            `<option value="${r}" ${u.role===r?"selected":""}>${r.charAt(0).toUpperCase()+r.slice(1)}</option>`
+          ).join("")}
+        </select>
+      </td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary btn-sm" onclick="cambiarPasswordDirecto('${u.id}')">🔑 Contraseña</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarUsuario('${u.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>`).join("");
+}
+ 
+async function cambiarRol(id, nuevoRol) {
+  await client.from("profiles").update({ role: nuevoRol }).eq("id", id);
+  toast("Rol actualizado", "success");
+}
+ 
+async function eliminarUsuario(id) {
+  if (!confirm("¿Eliminar usuario completamente?")) return;
+  const res = await fetch("https://zuhssrhdezptsgemxofh.supabase.co/functions/v1/admin-update-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId: id, deleteUser: true })
+  });
+  const data = await res.json();
+  if (data.error) { toast("Error: " + data.error, "error"); return; }
+  toast("Usuario eliminado", "success");
+  cargarUsuarios();
+}
+ 
+async function cambiarPasswordDirecto(userId) {
+  const pass = prompt("Nueva contraseña:");
+  if (!pass) return;
+  const res = await fetch("https://zuhssrhdezptsgemxofh.supabase.co/functions/v1/admin-update-user", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, password: pass })
+  });
+  const data = await res.json();
+  if (data.error) { toast("Error: " + data.error, "error"); return; }
+  toast("Contraseña actualizada", "success");
+}
+ 
+// ══════════════════════════════════════════════════════
+// URL PÚBLICA
+// ══════════════════════════════════════════════════════
+function abrirPublico() {
   const url = `${window.location.origin}${window.location.pathname}?public=${currentEvent}`;
   window.open(url, "_blank");
 }
-  
-//////////////////////////////////////////////////
-// LOGIN
-//////////////////////////////////////////////////
-
-async function login(){
-
- const email = document.getElementById("emailLogin").value;
- const password = document.getElementById("passLogin").value;
-
- const { data, error } = await client.auth.signInWithPassword({
-   email,
-   password
- });
-
- if(error){
-   document.getElementById("errorLogin").innerText = "Credenciales incorrectas";
-   return;
- }
-
- console.log("LOGIN OK", data);
-
- // 🔥 OCULTAR LOGIN
- const loginDiv = document.getElementById("loginScreen");
- loginDiv.style.display = "none";
-
- // 🔥 MUY IMPORTANTE → cargar rol
- await checkLogin();
-
- // 🔥 ENTRAR A HOME
- ir("home");
-}
-
-
-//////////////////////////////////////////////////
-// LOGOUT
-//////////////////////////////////////////////////
-
-async function logout(){
-
- await client.auth.signOut();
-
- // 🔥 reset estado
- currentEvent = null;
- userRole = null;
-
- // 🔥 mostrar login
- document.getElementById("loginScreen").style.display = "flex";
-
- // 🔥 limpiar pantallas
- document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
- document.getElementById("home").classList.add("active");
-
- console.log("LOGOUT OK");
-}
-
-  function getColorAforo(p){
- if(p <= 75) return "#22c55e";
- if(p <= 89) return "#f59e0b";
- return "#ef4444";
-}
-  function animarNumero(id, valorFinal, texto=""){
-
- let actual = 0;
- const incremento = Math.ceil(valorFinal / 30);
-
- const intervalo = setInterval(()=>{
-   actual += incremento;
-
-   if(actual >= valorFinal){
-     actual = valorFinal;
-     clearInterval(intervalo);
-   }
-
-   document.getElementById(id).innerText = actual + texto;
- }, 30);
-}
-  
-//////////////////////////////////////////////////
-// USUARIOS
-//////////////////////////////////////////////////
-
-async function crearUsuario(){
-
- const email = document.getElementById("nuevoEmail").value;
- const password = document.getElementById("nuevoPass").value;
- const role = document.getElementById("nuevoRol").value;
-
- if(!email || !password){
-   alert("Faltan datos");
-   return;
- }
-
- const { data, error } = await client.auth.signUp({
-   email,
-   password
- });
-
- console.log("AUTH RESPONSE:", data, error);
-
- if(error){
-   alert("Error creando usuario: " + error.message);
-   return;
- }
-
- const user = data?.user;
-
-if(!user){
- alert("Usuario creado, pero necesita confirmar email");
- return;
-}
-
- if(!user){
-   alert("Usuario no devuelto por Supabase (revisa confirm email)");
-   return;
- }
-
- const { error: errorProfile } = await client
-   .from("profiles")
-   .insert({
-     id: user.id,
-     email: email,
-     role: role
-   });
-
- console.log("PROFILE ERROR:", errorProfile);
-
- if(errorProfile){
-   alert("Error creando perfil");
-   return;
- }
-
- alert("Usuario creado correctamente");
- cargarUsuarios();
-}
-
-async function cargarUsuarios(){
-
- const { data, error } = await client
-   .from("profiles")
-   .select("*");
-
- if(error){
-   console.log(error);
-   return;
- }
-
- document.getElementById("tablaUsuarios").innerHTML = `
-   <tr>
-     <th>Email</th>
-     <th>Rol</th>
-     <th>Acciones</th>
-   </tr>
- ` + data.map(u=>`
-   <tr>
-     <td>${u.email}</td>
-
-     <td>
-       <select onchange="cambiarRol('${u.id}', this.value)">
-         <option value="usuario" ${u.role==="usuario"?"selected":""}>Usuario</option>
-         <option value="promotor" ${u.role==="promotor"?"selected":""}>Promotor</option>
-         <option value="revision" ${u.role==="revision"?"selected":""}>Revisión</option>
-         <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
-       </select>
-     </td>
-
-     <td style="display:flex; gap:6px; justify-content:center;">
-
-       <button onclick="cambiarPasswordDirecto('${u.id}')">
-         Cambiar contraseña
-       </button>
-
-       <button onclick="eliminarUsuario('${u.id}')" class="danger">
-         🗑
-       </button>
-
-     </td>
-   </tr>
- `).join("");
-}
-  
-//////////////////////////////////////////////////
-// ACCIONES USUARIOS
-//////////////////////////////////////////////////
-
-// 🔄 CAMBIAR ROL
-async function cambiarRol(id, nuevoRol){
-
- const { error } = await client
-   .from("profiles")
-   .update({ role: nuevoRol })
-   .eq("id", id);
-
- if(error){
-   alert("Error actualizando rol");
-   return;
- }
-
- console.log("Rol actualizado");
-}
-
-// 🔑 RESET PASSWORD
-async function resetPassword(email){
-
- const { error } = await client.auth.resetPasswordForEmail(email);
-
- if(error){
-   alert("Error enviando email");
-   return;
- }
-
- alert("Email de recuperación enviado");
-}
-
-// 🗑 ELIMINAR PERFIL
-async function eliminarUsuario(id){
-
- const confirmacion = confirm("¿Eliminar usuario COMPLETAMENTE?");
-
- if(!confirmacion) return;
-
- const res = await fetch("https://zuhssrhdezptsgemxofh.supabase.co/functions/v1/admin-update-user", {
-   method: "POST",
-   headers: {
-     "Content-Type": "application/json"
-   },
-   body: JSON.stringify({
-     userId: id,
-     deleteUser: true
-   })
- });
-
- const data = await res.json();
-
- if(data.error){
-   alert("Error: " + data.error);
-   return;
- }
-
- alert("✅ Usuario eliminado completamente");
-
- cargarUsuarios();
-}
-  // 🔑 CAMBIAR CONTRASEÑA (via email)
-async function cambiarPasswordDirecto(userId){
-
- const nuevaPass = prompt("Introduce nueva contraseña:");
-
- if(!nuevaPass){
-   alert("Contraseña vacía");
-   return;
- }
-
- const res = await fetch("https://zuhssrhdezptsgemxofh.supabase.co/functions/v1/admin-update-user", {
-   method: "POST",
-   headers: {
-     "Content-Type": "application/json"
-   },
-   body: JSON.stringify({
-     userId: userId,
-     password: nuevaPass
-   })
- });
-
- const data = await res.json();
-
- if(data.error){
-   alert("Error: " + data.error);
-   console.log(data);
-   return;
- }
-
- alert("✅ Contraseña actualizada correctamente");
-}
-
-//////////////////////////////////////////////////
-// MODO PUBLICO
-//////////////////////////////////////////////////
-
-if(modoPublico){
-
+ 
+// ══════════════════════════════════════════════════════
+// MODO PÚBLICO
+// ══════════════════════════════════════════════════════
+function iniciarModoPublico() {
   currentEvent = modoPublico;
-
-  const htmlPublico = `
-  <div style="
-    min-height:100vh;
-    width:100%;
-    background:#f8fafc;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-    font-family:'Segoe UI',sans-serif;
-    padding:20px;
-    box-sizing:border-box;
-  ">
-
-    <img src="logo.png" style="width:120px;margin-bottom:10px;">
-
-    <div id="tituloEvento" style="color:#111;text-align:center;"></div>
-
-    <div id="datos" style="width:100%;max-width:400px;"></div>
-
-    <div id="zonas" style="width:100%;max-width:400px;"></div>
-
-    <div style="
-      margin-top:auto;
-      font-size:11px;
-      color:#666;
-      text-align:center;
-      padding-top:20px;
-    ">
-      Datos facilitados con localizadores emitidos por los operadores en la venta de tickets.<br>
-      © 2026 TOP ACCESS.S.L
-    </div>
-
-  </div>
-  `;
-
-  document.body.innerHTML = htmlPublico;
-
+  document.body.innerHTML = `
+    <div style="min-height:100vh;background:#f4f6f9;font-family:'DM Sans',sans-serif;padding:20px;">
+      <div style="max-width:480px;margin:0 auto;">
+        <div style="text-align:center;padding:24px 0 16px;">
+          <img src="logo.png" style="width:80px;margin-bottom:12px;" onerror="this.style.display='none'">
+          <div id="tituloEvento"></div>
+        </div>
+        <div id="datos"></div>
+        <div id="zonas"></div>
+        <div style="text-align:center;font-size:11px;color:#94a3b8;padding-top:24px;">
+          Datos facilitados con localizadores emitidos por los operadores en la venta de tickets.<br>
+          © 2026 TOP ACCESS S.L.
+        </div>
+      </div>
+    </div>`;
   cargarPublico();
-  setInterval(cargarPublico,20000);
+  setInterval(cargarPublico, 20000);
 }
-async function cargarPublico(){
-
- const {data:evento} = await client
-   .from("events")
-   .select("*")
-   .eq("id",modoPublico)
-   .single();
-
- const {data:codes} = await client
-   .from("codes")
-   .select("*,zones(name)")
-   .eq("event_id",modoPublico);
-
- let total = 0;
- let usados = 0;
- const zonas = {};
-
- codes.forEach(c=>{
-   total++;
-   if(c.usage_count > 0) usados++;
-
-   const z = c.zones?.name || "General";
-
-   if(!zonas[z]) zonas[z] = {used:0,total:0};
-
-   zonas[z].total++;
-   if(c.usage_count > 0) zonas[z].used++;
- });
-
- const porcentaje = total ? Math.round((usados/total)*100) : 0;
- const color = getColorAforo(porcentaje);
-
- // 🔥 CABECERA
- document.getElementById("tituloEvento").innerHTML = `
-   <div style="color:#111;text-align:center;">
-     <b>${evento.venue}</b><br>
-     ${evento.name}<br>
-     ${evento.event_date}
-   </div>
- `;
-
- // 🔥 BLOQUE PRINCIPAL
- document.getElementById("datos").innerHTML = `
-   <div id="contadorAfluencia" style="
-     background:${color};
-     color:white;
-     padding:15px;
-     margin-bottom:10px;
-     font-size:22px;
-     font-weight:bold;
-     text-align:center;
-     border-radius:10px;
-   ">
-     0 afluencia
-   </div>
-
-   <div id="contadorTotal" style="
-     background:#022c22;
-     color:white;
-     padding:15px;
-     margin-bottom:10px;
-     font-size:18px;
-     text-align:center;
-     border-radius:10px;
-   ">
-     0 códigos recibidos
-   </div>
-
-   <div style="
-     text-align:center;
-     font-size:20px;
-     margin-top:10px;
-     color:#111;
-     font-weight:600;
-   ">
-     AFLUENCIA TOTAL <b>${porcentaje}%</b>
-   </div>
-
-   <div style="
-     background:#e5e7eb;
-     height:14px;
-     border-radius:10px;
-     margin:10px 0;
-     overflow:hidden;
-   ">
-     <div class="progress-bar smooth" style="
-       width:${porcentaje}%;
-       background:${color};
-       height:100%;
-     "></div>
-   </div>
- `;
-
- // 🔥 ANIMACIONES (DESPUÉS del HTML)
- animarNumero("contadorAfluencia", usados, " afluencia");
- animarNumero("contadorTotal", total, " códigos recibidos");
-
- // 🔥 ZONAS
- let html = "";
-
- for(let z in zonas){
-
-   const p = Math.round((zonas[z].used/zonas[z].total)*100);
-   const colorZona = getColorAforo(p);
-
-   html += `
-     <div style="margin-bottom:15px;">
-
-       <div style="
-         text-align:center;
-         margin:6px 0;
-         color:#111;
-         font-weight:600;
-         font-size:14px;
-       ">
-         ${z} ${p}%
-       </div>
-
-       <div style="
-         background:#e5e7eb;
-         height:10px;
-         border-radius:10px;
-         overflow:hidden;
-       ">
-
-         <div class="progress-bar smooth" style="
-           width:${p}%;
-           background:${colorZona};
-           height:100%;
-         "></div>
-
-       </div>
-
-     </div>
-   `;
- }
-
- document.getElementById("zonas").innerHTML = html;
+ 
+async function cargarPublico() {
+  const { data: evento } = await client.from("events").select("*").eq("id", modoPublico).single();
+  const { data: codes } = await client.from("codes").select("*,zones(name)").eq("event_id", modoPublico);
+ 
+  let total = 0, usados = 0;
+  const zonas = {};
+  (codes || []).forEach(c => {
+    total++;
+    if (c.usage_count > 0) usados++;
+    const z = c.zones?.name || "General";
+    if (!zonas[z]) zonas[z] = { used: 0, total: 0 };
+    zonas[z].total++;
+    if (c.usage_count > 0) zonas[z].used++;
+  });
+ 
+  const pct = total ? Math.round((usados / total) * 100) : 0;
+  const color = pct <= 75 ? "#16a34a" : pct <= 89 ? "#d97706" : "#dc2626";
+ 
+  document.getElementById("tituloEvento").innerHTML = `
+    <h2 style="font-size:20px;font-weight:800;color:#0f172a;">${evento?.name || ""}</h2>
+    <p style="color:#475569;font-size:14px;">${evento?.venue || ""} · ${evento?.event_date || ""}</p>`;
+ 
+  document.getElementById("datos").innerHTML = `
+    <div style="background:${color};color:white;padding:20px;border-radius:12px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:40px;font-weight:800;">${usados.toLocaleString()}</div>
+      <div style="font-size:14px;opacity:0.9;">personas dentro</div>
+    </div>
+    <div style="background:white;border:1px solid #e2e8f0;padding:16px;border-radius:12px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:14px;color:#475569;">Afluencia total</span>
+        <span style="font-weight:700;color:${color}">${pct}%</span>
+      </div>
+      <div style="background:#e2e8f0;height:10px;border-radius:99px;overflow:hidden;">
+        <div style="width:${pct}%;background:${color};height:100%;border-radius:99px;transition:width 1s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#94a3b8;">
+        <span>${usados.toLocaleString()} usados</span>
+        <span>${total.toLocaleString()} total</span>
+      </div>
+    </div>`;
+ 
+  let zonaHtml = "";
+  for (let z in zonas) {
+    const p = Math.round((zonas[z].used / zonas[z].total) * 100);
+    const cz = p <= 75 ? "#16a34a" : p <= 89 ? "#d97706" : "#dc2626";
+    zonaHtml += `
+      <div style="background:white;border:1px solid #e2e8f0;padding:14px;border-radius:10px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-weight:600;">${z}</span>
+          <span style="font-weight:700;color:${cz}">${p}%</span>
+        </div>
+        <div style="background:#e2e8f0;height:8px;border-radius:99px;overflow:hidden;">
+          <div style="width:${p}%;background:${cz};height:100%;border-radius:99px;transition:width 1s;"></div>
+        </div>
+      </div>`;
+  }
+  document.getElementById("zonas").innerHTML = zonaHtml;
 }
-  </script>
-
+ 
+// ══════════════════════════════════════════════════════
+// INICIO
+// ══════════════════════════════════════════════════════
+checkLogin();
+</script>
 </body>
 </html>
