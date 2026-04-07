@@ -2074,7 +2074,7 @@ async function cargarStats() {
   // Cargar códigos y logs en paralelo
   const [{ data, error }, { data: logsNotFound }] = await Promise.all([
     client.from("codes").select("*,zones(name),ticket_providers(name)").eq("event_id", currentEvent),
-    client.from("logs").select("id").eq("event_id", currentEvent).eq("result", "not_found")
+    client.from("logs").select("id,code_value").eq("event_id", currentEvent).eq("result", "not_found")
   ]);
 
   if (error || !data) return;
@@ -2234,15 +2234,15 @@ async function cargarInc() {
       .select("*,zones(name),ticket_providers(name)")
       .eq("event_id", currentEvent),
     client.from("logs")
-      .select("*,zones(name),devices(name)")
+      .select("id, code_value, code_id, device_id, zone_id, mode, created_at, zones(name)")
       .eq("event_id", currentEvent)
       .eq("result", "not_found")
       .order("created_at", { ascending: false })
       .limit(500)
   ]);
 
-  const data = codes || [];
-  const logsNF = logs || [];
+  const data   = codes  || [];
+  const logsNF = logs   || [];
 
   // ── RESUMEN RÁPIDO ─────────────────────────────────
   const fraudes     = data.filter(c => c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id).length;
@@ -2287,7 +2287,7 @@ async function cargarInc() {
   });
 
   document.getElementById("tablaInc").innerHTML = data.map(c => {
-    let badge = `<span class="badge badge-gray">Pendiente</span>`;
+    let badge    = `<span class="badge badge-gray">Pendiente</span>`;
     let esAlerta = false;
 
     if (c.status === "cancelled") {
@@ -2332,15 +2332,15 @@ async function cargarInc() {
   }).join("");
 
   // ── TABLA NO ENCONTRADOS ───────────────────────────
-  // Agrupar por code_id (código leído) para contar intentos
+  // Agrupar por code_value para contar intentos del mismo código
   const agrupados = {};
   logsNF.forEach(log => {
-    const key = log.code_id || log.id;
+    const key = log.code_value || log.id;
     if (!agrupados[key]) {
       agrupados[key] = {
-        code_id:    log.code_id,
+        code_value: log.code_value || '(desconocido)',
         device_id:  log.device_id,
-        zone:       log.zones?.name || "—",
+        zone:       log.zones?.name || '—',
         mode:       log.mode,
         first_time: log.created_at,
         last_time:  log.created_at,
@@ -2352,20 +2352,26 @@ async function cargarInc() {
     if (log.created_at > agrupados[key].last_time)  agrupados[key].last_time  = log.created_at;
   });
 
-  // También buscar códigos leídos del log que tengan code_id null (not_found guarda null)
-  // Necesitamos mostrar el código leído — viene del log directamente
-  const rowsNF = logsNF.map(log => {
-    const hora  = new Date(log.created_at).toLocaleTimeString();
-    const fecha = new Date(log.created_at).toLocaleDateString();
-    const modo  = log.mode === 'entry' ? '🟢 Entrada' : log.mode === 'exit' ? '🟡 Salida' : log.mode || '—';
-    const disp  = log.device_id ? log.device_id.toString().substring(0, 16) + '...' : '—';
+  const rowsNF = Object.values(agrupados).map(row => {
+    const hora      = new Date(row.last_time).toLocaleTimeString();
+    const fecha     = new Date(row.last_time).toLocaleDateString();
+    const horaFirst = new Date(row.first_time).toLocaleTimeString();
+    const modo      = row.mode === 'entry' ? '🟢 Entrada' : row.mode === 'exit' ? '🟡 Salida' : row.mode || '—';
+    const disp      = row.device_id ? row.device_id.toString().substring(0, 16) + '...' : '—';
+    const esMultiple = row.count > 1;
+
     return `<tr>
-      <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red);">${log.code_id || '(sin código)'}</span></td>
-      <td><span style="font-size:12px;">${disp}</span></td>
-      <td>${log.zones?.name || '—'}</td>
+      <td>
+        <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--red);">${row.code_value}</span>
+        ${esMultiple ? `<br><span style="font-size:11px;color:var(--text3);">Primera vez: ${horaFirst}</span>` : ''}
+      </td>
+      <td><span style="font-size:12px;color:var(--text2);">${disp}</span></td>
+      <td>${row.zone}</td>
       <td>${modo}</td>
       <td style="font-size:12px;">${fecha} ${hora}</td>
-      <td><span class="badge badge-red">${1}</span></td>
+      <td>
+        <span class="badge ${esMultiple ? 'badge-red' : 'badge-amber'}">${row.count} intento${row.count > 1 ? 's' : ''}</span>
+      </td>
     </tr>`;
   });
 
