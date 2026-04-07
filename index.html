@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
- 
+
   <style>
     :root {
       --bg: #f4f6f9;
@@ -37,9 +37,9 @@
       --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
       --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
     }
- 
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
     body {
       font-family: 'DM Sans', sans-serif;
       background: var(--bg);
@@ -47,7 +47,7 @@
       font-size: 14px;
       line-height: 1.5;
     }
- 
+
     /* ── TOAST ── */
     #toast-container {
       position: fixed;
@@ -83,7 +83,7 @@
       from { transform: translateX(0);   opacity: 1; }
       to   { transform: translateX(120%); opacity: 0; }
     }
- 
+
     /* ── LOGIN ── */
     #loginScreen {
       position: fixed; inset: 0;
@@ -130,10 +130,10 @@
     }
     .btn-login:hover { background: var(--accent-hover); }
     #errorLogin { color: var(--red); font-size: 13px; margin-top: 10px; min-height: 18px; }
- 
+
     /* ── APP SHELL ── */
     #appShell { display: none; min-height: 100vh; }
- 
+
     /* ── SIDEBAR ── */
     #sidebar {
       position: fixed;
@@ -168,7 +168,7 @@
       letter-spacing: 0.5px;
       text-transform: uppercase;
     }
- 
+
     #eventoBadge {
       margin: 12px 14px;
       background: rgba(37,99,235,0.2);
@@ -191,7 +191,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
- 
+
     .sidebar-section {
       padding: 8px 10px 4px;
       font-size: 10px;
@@ -201,7 +201,7 @@
       font-weight: 600;
       margin-top: 6px;
     }
- 
+
     .nav-item {
       display: flex;
       align-items: center;
@@ -219,7 +219,7 @@
     .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
     .nav-item.active { background: var(--accent); color: white; }
     .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
- 
+
     .sidebar-bottom {
       margin-top: auto;
       padding: 14px 10px;
@@ -255,7 +255,7 @@
       padding: 4px; border-radius: 6px; transition: color 0.2s;
     }
     .btn-logout:hover { color: var(--red); }
- 
+
     /* ── MAIN ── */
     #main {
       margin-left: var(--sidebar-w);
@@ -263,7 +263,7 @@
       display: flex;
       flex-direction: column;
     }
- 
+
     /* ── TOP BAR ── */
     #topBar {
       height: var(--header-h);
@@ -324,14 +324,14 @@
     .notif-item:last-child { border-bottom: none; }
     .notif-item.unread { background: var(--accent-light); }
     .notif-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
- 
+
     /* ── CONTENT ── */
     #content { padding: 28px; flex: 1; }
- 
+
     /* ── SCREENS ── */
     .screen { display: none; }
     .screen.active { display: block; }
- 
+
     /* ── PAGE HEADER ── */
     .page-header {
       display: flex;
@@ -341,7 +341,7 @@
     }
     .page-header h1 { font-size: 22px; font-weight: 700; }
     .page-header p  { color: var(--text2); font-size: 13px; margin-top: 2px; }
- 
+
     /* ── BUTTONS ── */
     .btn {
       display: inline-flex;
@@ -367,7 +367,7 @@
     .btn-success   { background: var(--green-light); color: var(--green); border: 1.5px solid #bbf7d0; }
     .btn-sm { padding: 6px 12px; font-size: 12px; }
     .btn-icon { padding: 7px; border-radius: 7px; }
- 
+
     /* ── CARDS ── */
     .card {
       background: var(--surface);
@@ -385,7 +385,7 @@
       align-items: center;
       justify-content: space-between;
     }
- 
+
     /* ── STAT CARDS ── */
     .stats-grid {
       display: grid;
@@ -404,7 +404,7 @@
     .stat-value { font-size: 28px; font-weight: 700; margin: 6px 0 4px; letter-spacing: -1px; }
     .stat-sub   { font-size: 12px; color: var(--text3); }
     .stat-icon  { font-size: 22px; float: right; }
- 
+
     /* ── INPUTS ── */
     .form-group { margin-bottom: 16px; }
     .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
@@ -424,7 +424,7 @@
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
     select.form-input { cursor: pointer; }
- 
+
     /* ── TABLE ── */
     .table-wrap { overflow-x: auto; border-radius: var(--radius); }
     table { width: 100%; border-collapse: collapse; }
@@ -448,7 +448,7 @@
     }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: var(--surface2); }
- 
+
     /* ── BADGE ── */
     .badge {
       display: inline-flex;
@@ -466,11 +466,11 @@
     .badge-purple { background: var(--purple-light); color: var(--purple); }
     .badge-gray   { background: #f1f5f9; color: var(--text2); }
     .badge-blue   { background: var(--accent-light); color: var(--accent); }
- 
+
     /* ── PROGRESS ── */
     .progress-wrap { background: #e2e8f0; border-radius: 99px; overflow: hidden; }
     .progress-bar  { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
- 
+
     /* ── SEARCH ── */
     .search-box {
       position: relative;
@@ -485,7 +485,7 @@
       font-size: 14px;
       pointer-events: none;
     }
- 
+
     /* ── MODAL ── */
     .modal-overlay {
       position: fixed; inset: 0;
@@ -526,10 +526,10 @@
       padding: 2px; border-radius: 6px; transition: color 0.2s;
     }
     .btn-close:hover { color: var(--text); }
- 
+
     /* ── DIVIDER ── */
     .divider { height: 1px; background: var(--border); margin: 20px 0; }
- 
+
     /* ── EVENTO CARD ── */
     .event-card {
       background: white;
@@ -561,11 +561,11 @@
     .event-stat { text-align: center; }
     .event-stat-v { font-size: 16px; font-weight: 700; }
     .event-stat-l { font-size: 11px; color: var(--text3); }
- 
+
     /* ── CHART CONTAINER ── */
     .chart-container { position: relative; }
     .chart-container canvas { max-height: 260px; }
- 
+
     /* ── EMPTY STATE ── */
     .empty-state {
       text-align: center;
@@ -574,7 +574,7 @@
     }
     .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
     .empty-state p { font-size: 14px; }
- 
+
     /* ── TABS ── */
     .tabs {
       display: flex;
@@ -593,11 +593,11 @@
       transition: all 0.15s;
     }
     .tab.active { background: white; color: var(--text); box-shadow: var(--shadow); }
- 
+
     /* ── GRID LAYOUTS ── */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
- 
+
     /* ── NOTIF REALTIME DOT ── */
     .live-dot {
       display: inline-block;
@@ -611,7 +611,7 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
- 
+
     /* ── BACK BUTTON ── */
     .back-btn {
       display: inline-flex; align-items: center; gap: 6px;
@@ -623,7 +623,7 @@
       margin-bottom: 16px;
     }
     .back-btn:hover { color: var(--accent); }
- 
+
     /* ── LOGO PREVIEW ── */
     #logoPreview {
       max-width: 80px; max-height: 60px;
@@ -633,7 +633,7 @@
       display: none;
       margin-top: 8px;
     }
- 
+
     /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
       #sidebar { width: 0; overflow: hidden; }
@@ -643,10 +643,10 @@
   </style>
 </head>
 <body>
- 
+
 <!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
- 
+
 <!-- NOTIF PANEL -->
 <div id="notifPanel">
   <div class="notif-header">
@@ -655,7 +655,7 @@
   </div>
   <div id="notifList"><div class="notif-item" style="color:var(--text3);text-align:center;padding:20px;">Sin notificaciones</div></div>
 </div>
- 
+
 <!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
@@ -668,10 +668,10 @@
     <div id="errorLogin"></div>
   </div>
 </div>
- 
+
 <!-- APP SHELL -->
 <div id="appShell">
- 
+
   <!-- SIDEBAR -->
   <nav id="sidebar">
     <div class="sidebar-logo">
@@ -681,12 +681,12 @@
         <small>PRO Panel</small>
       </div>
     </div>
- 
+
     <div id="eventoBadge">
       <div class="badge-label">Evento activo</div>
       <div class="badge-name" id="eventoBadgeName">—</div>
     </div>
- 
+
     <div class="sidebar-section">General</div>
     <div class="nav-item active" onclick="irNav('home')" id="nav-home">
       <span class="icon">🏠</span> Inicio
@@ -694,7 +694,7 @@
     <div class="nav-item" onclick="irNav('eventos')" id="nav-eventos">
       <span class="icon">📅</span> Eventos
     </div>
- 
+
     <div id="navEvento" style="display:none;">
       <div class="sidebar-section">Evento</div>
       <div class="nav-item" onclick="irNav('stats')" id="nav-stats">
@@ -716,14 +716,14 @@
         <span class="icon">🔗</span> Asociación
       </div>
     </div>
- 
+
     <div id="navAdmin" style="display:none;">
       <div class="sidebar-section">Administración</div>
       <div class="nav-item" onclick="irNav('usuarios')" id="nav-usuarios">
         <span class="icon">👥</span> Usuarios
       </div>
     </div>
- 
+
     <div class="sidebar-bottom">
       <div class="user-chip">
         <div class="user-avatar" id="userAvatar">?</div>
@@ -735,7 +735,7 @@
       </div>
     </div>
   </nav>
- 
+
   <!-- MAIN -->
   <div id="main">
     <!-- TOP BAR -->
@@ -752,10 +752,10 @@
         <button class="btn btn-danger btn-sm" onclick="salirEvento()" id="btnSalir" style="display:none;">✕ Salir evento</button>
       </div>
     </div>
- 
+
     <!-- CONTENT -->
     <div id="content">
- 
+
       <!-- ████ HOME ████ -->
       <div id="home" class="screen active">
         <div class="page-header">
@@ -785,7 +785,7 @@
           </div>
         </div>
       </div>
- 
+
       <!-- ████ EVENTOS ████ -->
       <div id="eventos" class="screen">
         <div class="page-header">
@@ -795,7 +795,7 @@
           </div>
           <button class="btn btn-primary" onclick="abrirModalCrearEvento()">+ Nuevo evento</button>
         </div>
- 
+
         <!-- Filtros -->
         <div class="card card-pad" style="margin-bottom:16px;">
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
@@ -814,10 +814,10 @@
             <button class="btn btn-secondary" onclick="limpiarFiltros()">✕ Limpiar</button>
           </div>
         </div>
- 
+
         <div id="listaEventos"></div>
       </div>
- 
+
       <!-- ████ STATS ████ -->
       <div id="stats" class="screen">
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
@@ -831,9 +831,9 @@
             <button class="btn btn-secondary" onclick="generarPDF()">📄 PDF</button>
           </div>
         </div>
- 
+
         <div class="stats-grid" id="statsCards"></div>
- 
+
         <div class="grid-2" style="margin-bottom:20px;">
           <div class="card">
             <div class="card-header">Por zona <span style="font-size:12px;color:var(--text3);font-weight:400;">Uso de códigos</span></div>
@@ -844,49 +844,93 @@
             <div class="card-pad chart-container"><canvas id="graficoTicket"></canvas></div>
           </div>
         </div>
- 
+
         <div class="card" style="margin-bottom:20px;">
           <div class="card-header">Flujo de accesos <span style="font-size:12px;color:var(--text3);font-weight:400;">Entradas cada 20 min</span></div>
           <div class="card-pad chart-container"><canvas id="graficoFlujo"></canvas></div>
         </div>
- 
+
         <div class="card">
           <div class="card-header">Detalle por ticketera / zona</div>
           <div class="table-wrap" id="tablaStats"></div>
         </div>
       </div>
- 
+
       <!-- ████ INCIDENCIAS ████ -->
       <div id="inc" class="screen">
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
         <div class="page-header">
-          <h1>Incidencias</h1>
-          <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input class="form-input" id="busquedaCodigo" placeholder="Buscar código..." oninput="filtrarIncidencias()" style="padding-left:34px;width:260px;">
+          <div>
+            <h1>Incidencias</h1>
+            <p id="incSubtitle">Todos los códigos y lecturas del evento</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input class="form-input" id="busquedaCodigo" placeholder="Buscar código..." oninput="filtrarIncidencias()" style="padding-left:34px;width:220px;">
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="cargarInc()">↺ Actualizar</button>
           </div>
         </div>
- 
-        <div class="card">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Zona</th>
-                  <th>Ticketera</th>
-                  <th>Usos</th>
-                  <th>Estado</th>
-                  <th>Actividad</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="tablaInc"></tbody>
-            </table>
+
+        <!-- TABS -->
+        <div class="tabs" style="max-width:600px;">
+          <div class="tab active" id="tab-todos"    onclick="cambiarTabInc('todos')">Todos los códigos</div>
+          <div class="tab"        id="tab-alertas"  onclick="cambiarTabInc('alertas')">⚠️ Alertas</div>
+          <div class="tab"        id="tab-notfound" onclick="cambiarTabInc('notfound')">❌ No encontrados</div>
+        </div>
+
+        <!-- RESUMEN RÁPIDO -->
+        <div class="stats-grid" style="margin-bottom:16px;" id="incResumen"></div>
+
+        <!-- TABLA CÓDIGOS (tabs: todos + alertas) -->
+        <div id="incTabCodes">
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Zona</th>
+                    <th>Ticketera</th>
+                    <th>Usos</th>
+                    <th>Estado</th>
+                    <th>Actividad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaInc"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLA NO ENCONTRADOS (tab: notfound) -->
+        <div id="incTabNotFound" style="display:none;">
+          <div class="card">
+            <div class="card-header">
+              Lecturas no encontradas en base de datos
+              <span style="font-size:12px;color:var(--text3);font-weight:400;">Escaneadas desde la APK pero sin código registrado</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código leído</th>
+                    <th>Dispositivo</th>
+                    <th>Zona</th>
+                    <th>Modo</th>
+                    <th>Fecha y hora</th>
+                    <th>Intentos</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaNotFound"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
- 
+
       <!-- ████ UPLOAD CSV ████ -->
       <div id="upload" class="screen">
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
@@ -914,7 +958,7 @@
           </div>
         </div>
       </div>
- 
+
       <!-- ████ ZONAS ████ -->
       <div id="zonas" class="screen">
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
@@ -934,7 +978,7 @@
           </div>
         </div>
       </div>
- 
+
       <!-- ████ ACCESOS ████ -->
       <div id="accesos" class="screen">
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
@@ -954,7 +998,7 @@
           </div>
         </div>
       </div>
- 
+
       <!-- ████ ASOCIACION ████ -->
       <div id="asociacion" class="screen">
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
@@ -966,7 +1010,7 @@
           <div class="table-wrap" id="tabla"></div>
         </div>
       </div>
- 
+
       <!-- ████ USUARIOS ████ -->
       <div id="usuarios" class="screen">
         <div class="page-header">
@@ -985,13 +1029,13 @@
           </div>
         </div>
       </div>
- 
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /appShell -->
- 
+
 <!-- ████ MODALES ████ -->
- 
+
 <!-- Modal Crear/Editar Evento -->
 <div class="modal-overlay" id="modalEvento">
   <div class="modal modal-lg">
@@ -1046,7 +1090,7 @@
     </div>
   </div>
 </div>
- 
+
 <!-- Modal Zona -->
 <div class="modal-overlay" id="modalZona">
   <div class="modal">
@@ -1066,7 +1110,7 @@
     </div>
   </div>
 </div>
- 
+
 <!-- Modal Acceso -->
 <div class="modal-overlay" id="modalAcceso">
   <div class="modal">
@@ -1086,7 +1130,7 @@
     </div>
   </div>
 </div>
- 
+
 <!-- Modal Usuario -->
 <div class="modal-overlay" id="modalUsuario">
   <div class="modal">
@@ -1119,7 +1163,7 @@
     </div>
   </div>
 </div>
- 
+
 <script>
 // ══════════════════════════════════════════════════════
 // INIT
@@ -1128,7 +1172,7 @@ const client = supabase.createClient(
   "https://zuhssrhdezptsgemxofh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1aHNzcmhkZXpwdHNnZW14b2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzNzE5MjcsImV4cCI6MjA4NTk0NzkyN30.Tb0y2zGuy3hGRimE5SY4zHIY8FMfgYt9uDofVQeKBX0"
 );
- 
+
 let currentEvent = null;
 let currentVenue = null;
 let userRole = null;
@@ -1140,10 +1184,10 @@ let bloquearAccionesIncidencias = false;
 let notificaciones = [];
 let realtimeChannel = null;
 let chartZonas = null, chartTicket = null, chartFlujo = null;
- 
+
 const params = new URLSearchParams(window.location.search);
 const modoPublico = params.get("public") || null;
- 
+
 // ══════════════════════════════════════════════════════
 // TOAST
 // ══════════════════════════════════════════════════════
@@ -1158,7 +1202,7 @@ function toast(msg, type = "info", duration = 3500) {
     setTimeout(() => el.remove(), 300);
   }, duration);
 }
- 
+
 // ══════════════════════════════════════════════════════
 // MODAL
 // ══════════════════════════════════════════════════════
@@ -1173,57 +1217,57 @@ document.addEventListener("click", e => {
     document.getElementById("notifPanel").style.display = "none";
   }
 });
- 
+
 // ══════════════════════════════════════════════════════
 // LOGIN / SESIÓN
 // ══════════════════════════════════════════════════════
 async function checkLogin() {
   if (modoPublico) { iniciarModoPublico(); return; }
- 
+
   const { data } = await client.auth.getSession();
   if (!data?.session) { document.getElementById("loginScreen").style.display = "flex"; return; }
- 
+
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("appShell").style.display = "flex";
- 
+
   const user = data.session.user;
   userEmailGlobal = user.email;
- 
+
   const { data: profile } = await client.from("profiles").select("*").eq("id", user.id).single();
   userRole = profile?.role || "usuario";
- 
+
   // UI usuario
   document.getElementById("userEmail").textContent = user.email;
   document.getElementById("userRoleLabel").textContent = userRole;
   document.getElementById("userAvatar").textContent = user.email[0].toUpperCase();
- 
+
   aplicarPermisos();
   irNav("home");
 }
- 
+
 async function login() {
   const email = document.getElementById("emailLogin").value.trim();
   const pass = document.getElementById("passLogin").value;
   document.getElementById("errorLogin").textContent = "";
- 
+
   const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
   if (error) { document.getElementById("errorLogin").textContent = "Credenciales incorrectas"; return; }
- 
+
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("appShell").style.display = "flex";
- 
+
   userEmailGlobal = email;
   const { data: profile } = await client.from("profiles").select("*").eq("id", data.user.id).single();
   userRole = profile?.role || "usuario";
- 
+
   document.getElementById("userEmail").textContent = email;
   document.getElementById("userRoleLabel").textContent = userRole;
   document.getElementById("userAvatar").textContent = email[0].toUpperCase();
- 
+
   aplicarPermisos();
   irNav("home");
 }
- 
+
 async function logout() {
   await client.auth.signOut();
   if (realtimeChannel) client.removeChannel(realtimeChannel);
@@ -1233,7 +1277,7 @@ async function logout() {
   document.getElementById("emailLogin").value = "";
   document.getElementById("passLogin").value = "";
 }
- 
+
 // ══════════════════════════════════════════════════════
 // PERMISOS
 // ══════════════════════════════════════════════════════
@@ -1258,12 +1302,12 @@ function aplicarPermisos() {
     ocultarNav("nav-asociacion");
   }
 }
- 
+
 function ocultarNav(id) {
   const el = document.getElementById(id);
   if (el) el.style.display = "none";
 }
- 
+
 // ══════════════════════════════════════════════════════
 // NAVEGACIÓN
 // ══════════════════════════════════════════════════════
@@ -1272,21 +1316,21 @@ const pageTitles = {
   inc: "Incidencias", upload: "Importar CSV", zonas: "Zonas",
   accesos: "Accesos", asociacion: "Asociación", usuarios: "Usuarios"
 };
- 
+
 function irNav(p) {
   if (p === "usuarios" && userRole !== "admin") { toast("No tienes permisos", "error"); return; }
- 
+
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
- 
+
   const screen = document.getElementById(p);
   if (screen) screen.classList.add("active");
- 
+
   const navEl = document.getElementById("nav-" + p);
   if (navEl) navEl.classList.add("active");
- 
+
   document.getElementById("pageTitle").textContent = pageTitles[p] || p;
- 
+
   if (p === "eventos") cargarEventos();
   if (p === "stats") cargarStats();
   if (p === "inc") cargarInc();
@@ -1295,7 +1339,7 @@ function irNav(p) {
   if (p === "asociacion") cargarMatriz();
   if (p === "usuarios") cargarUsuarios();
 }
- 
+
 function salirEvento() {
   currentEvent = null; currentVenue = null;
   document.getElementById("navEvento").style.display = "none";
@@ -1307,7 +1351,7 @@ function salirEvento() {
   if (realtimeChannel) { client.removeChannel(realtimeChannel); realtimeChannel = null; }
   irNav("eventos");
 }
- 
+
 // ══════════════════════════════════════════════════════
 // NOTIFICACIONES REALTIME
 // ══════════════════════════════════════════════════════
@@ -1315,7 +1359,7 @@ function toggleNotif() {
   const p = document.getElementById("notifPanel");
   p.style.display = p.style.display === "block" ? "none" : "block";
 }
- 
+
 function agregarNotif(msg, tipo = "info") {
   const hora = new Date().toLocaleTimeString();
   notificaciones.unshift({ msg, tipo, hora, leida: false });
@@ -1323,7 +1367,7 @@ function agregarNotif(msg, tipo = "info") {
   document.getElementById("notifDot").style.display = "block";
   toast(msg, tipo === "fraude" ? "error" : tipo === "warning" ? "info" : "info");
 }
- 
+
 function renderNotifs() {
   if (!notificaciones.length) return;
   document.getElementById("notifList").innerHTML = notificaciones.slice(0, 15).map(n => `
@@ -1333,27 +1377,24 @@ function renderNotifs() {
     </div>
   `).join("");
 }
- 
+
 function marcarTodasLeidas() {
   notificaciones.forEach(n => n.leida = true);
   document.getElementById("notifDot").style.display = "none";
   renderNotifs();
 }
- 
+
 function iniciarRealtime() {
   if (realtimeChannel) client.removeChannel(realtimeChannel);
- 
+
   realtimeChannel = client
-    .channel("realtime-codes-" + currentEvent)
+    .channel("realtime-evento-" + currentEvent)
     .on("postgres_changes", {
-      event: "*",
-      schema: "public",
-      table: "codes",
+      event: "*", schema: "public", table: "codes",
       filter: `event_id=eq.${currentEvent}`
     }, payload => {
       const c = payload.new;
       if (!c) return;
- 
       if (payload.eventType === "UPDATE") {
         if (c.usage_count > 1) agregarNotif(`⚠️ Código sospechoso: ${c.code_value} (${c.usage_count} usos)`, "warning");
         if (c.first_entry_device_id && c.last_exit_device_id &&
@@ -1361,18 +1402,29 @@ function iniciarRealtime() {
           agregarNotif(`🚨 POSIBLE FRAUDE: ${c.code_value}`, "fraude");
         }
       }
- 
-      // Refrescar si estamos en stats o inc
       const activeScreen = document.querySelector(".screen.active");
       if (activeScreen?.id === "stats") cargarStats();
       if (activeScreen?.id === "inc") cargarInc();
     })
+    .on("postgres_changes", {
+      event: "INSERT", schema: "public", table: "logs",
+      filter: `event_id=eq.${currentEvent}`
+    }, payload => {
+      const log = payload.new;
+      if (!log) return;
+      if (log.result === "not_found") {
+        agregarNotif(`❌ Código no encontrado escaneado desde dispositivo`, "warning");
+      }
+      const activeScreen = document.querySelector(".screen.active");
+      if (activeScreen?.id === "inc") cargarInc();
+      if (activeScreen?.id === "stats") cargarStats();
+    })
     .subscribe();
- 
+
   document.getElementById("liveDot").style.display = "inline-block";
   document.getElementById("liveLabel").style.display = "inline";
 }
- 
+
 // ══════════════════════════════════════════════════════
 // EVENTOS
 // ══════════════════════════════════════════════════════
@@ -1387,7 +1439,7 @@ function abrirModalCrearEvento() {
   document.getElementById("logoPreview").style.display = "none";
   abrirModal("modalEvento");
 }
- 
+
 function abrirModalEditarEvento(e) {
   editandoEventoId = e.id;
   document.getElementById("modalEventoTitulo").textContent = "Editar evento";
@@ -1407,19 +1459,19 @@ function abrirModalEditarEvento(e) {
   }
   abrirModal("modalEvento");
 }
- 
+
 function previewLogo() {
   const url = document.getElementById("logoEvento").value.trim();
   const img = document.getElementById("logoPreview");
   if (url) { img.src = url; img.style.display = "block"; }
   else img.style.display = "none";
 }
- 
+
 async function guardarEvento() {
   const nombre = document.getElementById("nombreEvento").value.trim();
   const venue = document.getElementById("venueEvento").value.trim();
   if (!nombre || !venue) { toast("Nombre y venue son obligatorios", "error"); return; }
- 
+
   const payload = {
     name: nombre,
     venue,
@@ -1429,39 +1481,39 @@ async function guardarEvento() {
     sync_interval_seconds: parseInt(document.getElementById("syncEvento").value) || 5,
     logo_url: document.getElementById("logoEvento").value.trim() || null,
   };
- 
+
   let error;
   if (editandoEventoId) {
     ({ error } = await client.from("events").update(payload).eq("id", editandoEventoId));
   } else {
     ({ error } = await client.from("events").insert(payload));
   }
- 
+
   if (error) { toast("Error guardando evento", "error"); return; }
- 
+
   toast(editandoEventoId ? "Evento actualizado" : "Evento creado", "success");
   cerrarModal("modalEvento");
   cargarEventos();
 }
- 
+
 async function cargarEventos() {
   const { data, error } = await client.from("events").select("*");
   if (error) { toast("Error cargando eventos", "error"); return; }
- 
+
   eventosGlobal = (data || []).sort((a, b) =>
     new Date(b.event_date || 0) - new Date(a.event_date || 0)
   );
   document.getElementById("eventosCount").textContent = `${eventosGlobal.length} evento(s)`;
   renderEventos(eventosGlobal);
 }
- 
+
 function renderEventos(lista) {
   const el = document.getElementById("listaEventos");
   if (!lista?.length) {
     el.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No hay eventos. Crea el primero.</p></div>`;
     return;
   }
- 
+
   el.innerHTML = lista.map(e => {
     const statusColor = e.status === "active" ? "var(--green)" : e.status === "finished" ? "var(--text3)" : "var(--amber)";
     return `
@@ -1489,10 +1541,10 @@ function renderEventos(lista) {
       </div>
     </div>`;
   }).join("");
- 
+
   lista.forEach(e => cargarAforoEvento(e.id));
 }
- 
+
 async function cargarAforoEvento(eventId) {
   const { data } = await client.from("codes").select("usage_count").eq("event_id", eventId);
   if (!data) return;
@@ -1502,7 +1554,7 @@ async function cargarAforoEvento(eventId) {
   const el = document.getElementById("aforo_" + eventId);
   if (el) el.textContent = porcentaje + "%";
 }
- 
+
 function filtrarEventos() {
   const texto = document.getElementById("busquedaEvento").value.toLowerCase();
   const inicio = document.getElementById("fechaInicio").value;
@@ -1513,14 +1565,14 @@ function filtrarEventos() {
   if (fin)    f = f.filter(e => e.event_date && e.event_date <= fin);
   renderEventos(f);
 }
- 
+
 function limpiarFiltros() {
   document.getElementById("busquedaEvento").value = "";
   document.getElementById("fechaInicio").value = "";
   document.getElementById("fechaFin").value = "";
   renderEventos(eventosGlobal);
 }
- 
+
 async function entrar(id, venue, nombre) {
   currentEvent = id; currentVenue = venue;
   document.getElementById("navEvento").style.display = "block";
@@ -1531,7 +1583,7 @@ async function entrar(id, venue, nombre) {
   iniciarRealtime();
   irNav("stats");
 }
- 
+
 // ══════════════════════════════════════════════════════
 // ZONAS
 // ══════════════════════════════════════════════════════
@@ -1541,35 +1593,35 @@ function abrirModalZona(zona = null) {
   document.getElementById("nombreZona").value = zona?.name || "";
   abrirModal("modalZona");
 }
- 
+
 async function guardarZona() {
   const nombre = document.getElementById("nombreZona").value.trim();
   if (!nombre) { toast("Nombre obligatorio", "error"); return; }
- 
+
   let error;
   if (editandoZonaId) {
     ({ error } = await client.from("zones").update({ name: nombre }).eq("id", editandoZonaId));
   } else {
     ({ error } = await client.from("zones").insert({ name: nombre }));
   }
- 
+
   if (error) { toast("Error guardando zona", "error"); return; }
   toast(editandoZonaId ? "Zona actualizada" : "Zona creada", "success");
   cerrarModal("modalZona");
   cargarZonas();
 }
- 
+
 async function cargarZonas() {
   const { data: zonas } = await client.from("zones").select("*");
   const { data: codes } = await client.from("codes").select("zone_id, usage_count").eq("event_id", currentEvent);
- 
+
   const stats = {};
   (codes || []).forEach(c => {
     if (!stats[c.zone_id]) stats[c.zone_id] = { total: 0, usados: 0 };
     stats[c.zone_id].total++;
     if (c.usage_count > 0) stats[c.zone_id].usados++;
   });
- 
+
   document.getElementById("tablaZonas").innerHTML = (zonas || []).length === 0
     ? `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text3);">No hay zonas creadas</td></tr>`
     : (zonas || []).map(z => `
@@ -1585,7 +1637,7 @@ async function cargarZonas() {
         </td>
       </tr>`).join("");
 }
- 
+
 async function eliminarZona(id) {
   if (!confirm("¿Eliminar esta zona?")) return;
   const { error } = await client.from("zones").delete().eq("id", id);
@@ -1593,12 +1645,12 @@ async function eliminarZona(id) {
   toast("Zona eliminada", "success");
   cargarZonas();
 }
- 
+
 // ══════════════════════════════════════════════════════
 // ACCESOS
 // ══════════════════════════════════════════════════════
 function abrirModalAcceso() { document.getElementById("nombreAcceso").value = ""; abrirModal("modalAcceso"); }
- 
+
 async function guardarAcceso() {
   const nombre = document.getElementById("nombreAcceso").value.trim();
   if (!nombre) { toast("Nombre obligatorio", "error"); return; }
@@ -1608,7 +1660,7 @@ async function guardarAcceso() {
   cerrarModal("modalAcceso");
   cargarAccesos();
 }
- 
+
 async function cargarAccesos() {
   const { data } = await client.from("access_points").select("*").eq("venue", currentVenue);
   document.getElementById("tablaAccesos").innerHTML = (data || []).length === 0
@@ -1622,14 +1674,14 @@ async function cargarAccesos() {
         </td>
       </tr>`).join("");
 }
- 
+
 async function eliminarAcceso(id) {
   if (!confirm("¿Eliminar este acceso?")) return;
   await client.from("access_points").delete().eq("id", id);
   toast("Acceso eliminado", "success");
   cargarAccesos();
 }
- 
+
 // ══════════════════════════════════════════════════════
 // ASOCIACIÓN
 // ══════════════════════════════════════════════════════
@@ -1637,25 +1689,25 @@ async function cargarMatriz() {
   const { data: codes } = await client.from("codes")
     .select("zone_id,ticket_provider_id,zones(name),ticket_providers(name)")
     .eq("event_id", currentEvent);
- 
+
   const { data: acc } = await client.from("access_points").select("*").eq("venue", currentVenue);
   const { data: rel } = await client.from("ticket_zone_access").select("*");
- 
+
   const combos = {};
   (codes || []).forEach(c => {
     const k = c.zone_id + "_" + c.ticket_provider_id;
     combos[k] = c;
   });
- 
+
   if (!Object.keys(combos).length) {
     document.getElementById("tabla").innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);">No hay combinaciones zona/ticketera para este evento</div>`;
     return;
   }
- 
+
   let html = `<table><thead><tr><th>Concepto</th>`;
   (acc || []).forEach(a => html += `<th>${a.name}</th>`);
   html += `</tr></thead><tbody>`;
- 
+
   Object.values(combos).forEach(c => {
     html += `<tr><td><b>${c.zones?.name}</b> · ${c.ticket_providers?.name}</td>`;
     (acc || []).forEach(a => {
@@ -1668,7 +1720,7 @@ async function cargarMatriz() {
   html += `</tbody></table>`;
   document.getElementById("tabla").innerHTML = html;
 }
- 
+
 async function toggleAcceso(z, t, a, e) {
   if (e) {
     await client.from("ticket_zone_access").insert({ zone_id: z, ticket_provider_id: t, access_id: a });
@@ -1677,23 +1729,25 @@ async function toggleAcceso(z, t, a, e) {
   }
   toast(e ? "Acceso habilitado" : "Acceso deshabilitado", "success");
 }
- 
+
 // ══════════════════════════════════════════════════════
 // STATS
 // ══════════════════════════════════════════════════════
 async function cargarStats() {
   const { data: evento } = await client.from("events").select("*").eq("id", currentEvent).single();
   document.getElementById("statsEventoNombre").textContent = evento?.name || "";
- 
-  const { data, error } = await client.from("codes")
-    .select("*,zones(name),ticket_providers(name)")
-    .eq("event_id", currentEvent);
- 
+
+  // Cargar códigos y logs en paralelo
+  const [{ data, error }, { data: logsNotFound }] = await Promise.all([
+    client.from("codes").select("*,zones(name),ticket_providers(name)").eq("event_id", currentEvent),
+    client.from("logs").select("id").eq("event_id", currentEvent).eq("result", "not_found")
+  ]);
+
   if (error || !data) return;
- 
+
   let total = 0, usados = 0, pendientes = 0, fraudes = 0, sospechosos = 0;
   const combo = {}, porTicket = {}, porZona = {}, flujo = {};
- 
+
   data.forEach(c => {
     total++;
     const zona = c.zones?.name || "Sin zona";
@@ -1701,18 +1755,18 @@ async function cargarStats() {
     const key = ticket + " · " + zona;
     const usado = c.usage_count > 0;
     if (usado) usados++; else pendientes++;
- 
+
     const esFraude = c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id;
     if (esFraude) fraudes++;
     if (c.usage_count > 1 && !esFraude) sospechosos++;
- 
+
     [combo, porTicket, porZona].forEach((obj, i) => {
       const k = [key, ticket, zona][i];
       if (!obj[k]) obj[k] = { used: 0, pend: 0, total: 0 };
       obj[k].total++;
       usado ? obj[k].used++ : obj[k].pend++;
     });
- 
+
     if (c.first_entry_at) {
       const fecha = new Date(c.first_entry_at);
       const min = Math.floor(fecha.getMinutes() / 20) * 20;
@@ -1721,10 +1775,11 @@ async function cargarStats() {
       flujo[kT]++;
     }
   });
- 
+
   const pct = total ? Math.round((usados / total) * 100) : 0;
   const colorPct = pct <= 75 ? "var(--green)" : pct <= 89 ? "var(--amber)" : "var(--red)";
- 
+  const noEncontrados = logsNotFound?.length || 0;
+
   // STAT CARDS
   document.getElementById("statsCards").innerHTML = `
     <div class="stat-card">
@@ -1752,6 +1807,12 @@ async function cargarStats() {
       <div class="stat-value" style="color:var(--red)">${fraudes}</div>
       <div class="stat-sub">Dispositivos distintos</div>
     </div>
+    <div class="stat-card" style="cursor:pointer;" onclick="irNav('inc');setTimeout(()=>cambiarTabInc('notfound'),300)"
+      onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div class="stat-label">No encontrados</div>
+      <div class="stat-value" style="color:var(--red)">${noEncontrados}</div>
+      <div class="stat-sub">Lecturas sin código registrado · <b style="color:var(--accent)">Ver detalle →</b></div>
+    </div>
     <div class="stat-card">
       <div class="stat-label">Afluencia</div>
       <div class="stat-value" style="color:${colorPct}">${pct}%</div>
@@ -1762,7 +1823,7 @@ async function cargarStats() {
       </div>
     </div>
   `;
- 
+
   // TABLA DETALLE
   let html = `<table><thead><tr><th>Concepto</th><th>Pendientes</th><th>Usadas</th><th>Total</th><th>% Uso</th></tr></thead><tbody>`;
   for (let k in combo) {
@@ -1784,23 +1845,23 @@ async function cargarStats() {
   }
   html += `</tbody></table>`;
   document.getElementById("tablaStats").innerHTML = html;
- 
+
   // GRÁFICOS
   renderGrafico("graficoZonas", "bar", Object.keys(porZona), [
     { label: "Usadas", data: Object.values(porZona).map(v => v.used), backgroundColor: "#16a34a" },
     { label: "Pendientes", data: Object.values(porZona).map(v => v.pend), backgroundColor: "#e2e8f0" }
   ], "chartZonas");
- 
+
   renderGrafico("graficoTicket", "doughnut", Object.keys(porTicket),
     [{ data: Object.values(porTicket).map(v => v.used), backgroundColor: ["#2563eb","#16a34a","#d97706","#7c3aed","#dc2626","#0891b2"] }],
     "chartTicket");
- 
+
   const flujoLabels = Object.keys(flujo).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   renderGrafico("graficoFlujo", "line", flujoLabels,
     [{ label: "Accesos", data: flujoLabels.map(l => flujo[l]), borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,0.1)", fill: true, tension: 0.4 }],
     "chartFlujo");
 }
- 
+
 function renderGrafico(canvasId, type, labels, datasets, varName) {
   if (window[varName]) window[varName].destroy();
   window[varName] = new Chart(document.getElementById(canvasId), {
@@ -1812,17 +1873,73 @@ function renderGrafico(canvasId, type, labels, datasets, varName) {
     }
   });
 }
- 
+
 // ══════════════════════════════════════════════════════
 // INCIDENCIAS
 // ══════════════════════════════════════════════════════
+let _tabActual = 'todos';
+
+function cambiarTabInc(tab) {
+  _tabActual = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+
+  const showCodes    = tab === 'todos' || tab === 'alertas';
+  const showNotFound = tab === 'notfound';
+
+  document.getElementById('incTabCodes').style.display    = showCodes    ? 'block' : 'none';
+  document.getElementById('incTabNotFound').style.display = showNotFound ? 'block' : 'none';
+
+  filtrarIncidencias();
+}
+
 async function cargarInc() {
-  const { data, error } = await client.from("codes")
-    .select("*,zones(name),ticket_providers(name)")
-    .eq("event_id", currentEvent);
- 
-  if (error || !data) return;
- 
+  // Cargar códigos y logs no encontrados en paralelo
+  const [{ data: codes }, { data: logs }] = await Promise.all([
+    client.from("codes")
+      .select("*,zones(name),ticket_providers(name)")
+      .eq("event_id", currentEvent),
+    client.from("logs")
+      .select("*,zones(name),devices(name)")
+      .eq("event_id", currentEvent)
+      .eq("result", "not_found")
+      .order("created_at", { ascending: false })
+      .limit(500)
+  ]);
+
+  const data = codes || [];
+  const logsNF = logs || [];
+
+  // ── RESUMEN RÁPIDO ─────────────────────────────────
+  const fraudes     = data.filter(c => c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id).length;
+  const sospechosos = data.filter(c => c.usage_count > 1).length;
+  const usados      = data.filter(c => c.usage_count > 0).length;
+  const cancelados  = data.filter(c => c.status === 'cancelled').length;
+
+  document.getElementById("incResumen").innerHTML = `
+    <div class="stat-card" style="cursor:pointer;" onclick="cambiarTabInc('todos')">
+      <div class="stat-label">Total códigos</div>
+      <div class="stat-value">${data.length.toLocaleString()}</div>
+      <div class="stat-sub">${usados} usados</div>
+    </div>
+    <div class="stat-card" style="cursor:pointer;" onclick="cambiarTabInc('alertas')">
+      <div class="stat-label">⚠️ Alertas</div>
+      <div class="stat-value" style="color:var(--amber)">${fraudes + sospechosos}</div>
+      <div class="stat-sub">${fraudes} fraudes · ${sospechosos} sospechosos</div>
+    </div>
+    <div class="stat-card" style="cursor:pointer;" onclick="cambiarTabInc('notfound')">
+      <div class="stat-label">❌ No encontrados</div>
+      <div class="stat-value" style="color:var(--red)">${logsNF.length}</div>
+      <div class="stat-sub">Lecturas sin código registrado</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cancelados</div>
+      <div class="stat-value" style="color:var(--text3)">${cancelados}</div>
+      <div class="stat-sub">Anulados manualmente</div>
+    </div>
+  `;
+
+  // ── TABLA CÓDIGOS ──────────────────────────────────
   data.sort((a, b) => {
     function pri(c) {
       if (c.status === "cancelled") return 0;
@@ -1834,16 +1951,26 @@ async function cargarInc() {
     }
     return pri(b) - pri(a);
   });
- 
+
   document.getElementById("tablaInc").innerHTML = data.map(c => {
-    let badge = `<span class="badge badge-green">Pendiente</span>`;
-    if (c.status === "cancelled") badge = `<span class="badge badge-gray">Cancelado</span>`;
-    else if (c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id)
+    let badge = `<span class="badge badge-gray">Pendiente</span>`;
+    let esAlerta = false;
+
+    if (c.status === "cancelled") {
+      badge = `<span class="badge badge-gray">Cancelado</span>`;
+    } else if (c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id) {
       badge = `<span class="badge badge-red">🚨 Fraude</span>`;
-    else if (c.usage_count > 1) badge = `<span class="badge badge-amber">⚠️ Sospechoso</span>`;
-    else if (c.is_top_code) badge = `<span class="badge badge-purple">Multiread</span>`;
-    else if (c.usage_count > 0) badge = `<span class="badge badge-blue">Usado</span>`;
- 
+      esAlerta = true;
+    } else if (c.usage_count > 1) {
+      badge = `<span class="badge badge-amber">⚠️ Sospechoso</span>`;
+      esAlerta = true;
+    } else if (c.is_top_code) {
+      badge = `<span class="badge badge-purple">Multiread</span>`;
+      esAlerta = true;
+    } else if (c.usage_count > 0) {
+      badge = `<span class="badge badge-blue">Usado</span>`;
+    }
+
     const acciones = bloquearAccionesIncidencias
       ? `<span style="color:var(--text3);font-size:12px;">Solo lectura</span>`
       : `<div style="display:flex;gap:4px;flex-wrap:wrap;">
@@ -1851,29 +1978,94 @@ async function cargarInc() {
           <button class="btn btn-secondary btn-sm" onclick="resetCode('${c.id}')">↺ Reset</button>
           <button class="btn btn-danger btn-sm" onclick="cancelar('${c.id}')">✖ Cancelar</button>
         </div>`;
- 
-    return `<tr>
+
+    const entrada = c.first_entry_at
+      ? `<div style="font-size:11px;">
+           <b>Entrada:</b> ${new Date(c.first_entry_at).toLocaleTimeString()}<br>
+           ${c.first_entry_device_id ? `<span style="color:var(--text3)">📱 ${c.first_entry_device_id.substring(0,12)}...</span>` : ''}
+         </div>`
+      : `<span style="color:var(--text3);font-size:12px;">Sin actividad</span>`;
+
+    return `<tr data-alerta="${esAlerta}" data-usado="${c.usage_count > 0}">
       <td><span style="font-family:'DM Mono',monospace;font-size:13px;">${c.code_value}</span></td>
       <td>${c.zones?.name || "—"}</td>
       <td>${c.ticket_providers?.name || "—"}</td>
       <td><b>${c.usage_count}</b></td>
       <td>${badge}</td>
-      <td style="font-size:12px;color:var(--text2);">
-        ${c.first_entry_at ? "⏱ " + new Date(c.first_entry_at).toLocaleTimeString() : "—"}
-      </td>
+      <td>${entrada}</td>
       <td>${acciones}</td>
     </tr>`;
   }).join("");
+
+  // ── TABLA NO ENCONTRADOS ───────────────────────────
+  // Agrupar por code_id (código leído) para contar intentos
+  const agrupados = {};
+  logsNF.forEach(log => {
+    const key = log.code_id || log.id;
+    if (!agrupados[key]) {
+      agrupados[key] = {
+        code_id:    log.code_id,
+        device_id:  log.device_id,
+        zone:       log.zones?.name || "—",
+        mode:       log.mode,
+        first_time: log.created_at,
+        last_time:  log.created_at,
+        count:      0,
+      };
+    }
+    agrupados[key].count++;
+    if (log.created_at < agrupados[key].first_time) agrupados[key].first_time = log.created_at;
+    if (log.created_at > agrupados[key].last_time)  agrupados[key].last_time  = log.created_at;
+  });
+
+  // También buscar códigos leídos del log que tengan code_id null (not_found guarda null)
+  // Necesitamos mostrar el código leído — viene del log directamente
+  const rowsNF = logsNF.map(log => {
+    const hora  = new Date(log.created_at).toLocaleTimeString();
+    const fecha = new Date(log.created_at).toLocaleDateString();
+    const modo  = log.mode === 'entry' ? '🟢 Entrada' : log.mode === 'exit' ? '🟡 Salida' : log.mode || '—';
+    const disp  = log.device_id ? log.device_id.toString().substring(0, 16) + '...' : '—';
+    return `<tr>
+      <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red);">${log.code_id || '(sin código)'}</span></td>
+      <td><span style="font-size:12px;">${disp}</span></td>
+      <td>${log.zones?.name || '—'}</td>
+      <td>${modo}</td>
+      <td style="font-size:12px;">${fecha} ${hora}</td>
+      <td><span class="badge badge-red">${1}</span></td>
+    </tr>`;
+  });
+
+  document.getElementById("tablaNotFound").innerHTML = rowsNF.length
+    ? rowsNF.join("")
+    : `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text3);">No hay lecturas no encontradas 🎉</td></tr>`;
+
+  // Aplicar tab activo
+  cambiarTabInc(_tabActual);
 }
- 
+
 function filtrarIncidencias() {
   const texto = document.getElementById("busquedaCodigo").value.toLowerCase();
+
+  // Filtrar tabla de códigos
   document.querySelectorAll("#tablaInc tr").forEach(f => {
-    const codigo = f.children[0]?.textContent.toLowerCase();
-    f.style.display = codigo?.includes(texto) ? "" : "none";
+    const codigo = f.children[0]?.textContent.toLowerCase() || '';
+    const zona   = f.children[1]?.textContent.toLowerCase() || '';
+    const ticket = f.children[2]?.textContent.toLowerCase() || '';
+    const match  = codigo.includes(texto) || zona.includes(texto) || ticket.includes(texto);
+
+    // Si estamos en tab alertas, solo mostrar alertas
+    const esAlerta = f.dataset.alerta === 'true';
+    const visible  = match && (_tabActual !== 'alertas' || esAlerta);
+    f.style.display = visible ? '' : 'none';
+  });
+
+  // Filtrar tabla not found
+  document.querySelectorAll("#tablaNotFound tr").forEach(f => {
+    const codigo = f.children[0]?.textContent.toLowerCase() || '';
+    f.style.display = codigo.includes(texto) ? '' : 'none';
   });
 }
- 
+
 async function usar(id) {
   await client.from("codes").update({ usage_count: 1 }).eq("id", id);
   toast("Código marcado como usado", "success");
@@ -1889,7 +2081,7 @@ async function cancelar(id) {
   toast("Código cancelado", "success");
   cargarInc();
 }
- 
+
 // ══════════════════════════════════════════════════════
 // CSV
 // ══════════════════════════════════════════════════════
@@ -1907,34 +2099,34 @@ async function previewCSV() {
     Columna código: <b>${idxCodigo >= 0 ? headers[idxCodigo] : "⚠️ no detectada"}</b></span>
   `;
 }
- 
+
 async function subir() {
   const file = document.getElementById("fileInput").files[0];
   if (!file) return toast("Selecciona un archivo", "error");
   const text = await file.text();
   const lines = text.split("\n").filter(l => l.trim());
   if (lines.length < 2) return toast("Archivo vacío", "error");
- 
+
   const headers = lines[0].toLowerCase().split(";");
   const idxCodigo = headers.findIndex(h => h.includes("code") || h.includes("codigo"));
   const idxZona   = headers.findIndex(h => h.includes("zone") || h.includes("zona"));
   const idxTicket = headers.findIndex(h => h.includes("ticket") || h.includes("provider"));
   if (idxCodigo === -1) return toast("No se detecta columna código", "error");
- 
+
   const { data: exist } = await client.from("codes").select("code_value").eq("event_id", currentEvent);
   const existentes = new Set((exist || []).map(e => e.code_value));
- 
+
   const { data: zonas } = await client.from("zones").select("*");
   const { data: tickets } = await client.from("ticket_providers").select("*");
   const zonasMap = {}; zonas?.forEach(z => zonasMap[z.name.toLowerCase()] = z);
   const ticketMap = {}; tickets?.forEach(t => ticketMap[t.name.toLowerCase()] = t);
- 
+
   const insertar = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(";");
     const codigo = cols[idxCodigo]?.trim();
     if (!codigo || existentes.has(codigo)) continue;
- 
+
     let zonaId = null, ticketId = null;
     if (idxZona !== -1) {
       const nz = cols[idxZona]?.trim().toLowerCase();
@@ -1958,14 +2150,14 @@ async function subir() {
     }
     insertar.push({ event_id: currentEvent, code_value: codigo, zone_id: zonaId, ticket_provider_id: ticketId, status: "valid", usage_count: 0 });
   }
- 
+
   if (!insertar.length) return toast("No hay códigos nuevos", "info");
   await client.from("codes").insert(insertar);
   toast(`✅ ${insertar.length} códigos importados correctamente`, "success");
   document.getElementById("csvPreview").style.display = "none";
   document.getElementById("fileInput").value = "";
 }
- 
+
 // ══════════════════════════════════════════════════════
 // EXPORT CSV
 // ══════════════════════════════════════════════════════
@@ -1974,7 +2166,7 @@ async function exportarCSV() {
   const { data } = await client.from("codes")
     .select("code_value,usage_count,first_entry_at,last_exit_at,first_entry_device_id,last_exit_device_id,zones(name),ticket_providers(name),status")
     .eq("event_id", currentEvent);
- 
+
   let csv = "Codigo;Ticketera;Zona;Usos;Estado;Fecha Entrada;Hora Entrada;Fecha Salida;Hora Salida;Dispositivo Entrada;Dispositivo Salida\n";
   data.forEach(c => {
     let estado = "Pendiente";
@@ -1982,12 +2174,12 @@ async function exportarCSV() {
     else if (c.first_entry_device_id && c.last_exit_device_id && c.first_entry_device_id !== c.last_exit_device_id) estado = "Fraude";
     else if (c.usage_count > 1) estado = "Sospechoso";
     else if (c.usage_count > 0) estado = "Usado";
- 
+
     const fe = c.first_entry_at ? new Date(c.first_entry_at) : null;
     const fs = c.last_exit_at ? new Date(c.last_exit_at) : null;
     csv += `${c.code_value};${c.ticket_providers?.name||""};${c.zones?.name||""};${c.usage_count};${estado};${fe?fe.toLocaleDateString():""};${fe?fe.toLocaleTimeString():""};${fs?fs.toLocaleDateString():""};${fs?fs.toLocaleTimeString():""};${c.first_entry_device_id||""};${c.last_exit_device_id||""}\n`;
   });
- 
+
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
@@ -1997,7 +2189,7 @@ async function exportarCSV() {
   document.body.removeChild(link);
   toast("CSV exportado", "success");
 }
- 
+
 // ══════════════════════════════════════════════════════
 // PDF
 // ══════════════════════════════════════════════════════
@@ -2006,7 +2198,7 @@ async function generarPDF() {
   const doc = new jsPDF();
   const { data: evento } = await client.from("events").select("*").eq("id", currentEvent).single();
   const { data } = await client.from("codes").select("*,zones(name),ticket_providers(name)").eq("event_id", currentEvent);
- 
+
   let y = 15;
   try {
     const img = new Image(); img.src = "logo.png";
@@ -2015,14 +2207,14 @@ async function generarPDF() {
     doc.addImage(img, "PNG", (210 - w) / 2, y, w, h);
     y += h + 8;
   } catch (e) {}
- 
+
   doc.setFont("helvetica", "bold"); doc.setFontSize(16);
   doc.text("INFORME EVENTO", 105, y, { align: "center" }); y += 10;
   doc.setFont("helvetica", "normal"); doc.setFontSize(11);
   doc.text(`Evento: ${evento?.name || ""}`, 10, y); y += 6;
   doc.text(`Recinto: ${evento?.venue || ""}`, 10, y); y += 6;
   doc.text(`Fecha: ${evento?.event_date || ""}`, 10, y); y += 12;
- 
+
   const porZona = {}, porTicket = {};
   data.forEach(c => {
     const z = c.zones?.name || "Sin zona", t = c.ticket_providers?.name || "Sin ticketera";
@@ -2033,7 +2225,7 @@ async function generarPDF() {
       obj[k].total++; u ? obj[k].used++ : obj[k].pend++;
     });
   });
- 
+
   function tabla(titulo, obj) {
     doc.setFont("helvetica", "bold"); doc.setFontSize(12);
     doc.text(titulo, 10, y); y += 7;
@@ -2051,7 +2243,7 @@ async function generarPDF() {
   }
   tabla("POR ZONA", porZona);
   tabla("POR TICKETERA", porTicket);
- 
+
   const canvas = document.getElementById("graficoFlujo");
   if (canvas) {
     doc.addPage();
@@ -2062,7 +2254,7 @@ async function generarPDF() {
   doc.save(`${(evento?.name || "evento").replace(/\s+/g, "_")}_informe.pdf`);
   toast("PDF generado", "success");
 }
- 
+
 // ══════════════════════════════════════════════════════
 // USUARIOS
 // ══════════════════════════════════════════════════════
@@ -2071,27 +2263,27 @@ function abrirModalUsuario() {
   document.getElementById("nuevoRol").value = "usuario";
   abrirModal("modalUsuario");
 }
- 
+
 async function crearUsuario() {
   const email = document.getElementById("nuevoEmail").value.trim();
   const pass = document.getElementById("nuevoPass").value;
   const role = document.getElementById("nuevoRol").value;
   if (!email || !pass) { toast("Email y contraseña obligatorios", "error"); return; }
- 
+
   const { data, error } = await client.auth.signUp({ email, password: pass });
   if (error) { toast("Error: " + error.message, "error"); return; }
- 
+
   const user = data?.user;
   if (!user) { toast("Usuario creado, pendiente de confirmación de email", "info"); cerrarModal("modalUsuario"); return; }
- 
+
   const { error: ep } = await client.from("profiles").insert({ id: user.id, email, role });
   if (ep) { toast("Error creando perfil", "error"); return; }
- 
+
   toast("Usuario creado correctamente", "success");
   cerrarModal("modalUsuario");
   cargarUsuarios();
 }
- 
+
 async function cargarUsuarios() {
   const { data } = await client.from("profiles").select("*");
   document.getElementById("tablaUsuarios").innerHTML = (data || []).map(u => `
@@ -2112,12 +2304,12 @@ async function cargarUsuarios() {
       </td>
     </tr>`).join("");
 }
- 
+
 async function cambiarRol(id, nuevoRol) {
   await client.from("profiles").update({ role: nuevoRol }).eq("id", id);
   toast("Rol actualizado", "success");
 }
- 
+
 async function eliminarUsuario(id) {
   if (!confirm("¿Eliminar usuario completamente?")) return;
   const res = await fetch("https://zuhssrhdezptsgemxofh.supabase.co/functions/v1/admin-update-user", {
@@ -2130,7 +2322,7 @@ async function eliminarUsuario(id) {
   toast("Usuario eliminado", "success");
   cargarUsuarios();
 }
- 
+
 async function cambiarPasswordDirecto(userId) {
   const pass = prompt("Nueva contraseña:");
   if (!pass) return;
@@ -2143,7 +2335,7 @@ async function cambiarPasswordDirecto(userId) {
   if (data.error) { toast("Error: " + data.error, "error"); return; }
   toast("Contraseña actualizada", "success");
 }
- 
+
 // ══════════════════════════════════════════════════════
 // URL PÚBLICA
 // ══════════════════════════════════════════════════════
@@ -2151,7 +2343,7 @@ function abrirPublico() {
   const url = `${window.location.origin}${window.location.pathname}?public=${currentEvent}`;
   window.open(url, "_blank");
 }
- 
+
 // ══════════════════════════════════════════════════════
 // MODO PÚBLICO
 // ══════════════════════════════════════════════════════
@@ -2175,11 +2367,11 @@ function iniciarModoPublico() {
   cargarPublico();
   setInterval(cargarPublico, 20000);
 }
- 
+
 async function cargarPublico() {
   const { data: evento } = await client.from("events").select("*").eq("id", modoPublico).single();
   const { data: codes } = await client.from("codes").select("*,zones(name)").eq("event_id", modoPublico);
- 
+
   let total = 0, usados = 0;
   const zonas = {};
   (codes || []).forEach(c => {
@@ -2190,14 +2382,14 @@ async function cargarPublico() {
     zonas[z].total++;
     if (c.usage_count > 0) zonas[z].used++;
   });
- 
+
   const pct = total ? Math.round((usados / total) * 100) : 0;
   const color = pct <= 75 ? "#16a34a" : pct <= 89 ? "#d97706" : "#dc2626";
- 
+
   document.getElementById("tituloEvento").innerHTML = `
     <h2 style="font-size:20px;font-weight:800;color:#0f172a;">${evento?.name || ""}</h2>
     <p style="color:#475569;font-size:14px;">${evento?.venue || ""} · ${evento?.event_date || ""}</p>`;
- 
+
   document.getElementById("datos").innerHTML = `
     <div style="background:${color};color:white;padding:20px;border-radius:12px;text-align:center;margin-bottom:12px;">
       <div style="font-size:40px;font-weight:800;">${usados.toLocaleString()}</div>
@@ -2216,7 +2408,7 @@ async function cargarPublico() {
         <span>${total.toLocaleString()} total</span>
       </div>
     </div>`;
- 
+
   let zonaHtml = "";
   for (let z in zonas) {
     const p = Math.round((zonas[z].used / zonas[z].total) * 100);
@@ -2234,7 +2426,7 @@ async function cargarPublico() {
   }
   document.getElementById("zonas").innerHTML = zonaHtml;
 }
- 
+
 // ══════════════════════════════════════════════════════
 // INICIO
 // ══════════════════════════════════════════════════════
