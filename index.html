@@ -964,17 +964,58 @@
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
         <div class="page-header">
           <div>
-            <h1>Zonas</h1>
-            <p>Gestiona las zonas del evento</p>
+            <h1>Zonas y Dispositivos</h1>
+            <p>Gestiona las zonas y los dispositivos asignados</p>
           </div>
-          <button class="btn btn-primary" onclick="abrirModalZona()">+ Nueva zona</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary" onclick="abrirModalPlantilla()">📋 Plantilla recinto</button>
+            <button class="btn btn-primary" onclick="abrirModalZona()">+ Nueva zona</button>
+          </div>
         </div>
+
+        <!-- AVISO PLANTILLA -->
+        <div id="avisoPlantilla" style="display:none;margin-bottom:16px;">
+          <div style="background:var(--accent-light);border:1px solid var(--accent);border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;">
+            <span style="font-size:24px;">💡</span>
+            <div style="flex:1;">
+              <b>Se encontró una plantilla para este recinto</b>
+              <p style="font-size:13px;color:var(--text2);margin-top:2px;" id="avisoPlantillaTexto"></p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="aplicarPlantilla()">Aplicar plantilla</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('avisoPlantilla').style.display='none'">✕</button>
+          </div>
+        </div>
+
         <div class="card">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Nombre</th><th>Códigos</th><th>Usados</th><th>Acciones</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Zona</th>
+                  <th>Dispositivos</th>
+                  <th>Códigos</th>
+                  <th>Usados</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
               <tbody id="tablaZonas"></tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- DISPOSITIVOS EXPANDIBLES -->
+        <div id="dispositivosDetalle" style="margin-top:20px;display:none;">
+          <div class="card">
+            <div class="card-header">
+              Dispositivos de <span id="dispositivosZonaNombre" style="color:var(--accent)"></span>
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('dispositivosDetalle').style.display='none'">✕ Cerrar</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Dispositivo</th><th>Zona</th><th>Fast Pass</th><th>All Access</th><th>Último uso</th></tr></thead>
+                <tbody id="tablaDispositivos"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -1103,10 +1144,43 @@
         <label class="form-label">Nombre de la zona *</label>
         <input class="form-input" id="nombreZona" placeholder="Ej: VIP, General, Pista...">
       </div>
+      <div class="form-group">
+        <label class="form-label">Número de dispositivos</label>
+        <input class="form-input" type="number" id="dispositivosZona" placeholder="Ej: 3" min="0" max="50" value="1">
+        <div style="font-size:12px;color:var(--text2);margin-top:4px;">
+          Se crearán: <b id="previstaDispositivos">Pista 1</b>
+        </div>
+      </div>
+      <div id="zonaModoEdicion" style="display:none;">
+        <div style="background:var(--amber-light);border:1px solid #fcd34d;border-radius:8px;padding:10px;font-size:13px;color:var(--amber);">
+          ⚠️ Al cambiar el número se añadirán o eliminarán dispositivos automáticamente
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="cerrarModal('modalZona')">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarZona()">Guardar zona</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Plantilla Recinto -->
+<div class="modal-overlay" id="modalPlantilla">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>📋 Plantilla del recinto</h3>
+      <button class="btn-close" onclick="cerrarModal('modalPlantilla')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);font-size:13px;margin-bottom:16px;">
+        Guarda la configuración actual de zonas y dispositivos como plantilla para este recinto.
+        La próxima vez que crees un evento aquí podrás aplicarla directamente.
+      </p>
+      <div id="plantillaPreview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modalPlantilla')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPlantilla()">💾 Guardar plantilla</button>
     </div>
   </div>
 </div>
@@ -1585,65 +1659,325 @@ async function entrar(id, venue, nombre) {
 }
 
 // ══════════════════════════════════════════════════════
-// ZONAS
+// ZONAS + DISPOSITIVOS
 // ══════════════════════════════════════════════════════
+let _plantillaDisponible = null;
+
 function abrirModalZona(zona = null) {
   editandoZonaId = zona?.id || null;
   document.getElementById("modalZonaTitulo").textContent = zona ? "Editar zona" : "Nueva zona";
   document.getElementById("nombreZona").value = zona?.name || "";
+  document.getElementById("dispositivosZona").value = zona?._deviceCount || 1;
+  document.getElementById("zonaModoEdicion").style.display = zona ? "block" : "none";
+  _actualizarPrevistaDispositivos();
   abrirModal("modalZona");
 }
 
+function _actualizarPrevistaDispositivos() {
+  const nombre = document.getElementById("nombreZona").value.trim() || "Zona";
+  const count  = parseInt(document.getElementById("dispositivosZona").value) || 1;
+  const lista  = Array.from({length: Math.min(count, 5)}, (_, i) => `${nombre} ${i+1}`);
+  const extra  = count > 5 ? ` ... ${nombre} ${count}` : "";
+  document.getElementById("previstaDispositivos").textContent = lista.join(", ") + extra;
+}
+
+// Actualizar preview en tiempo real
+document.addEventListener("input", e => {
+  if (e.target.id === "nombreZona" || e.target.id === "dispositivosZona") {
+    _actualizarPrevistaDispositivos();
+  }
+});
+
 async function guardarZona() {
-  const nombre = document.getElementById("nombreZona").value.trim();
+  const nombre      = document.getElementById("nombreZona").value.trim();
+  const deviceCount = parseInt(document.getElementById("dispositivosZona").value) || 1;
   if (!nombre) { toast("Nombre obligatorio", "error"); return; }
 
+  let zonaId = editandoZonaId;
   let error;
+
   if (editandoZonaId) {
     ({ error } = await client.from("zones").update({ name: nombre }).eq("id", editandoZonaId));
   } else {
-    ({ error } = await client.from("zones").insert({ name: nombre }));
+    const { data: newZona, error: e } = await client
+      .from("zones")
+      .insert({ name: nombre, event_id: currentEvent })
+      .select().single();
+    error = e;
+    zonaId = newZona?.id;
+
+    // Vincular a event_zones
+    if (!error && zonaId) {
+      await client.from("event_zones").insert({ event_id: currentEvent, zone_id: zonaId });
+    }
   }
 
   if (error) { toast("Error guardando zona", "error"); return; }
+
+  // Gestionar dispositivos
+  await _sincronizarDispositivos(zonaId, nombre, deviceCount);
+
   toast(editandoZonaId ? "Zona actualizada" : "Zona creada", "success");
   cerrarModal("modalZona");
   cargarZonas();
 }
 
-async function cargarZonas() {
-  const { data: zonas } = await client.from("zones").select("*");
-  const { data: codes } = await client.from("codes").select("zone_id, usage_count").eq("event_id", currentEvent);
+async function _sincronizarDispositivos(zonaId, zonaNombre, deviceCount) {
+  // Obtener dispositivos actuales de esta zona
+  const { data: existing } = await client
+    .from("devices")
+    .select("*")
+    .eq("zone_id", zonaId)
+    .eq("event_id", currentEvent)
+    .order("device_number");
 
-  const stats = {};
+  const existingCount = existing?.length || 0;
+
+  if (deviceCount > existingCount) {
+    // Añadir los que faltan
+    const nuevos = [];
+    for (let i = existingCount + 1; i <= deviceCount; i++) {
+      nuevos.push({
+        name:          `${zonaNombre} ${i}`,
+        event_id:      currentEvent,
+        zone_id:       zonaId,
+        zone:          zonaNombre,
+        device_number: i,
+        fast_pass_active:  false,
+        all_access_active: false,
+      });
+    }
+    await client.from("devices").insert(nuevos);
+  } else if (deviceCount < existingCount) {
+    // Eliminar los sobrantes (los de mayor número)
+    const aEliminar = existing.slice(deviceCount).map(d => d.id);
+    await client.from("devices").delete().in("id", aEliminar);
+  }
+}
+
+async function cargarZonas() {
+  const { data: zonas } = await client
+    .from("zones")
+    .select("*")
+    .eq("event_id", currentEvent);
+
+  const { data: codes } = await client
+    .from("codes")
+    .select("zone_id, usage_count")
+    .eq("event_id", currentEvent);
+
+  const { data: devices } = await client
+    .from("devices")
+    .select("*")
+    .eq("event_id", currentEvent);
+
+  const statsC = {};
   (codes || []).forEach(c => {
-    if (!stats[c.zone_id]) stats[c.zone_id] = { total: 0, usados: 0 };
-    stats[c.zone_id].total++;
-    if (c.usage_count > 0) stats[c.zone_id].usados++;
+    if (!statsC[c.zone_id]) statsC[c.zone_id] = { total: 0, usados: 0 };
+    statsC[c.zone_id].total++;
+    if (c.usage_count > 0) statsC[c.zone_id].usados++;
+  });
+
+  const statsD = {};
+  (devices || []).forEach(d => {
+    if (!statsD[d.zone_id]) statsD[d.zone_id] = 0;
+    statsD[d.zone_id]++;
   });
 
   document.getElementById("tablaZonas").innerHTML = (zonas || []).length === 0
-    ? `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text3);">No hay zonas creadas</td></tr>`
-    : (zonas || []).map(z => `
-      <tr>
-        <td><b>${z.name}</b></td>
-        <td>${stats[z.id]?.total || 0}</td>
-        <td>${stats[z.id]?.usados || 0}</td>
-        <td>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-secondary btn-sm" onclick='abrirModalZona(${JSON.stringify(z)})'>✏️ Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarZona('${z.id}')">🗑</button>
-          </div>
-        </td>
-      </tr>`).join("");
+    ? `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text3);">No hay zonas. Crea la primera.</td></tr>`
+    : (zonas || []).map(z => {
+        const devCount = statsD[z.id] || 0;
+        return `<tr>
+          <td><b>${z.name}</b></td>
+          <td>
+            <span class="badge badge-blue" style="cursor:pointer;" onclick="verDispositivos('${z.id}','${z.name}')">
+              📱 ${devCount} dispositivo${devCount !== 1 ? 's' : ''}
+            </span>
+          </td>
+          <td>${statsC[z.id]?.total || 0}</td>
+          <td>${statsC[z.id]?.usados || 0}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm" onclick='abrirModalZona({...${JSON.stringify(z)}, _deviceCount: ${devCount}})'>✏️ Editar</button>
+              <button class="btn btn-danger btn-sm" onclick="eliminarZona('${z.id}')">🗑</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join("");
+
+  // Comprobar plantilla de recinto disponible
+  _comprobarPlantilla();
+}
+
+async function verDispositivos(zonaId, zonaNombre) {
+  document.getElementById("dispositivosDetalle").style.display = "block";
+  document.getElementById("dispositivosZonaNombre").textContent = zonaNombre;
+
+  const { data } = await client
+    .from("devices")
+    .select("*")
+    .eq("zone_id", zonaId)
+    .eq("event_id", currentEvent)
+    .order("device_number");
+
+  document.getElementById("tablaDispositivos").innerHTML = (data || []).length === 0
+    ? `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3);">No hay dispositivos</td></tr>`
+    : (data || []).map(d => `
+        <tr>
+          <td><b>${d.name}</b></td>
+          <td>${d.zone || "—"}</td>
+          <td><span class="badge ${d.fast_pass_active ? 'badge-green' : 'badge-gray'}">${d.fast_pass_active ? "✓ Activo" : "Inactivo"}</span></td>
+          <td><span class="badge ${d.all_access_active ? 'badge-purple' : 'badge-gray'}">${d.all_access_active ? "✓ Activo" : "Inactivo"}</span></td>
+          <td style="font-size:12px;color:var(--text3);">${d.created_at ? new Date(d.created_at).toLocaleDateString() : "—"}</td>
+        </tr>`).join("");
+
+  // Scroll al detalle
+  document.getElementById("dispositivosDetalle").scrollIntoView({ behavior: "smooth" });
 }
 
 async function eliminarZona(id) {
-  if (!confirm("¿Eliminar esta zona?")) return;
+  if (!confirm("¿Eliminar esta zona y sus dispositivos?")) return;
+  await client.from("devices").delete().eq("zone_id", id).eq("event_id", currentEvent);
   const { error } = await client.from("zones").delete().eq("id", id);
   if (error) { toast("No se puede eliminar (tiene códigos asociados)", "error"); return; }
   toast("Zona eliminada", "success");
   cargarZonas();
+}
+
+// ══════════════════════════════════════════════════════
+// PLANTILLA DE RECINTO
+// ══════════════════════════════════════════════════════
+async function _comprobarPlantilla() {
+  if (!currentVenue) return;
+
+  const { data } = await client
+    .from("venue_templates")
+    .select("*")
+    .eq("venue", currentVenue)
+    .order("updated_at", { ascending: false })
+    .limit(10);
+
+  if (!data?.length) return;
+
+  // Comprobar si ya hay zonas en este evento
+  const { data: zonasActuales } = await client
+    .from("zones")
+    .select("id")
+    .eq("event_id", currentEvent);
+
+  if (zonasActuales?.length > 0) return; // Ya tiene zonas, no mostrar aviso
+
+  _plantillaDisponible = data;
+
+  const resumen = data.map(t => `${t.zone_name} (${t.device_count} disp.)`).join(", ");
+  document.getElementById("avisoPlantillaTexto").textContent =
+    `Zonas guardadas: ${resumen}`;
+  document.getElementById("avisoPlantilla").style.display = "block";
+}
+
+async function aplicarPlantilla() {
+  if (!_plantillaDisponible?.length) return;
+
+  document.getElementById("avisoPlantilla").style.display = "none";
+
+  for (const t of _plantillaDisponible) {
+    // Crear zona
+    const { data: newZona } = await client
+      .from("zones")
+      .insert({ name: t.zone_name, event_id: currentEvent })
+      .select().single();
+
+    if (!newZona) continue;
+
+    // Vincular a event_zones
+    await client.from("event_zones").insert({ event_id: currentEvent, zone_id: newZona.id });
+
+    // Crear dispositivos
+    await _sincronizarDispositivos(newZona.id, t.zone_name, t.device_count);
+  }
+
+  toast(`✅ Plantilla aplicada: ${_plantillaDisponible.length} zonas creadas`, "success");
+  cargarZonas();
+}
+
+async function abrirModalPlantilla() {
+  // Cargar zonas actuales para mostrar preview
+  const { data: zonas } = await client
+    .from("zones").select("*").eq("event_id", currentEvent);
+  const { data: devices } = await client
+    .from("devices").select("*").eq("event_id", currentEvent);
+
+  const statsD = {};
+  (devices || []).forEach(d => {
+    if (!statsD[d.zone_id]) statsD[d.zone_id] = 0;
+    statsD[d.zone_id]++;
+  });
+
+  if (!zonas?.length) {
+    toast("No hay zonas que guardar como plantilla", "error");
+    return;
+  }
+
+  document.getElementById("plantillaPreview").innerHTML = `
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">
+      Se guardará esta configuración para el recinto <b>${currentVenue}</b>:
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">Zona</th>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">Dispositivos</th>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">Genera</th>
+        </tr></thead>
+        <tbody>
+          ${zonas.map(z => {
+            const dc = statsD[z.id] || 0;
+            const lista = Array.from({length: Math.min(dc, 3)}, (_, i) => `${z.name} ${i+1}`).join(", ");
+            const extra = dc > 3 ? ` ... ${z.name} ${dc}` : "";
+            return `<tr>
+              <td style="padding:8px 12px;border-bottom:1px solid var(--border);"><b>${z.name}</b></td>
+              <td style="padding:8px 12px;border-bottom:1px solid var(--border);">${dc}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);">${lista}${extra}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  abrirModal("modalPlantilla");
+}
+
+async function guardarPlantilla() {
+  const { data: zonas } = await client
+    .from("zones").select("*").eq("event_id", currentEvent);
+  const { data: devices } = await client
+    .from("devices").select("*").eq("event_id", currentEvent);
+
+  if (!zonas?.length) { toast("No hay zonas", "error"); return; }
+
+  const statsD = {};
+  (devices || []).forEach(d => {
+    if (!statsD[d.zone_id]) statsD[d.zone_id] = 0;
+    statsD[d.zone_id]++;
+  });
+
+  // Borrar plantilla anterior de este recinto
+  await client.from("venue_templates").delete().eq("venue", currentVenue);
+
+  // Insertar nueva
+  const rows = zonas.map(z => ({
+    venue:        currentVenue,
+    zone_name:    z.name,
+    device_count: statsD[z.id] || 1,
+  }));
+
+  const { error } = await client.from("venue_templates").insert(rows);
+  if (error) { toast("Error guardando plantilla", "error"); return; }
+
+  toast(`✅ Plantilla guardada para ${currentVenue}`, "success");
+  cerrarModal("modalPlantilla");
 }
 
 // ══════════════════════════════════════════════════════
