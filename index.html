@@ -1044,9 +1044,25 @@
       <div id="asociacion" class="screen">
         <button class="back-btn" onclick="irNav('eventos')">← Volver a eventos</button>
         <div class="page-header">
-          <h1>Asociación</h1>
-          <p>Qué tickets tienen acceso a qué puertas</p>
+          <div>
+            <h1>Asociación de accesos</h1>
+            <p>Define qué ticketeras/conceptos pueden acceder a cada zona</p>
+          </div>
+          <button class="btn btn-secondary" onclick="cargarMatriz()">↺ Actualizar</button>
         </div>
+
+        <!-- EXPLICACIÓN -->
+        <div class="card card-pad" style="margin-bottom:16px;background:var(--accent-light);border-color:var(--accent);">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="font-size:20px;">ℹ️</span>
+            <div style="font-size:13px;color:var(--text2);">
+              <b style="color:var(--text);">Cómo funciona:</b> Cada fila es una ticketera con sus códigos agrupados por zona de origen (según el CSV).
+              Marca ✓ en las zonas a las que ese grupo puede acceder.<br>
+              <span style="margin-top:4px;display:block;">Ejemplo: TKM·PISTA puede acceder también a ZONA VIP si lo permites aquí.</span>
+            </div>
+          </div>
+        </div>
+
         <div class="card">
           <div class="table-wrap" id="tabla"></div>
         </div>
@@ -1479,6 +1495,7 @@ function iniciarRealtime() {
       const activeScreen = document.querySelector(".screen.active");
       if (activeScreen?.id === "stats") cargarStats();
       if (activeScreen?.id === "inc") cargarInc();
+      if (activeScreen?.id === "asociacion") cargarMatriz();
     })
     .on("postgres_changes", {
       event: "INSERT", schema: "public", table: "logs",
@@ -2017,51 +2034,165 @@ async function eliminarAcceso(id) {
 }
 
 // ══════════════════════════════════════════════════════
-// ASOCIACIÓN
+// ASOCIACIÓN — Ticketera · ZonaOrigen → Zonas permitidas
 // ══════════════════════════════════════════════════════
 async function cargarMatriz() {
-  const { data: codes } = await client.from("codes")
-    .select("zone_id,ticket_provider_id,zones(name),ticket_providers(name)")
-    .eq("event_id", currentEvent);
 
-  const { data: acc } = await client.from("access_points").select("*").eq("venue", currentVenue);
-  const { data: rel } = await client.from("ticket_zone_access").select("*");
+  document.getElementById("tabla").innerHTML =
+    `<div style="padding:30px;text-align:center;color:var(--text3);">Cargando...</div>`;
 
-  const combos = {};
-  (codes || []).forEach(c => {
-    const k = c.zone_id + "_" + c.ticket_provider_id;
-    combos[k] = c;
-  });
+  // Cargar en paralelo: combinaciones del CSV + zonas del evento + reglas actuales
+  const [
+    { data: codes },
+    { data: zonas },
+    { data: reglas }
+  ] = await Promise.all([
+    client.from("codes")
+      .select("zone_id, ticket_provider_id, zones(name), ticket_providers(name)")
+      .eq("event_id", currentEvent),
+    client.from("zones")
+      .select("id, name")
+      .eq("event_id", currentEvent)
+      .order("name"),
+    client.from("zone_access_rules")
+      .select("ticket_provider_id, zone_id")
+      .eq("event_id", currentEvent)
+  ]);
 
-  if (!Object.keys(combos).length) {
-    document.getElementById("tabla").innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);">No hay combinaciones zona/ticketera para este evento</div>`;
+  if (!codes?.length) {
+    document.getElementById("tabla").innerHTML =
+      `<div style="padding:40px;text-align:center;color:var(--text3);">
+        No hay códigos importados para este evento.<br>
+        <span style="font-size:12px;">Importa un CSV primero.</span>
+      </div>`;
     return;
   }
 
-  let html = `<table><thead><tr><th>Concepto</th>`;
-  (acc || []).forEach(a => html += `<th>${a.name}</th>`);
-  html += `</tr></thead><tbody>`;
+  if (!zonas?.length) {
+    document.getElementById("tabla").innerHTML =
+      `<div style="padding:40px;text-align:center;color:var(--text3);">
+        No hay zonas creadas para este evento.<br>
+        <span style="font-size:12px;">Crea zonas primero en la sección Zonas.</span>
+      </div>`;
+    return;
+  }
+
+  // Agrupar códigos por ticketera + zona_origen
+  // Key: ticket_provider_id + "_" + zone_id
+  const combos = {};
+  (codes || []).forEach(c => {
+    if (!c.ticket_provider_id || !c.zone_id) return;
+    const k = `${c.ticket_provider_id}_${c.zone_id}`;
+    if (!combos[k]) {
+      combos[k] = {
+        ticket_provider_id: c.ticket_provider_id,
+        ticketera:          c.ticket_providers?.name || "—",
+        zone_id_origen:     c.zone_id,
+        zona_origen:        c.zones?.name || "—",
+        total:              0,
+      };
+    }
+    combos[k].total++;
+  });
+
+  // Set de reglas activas para lookup rápido
+  const reglasSet = new Set(
+    (reglas || []).map(r => `${r.ticket_provider_id}_${r.zone_id}`)
+  );
+
+  // Construir tabla
+  // Columnas = zonas del evento
+  // Filas = combinaciones ticketera · zona_origen
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:200px;">Ticketera · Zona origen</th>
+          <th style="text-align:center;min-width:80px;">Códigos</th>
+          ${zonas.map(z => `
+            <th style="text-align:center;min-width:100px;">
+              <div style="font-weight:700;">${z.name}</div>
+              <div style="font-size:10px;color:var(--text3);font-weight:400;">Zona acceso</div>
+            </th>`).join("")}
+        </tr>
+      </thead>
+      <tbody>`;
 
   Object.values(combos).forEach(c => {
-    html += `<tr><td><b>${c.zones?.name}</b> · ${c.ticket_providers?.name}</td>`;
-    (acc || []).forEach(a => {
-      const ok = (rel || []).some(r => r.zone_id === c.zone_id && r.ticket_provider_id === c.ticket_provider_id && r.access_id === a.id);
-      html += `<td style="text-align:center;"><input type="checkbox" ${ok ? "checked" : ""}
-        onchange="toggleAcceso('${c.zone_id}','${c.ticket_provider_id}','${a.id}',this.checked)"></td>`;
+    html += `<tr>
+      <td>
+        <div style="font-weight:700;font-size:13px;">${c.ticketera}</div>
+        <div style="font-size:11px;color:var(--text2);">Origen: ${c.zona_origen}</div>
+      </td>
+      <td style="text-align:center;">
+        <span class="badge badge-blue">${c.total}</span>
+      </td>`;
+
+    zonas.forEach(z => {
+      const esMismaZona = z.id === c.zone_id_origen;
+      const tieneAcceso = esMismaZona || reglasSet.has(`${c.ticket_provider_id}_${z.id}`);
+
+      if (esMismaZona) {
+        // Zona de origen — siempre tiene acceso, no se puede quitar
+        html += `
+          <td style="text-align:center;">
+            <div title="Zona de origen — acceso nativo">
+              <span style="font-size:18px;">✅</span>
+              <div style="font-size:10px;color:var(--text3);">Nativo</div>
+            </div>
+          </td>`;
+      } else {
+        // Zona diferente — se puede activar/desactivar
+        html += `
+          <td style="text-align:center;">
+            <label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+              <input
+                type="checkbox"
+                ${tieneAcceso ? "checked" : ""}
+                style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);"
+                onchange="toggleRegla('${c.ticket_provider_id}','${z.id}',this.checked,'${c.ticketera}','${c.zona_origen}','${z.name}')"
+              >
+              <span style="font-size:10px;color:${tieneAcceso ? 'var(--green)' : 'var(--text3)'};">
+                ${tieneAcceso ? 'Permitido' : 'Bloqueado'}
+              </span>
+            </label>
+          </td>`;
+      }
     });
+
     html += `</tr>`;
   });
+
   html += `</tbody></table>`;
   document.getElementById("tabla").innerHTML = html;
 }
 
-async function toggleAcceso(z, t, a, e) {
-  if (e) {
-    await client.from("ticket_zone_access").insert({ zone_id: z, ticket_provider_id: t, access_id: a });
+async function toggleRegla(ticketProviderId, zonaId, activar, ticketera, zonaOrigen, zonaNombre) {
+  if (activar) {
+    const { error } = await client.from("zone_access_rules").insert({
+      event_id:           currentEvent,
+      ticket_provider_id: ticketProviderId,
+      zone_id:            zonaId,
+    });
+    if (error) {
+      toast("Error activando acceso", "error");
+      cargarMatriz();
+      return;
+    }
+    toast(`✅ ${ticketera} · ${zonaOrigen} → puede acceder a ${zonaNombre}`, "success");
   } else {
-    await client.from("ticket_zone_access").delete().eq("zone_id", z).eq("ticket_provider_id", t).eq("access_id", a);
+    const { error } = await client.from("zone_access_rules")
+      .delete()
+      .eq("event_id",           currentEvent)
+      .eq("ticket_provider_id", ticketProviderId)
+      .eq("zone_id",            zonaId);
+    if (error) {
+      toast("Error desactivando acceso", "error");
+      cargarMatriz();
+      return;
+    }
+    toast(`🚫 ${ticketera} · ${zonaOrigen} → bloqueado en ${zonaNombre}`, "info");
   }
-  toast(e ? "Acceso habilitado" : "Acceso deshabilitado", "success");
 }
 
 // ══════════════════════════════════════════════════════
